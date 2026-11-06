@@ -1,0 +1,385 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>MonitoringDashboard 決策問答</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: masthead with decision tally and filters, sticky milestone index on the left, one card per decision. */
+:root{--bg:#f2f4f8;--surface:#ffffff;--ink:#162033;--muted:#5b667c;--line:#d6dce8;--accent:#1d5bbf;--accent-soft:#e3ecfa;
+--ok:#1b7a4b;--ok-soft:#e1f3e8;--pend:#a34d00;--pend-soft:#fcecd6;--chip:#eaeef5;
+--sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141f;--surface:#171e2d;--ink:#e6eaf3;--muted:#9aa5bb;--line:#2a3347;--accent:#8db0f2;--accent-soft:#1c2a47;--ok:#6fd09a;--ok-soft:#14301f;--pend:#f0b060;--pend-soft:#36240d;--chip:#222c40;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141f;--surface:#171e2d;--ink:#e6eaf3;--muted:#9aa5bb;--line:#2a3347;--accent:#8db0f2;--accent-soft:#1c2a47;--ok:#6fd09a;--ok-soft:#14301f;--pend:#f0b060;--pend-soft:#36240d;--chip:#222c40;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;
+padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1100px;margin:0 auto}
+.mast{display:flex;flex-direction:column;gap:16px;margin-bottom:28px}
+.mast h1{font-size:1.75rem;line-height:1.25;margin:0;text-wrap:balance}
+.mast .sub{margin:0;color:var(--muted);font-size:.95rem;max-width:62ch}
+.tally{display:flex;flex-wrap:wrap;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 16px;min-width:108px}
+.tile b{display:block;font-family:var(--mono);font-size:1.5rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.tile span{font-size:.8rem;color:var(--muted)}
+.tile.ok b{color:var(--ok)}.tile.pend b{color:var(--pend)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:.9rem;padding:7px 16px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.search{flex:1 1 220px;min-width:0;font:inherit;font-size:.95rem;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.layout{display:grid;grid-template-columns:272px minmax(0,1fr);gap:36px;align-items:start}
+.toc{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;font-size:.84rem;line-height:1.45;padding-right:4px}
+.toc summary{font-weight:700;cursor:pointer;margin-bottom:6px}
+.toc a{display:block;color:var(--muted);text-decoration:none;border-radius:6px}
+.nh{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline;margin-top:12px;padding:6px 8px;color:var(--ink)!important;font-weight:700}
+.nh b{font-family:var(--mono);color:var(--accent)}
+.nh i{font-style:normal;font-family:var(--mono);font-size:.78rem;color:var(--muted);font-weight:500}
+.nq{padding:3px 8px 3px 14px;display:grid!important;grid-template-columns:2.2rem 1fr}
+.nq em{font-style:normal;font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.nq.np em{color:var(--pend);font-weight:700}
+.toc a:hover,.toc a.on{background:var(--accent-soft);color:var(--accent)}
+.ms{display:flex;flex-direction:column;gap:14px;margin-bottom:40px}
+.mshead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline;padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:4px}
+.mshead h2{font-size:1.3rem;margin:0;text-wrap:balance}
+.mn{font-family:var(--mono);color:var(--accent);margin-right:12px}
+.mcount{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}.mcount b{color:var(--ok)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card[data-state="pending"]{border-color:var(--pend)}
+.card header{display:grid;grid-template-columns:auto 1fr auto;gap:6px 14px;align-items:start;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--chip)}
+.card h3{margin:0;font-size:1.02rem;line-height:1.5;text-wrap:balance}
+.qid{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--accent);padding-top:3px;white-space:nowrap}
+.badge{font-size:.75rem;font-weight:700;padding:2px 10px;border-radius:99px;white-space:nowrap}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.pend{background:var(--pend-soft);color:var(--pend)}
+.ans{padding:14px 18px 4px}
+.ans p{margin:0 0 10px;max-width:68ch}
+.tablewrap{overflow-x:auto;margin:6px 0 12px}
+table{border-collapse:collapse;font-size:.88rem;min-width:520px;width:100%}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+.card footer{display:flex;flex-wrap:wrap;gap:6px;padding:4px 18px 14px}
+.chip{font-family:var(--mono);font-size:.74rem;background:var(--chip);color:var(--muted);padding:2px 9px;border-radius:5px}
+.empty{display:none;padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+html{scroll-behavior:smooth}.card,.ms{scroll-margin-top:16px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media (min-width:901px){.toc summary{display:none}}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr);gap:20px}.toc{position:static;max-height:55vh;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}
+.card header{grid-template-columns:1fr auto}.qid{grid-column:1/-1;padding:0}}
+</style>
+<div class="wrap">
+<div class="mast">
+<h1>MonitoringDashboard 決策問答</h1>
+<p class="sub">依 LinearBoard 上 PRD 的現行內容整理，涵蓋 M1 到 M5。每則決策標明來自哪份 PRD 的哪條規則，PRD 才是正式紀錄。</p>
+<div class="tally"><div class="tile"><b>47</b><span>問答總數</span></div><div class="tile ok"><b>39</b><span>已決定</span></div><div class="tile pend"><b>8</b><span>待決定</span></div></div>
+<div class="tools"><div class="seg" role="group" aria-label="篩選"><button type="button" data-f="all" aria-pressed="true">全部</button><button type="button" data-f="done" aria-pressed="false">已決定</button><button type="button" data-f="pending" aria-pressed="false">待決定</button></div>
+<input id="q" class="search" type="search" placeholder="搜尋問題或答案，例如 異常、Excel、Admin" aria-label="搜尋"></div>
+</div>
+<div class="layout">
+<nav class="toc" aria-label="目錄"><details id="toc" open><summary>目錄</summary>
+<a class="nh" href="#m1"><b>M1</b><span>帳號與存取</span><i>8/9</i></a>
+<a class="nq" href="#m1-q1"><em>Q1</em>新註冊者的預設角色是什麼？</a>
+<a class="nq" href="#m1-q2"><em>Q2</em>註冊是否需要 Admin 核准？</a>
+<a class="nq" href="#m1-q3"><em>Q3</em>第一位 Admin 怎麼產生？</a>
+<a class="nq" href="#m1-q4"><em>Q4</em>密碼規則是什麼？</a>
+<a class="nq" href="#m1-q5"><em>Q5</em>Token 有效期限是多久？重新整理頁面時要保持登入嗎？同一帳號重複登入怎麼處理？</a>
+<a class="nq" href="#m1-q6"><em>Q6</em>各角色的權限邊界是什麼？</a>
+<a class="nq" href="#m1-q7"><em>Q7</em>Viewer 的範圍是什麼？</a>
+<a class="nq" href="#m1-q8"><em>Q8</em>需要哪些環境變數？</a>
+<a class="nq np" href="#m1-q9"><em>Q9</em>資料庫遷移何時執行？</a>
+<a class="nh" href="#m2"><b>M2</b><span>資料管理</span><i>7/9</i></a>
+<a class="nq" href="#m2-q1"><em>Q1</em>資料記錄的時間戳由誰決定？</a>
+<a class="nq" href="#m2-q2"><em>Q2</em>「分類」欄位怎麼填？</a>
+<a class="nq" href="#m2-q3"><em>Q3</em>導入的檔案中有幾列格式錯誤時，怎麼處理？</a>
+<a class="nq" href="#m2-q4"><em>Q4</em>同一個檔案被上傳兩次時，怎麼處理？</a>
+<a class="nq" href="#m2-q5"><em>Q5</em>刪除資料記錄後還能復原嗎？</a>
+<a class="nq" href="#m2-q6"><em>Q6</em>誰可以修改與刪除資料？</a>
+<a class="nq" href="#m2-q7"><em>Q7</em>修改記錄時，哪些欄位可以改？要保留修改紀錄嗎？</a>
+<a class="nq np" href="#m2-q8"><em>Q8</em>資料記錄除了標題、數值、分類、時間戳，還有其他欄位嗎？數值有單位或範圍限制嗎？</a>
+<a class="nq np" href="#m2-q9"><em>Q9</em>每頁筆數、預設排序、CSV 欄位名稱與 JSON 結構、檔案大小與筆數上限、時間戳格式怎麼定？</a>
+<a class="nh" href="#m3"><b>M3</b><span>即時監控與告警</span><i>10/11</i></a>
+<a class="nq" href="#m3-q1"><em>Q1</em>異常的閾值怎麼訂？每個設備都有各自的閾值時，怎麼辨識設備？</a>
+<a class="nq" href="#m3-q2"><em>Q2</em>數值剛好等於最小值或最大值時，算異常嗎？</a>
+<a class="nq" href="#m3-q3"><em>Q3</em>還沒有設定範圍的分類，要怎麼判斷？</a>
+<a class="nq" href="#m3-q4"><em>Q4</em>手動新增和導入的資料也要判斷異常嗎？列表能篩選異常嗎？</a>
+<a class="nq" href="#m3-q5"><em>Q5</em>系統自動產生的資料要模擬哪些設備？</a>
+<a class="nq" href="#m3-q6"><em>Q6</em>系統產生的記錄，創建者顯示什麼？誰能修改或刪除？</a>
+<a class="nq" href="#m3-q7"><em>Q7</em>即時監控頁要顯示哪些圖表？</a>
+<a class="nq" href="#m3-q8"><em>Q8</em>即時監控頁的互動範圍到哪裡？</a>
+<a class="nq" href="#m3-q9"><em>Q9</em>自訂時間範圍與 M4、M5 的分工是什麼？</a>
+<a class="nq" href="#m3-q10"><em>Q10</em>M5 是否要補一則「Admin 設定各分類範圍」的故事？</a>
+<a class="nq np" href="#m3-q11"><em>Q11</em>其餘即時監控的細節呢？</a>
+<a class="nh" href="#m4"><b>M4</b><span>資料分析與匯出</span><i>6/8</i></a>
+<a class="nq" href="#m4-q1"><em>Q1</em>三個「按時間範圍看歷史」的地方怎麼分工？單次可以查多久？</a>
+<a class="nq" href="#m4-q2"><em>Q2</em>統計分析要顯示哪些數值？</a>
+<a class="nq" href="#m4-q3"><em>Q3</em>異常的記錄要怎麼特別保留供查看？</a>
+<a class="nq" href="#m4-q4"><em>Q4</em>異常記錄能被修改或刪除嗎？</a>
+<a class="nq" href="#m4-q5"><em>Q5</em>下載的 Excel 要包含什麼？</a>
+<a class="nq" href="#m4-q6"><em>Q6</em>查 3 個月的趨勢圖，資料有數百萬筆，圖上怎麼顯示？</a>
+<a class="nq np" href="#m4-q7"><em>Q7</em>資料分析頁是否可再依標題等其他欄位篩選？</a>
+<a class="nq np" href="#m4-q8"><em>Q8</em>可選粒度清單、資料點上限、時間軸縮放、圖例切換、Excel 明細筆數上限與日期數字格式怎麼定？</a>
+<a class="nh" href="#m5"><b>M5</b><span>系統管理</span><i>8/10</i></a>
+<a class="nq" href="#m5-q1"><em>Q1</em>擁有 Admin 專用的即時資料歷史查詢，和所有角色都能用的資料列表有什麼差別？</a>
+<a class="nq" href="#m5-q2"><em>Q2</em>使用者管理這一版做到哪裡？</a>
+<a class="nq" href="#m5-q3"><em>Q3</em>使用者列表顯示哪些欄位？要不要分頁與搜尋？</a>
+<a class="nq" href="#m5-q4"><em>Q4</em>系統日誌要記錄哪些事件？</a>
+<a class="nq" href="#m5-q5"><em>Q5</em>日誌可以怎麼查？保留多久？</a>
+<a class="nq" href="#m5-q6"><em>Q6</em>資料庫狀態頁顯示哪些指標？怎麼更新？</a>
+<a class="nq" href="#m5-q7"><em>Q7</em>M5 的所有功能誰可以使用？</a>
+<a class="nq" href="#m5-q8"><em>Q8</em>「Admin 設定各分類的最小值與最大值」的畫面由誰負責？</a>
+<a class="nq np" href="#m5-q9"><em>Q9</em>資料庫狀態各指標的警示門檻要怎麼定？</a>
+<a class="nq np" href="#m5-q10"><em>Q10</em>異常範圍設定還有哪些細節？</a>
+</details></nav>
+<main>
+<section class="ms" id="m1" data-ms="m1"><div class="mshead"><h2><span class="mn">M1</span>帳號與存取</h2><span class="mcount" data-total="9"><b>8</b> / 9 已決定</span></div>
+<article id="m1-q1" class="card" data-state="done">
+<header><span class="qid">M1·Q1</span><h3>新註冊者的預設角色是什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>Viewer。</p></div>
+<footer><span class="chip">PRD-01 規則 R7</span></footer></article>
+<article id="m1-q2" class="card" data-state="done">
+<header><span class="qid">M1·Q2</span><h3>註冊是否需要 Admin 核准？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>不需要，註冊後立即可登入。需要更高權限時由 Admin 在系統管理（M5）調整。</p></div>
+<footer><span class="chip">PRD-01 規則 R7</span></footer></article>
+<article id="m1-q3" class="card" data-state="done">
+<header><span class="qid">M1·Q3</span><h3>第一位 Admin 怎麼產生？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>由環境變數設定的帳號與密碼，在系統啟動時建立。已存在就不重複建立，也不覆寫。</p></div>
+<footer><span class="chip">PRD-01 規則 R8、PRD-03 規則 R5</span></footer></article>
+<article id="m1-q4" class="card" data-state="done">
+<header><span class="qid">M1·Q4</span><h3>密碼規則是什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>至少 8 個字元，且同時包含英文大寫、英文小寫、數字與符號。不符時拒絕並說明缺少什麼。</p></div>
+<footer><span class="chip">PRD-01 規則 R11</span></footer></article>
+<article id="m1-q5" class="card" data-state="done">
+<header><span class="qid">M1·Q5</span><h3>Token 有效期限是多久？重新整理頁面時要保持登入嗎？同一帳號重複登入怎麼處理？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>預設 12 小時，可由環境變數設定，過期後需重新登入。</p>
+<p>重新整理頁面或開新分頁時，只要 Token 未過期且未登出，仍保持登入。</p>
+<p>同一帳號重複登入時，新登入生效，舊登入失效。</p>
+</div>
+<footer><span class="chip">PRD-01 規則 R9、R10、R12</span></footer></article>
+<article id="m1-q6" class="card" data-state="done">
+<header><span class="qid">M1·Q6</span><h3>各角色的權限邊界是什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>下表只定義「誰可以做」。修改與刪除的詳細規則由 PRD-05 擁有。</p>
+<div class="tablewrap"><table>
+<tr><th>功能</th><th>Viewer</th><th>User</th><th>Admin</th></tr>
+<tr><td>即時監控、讀取資料、資料分析、下載 Excel</td><td>可</td><td>可</td><td>可</td></tr>
+<tr><td>新增資料、批量導入</td><td>不可</td><td>可</td><td>可</td></tr>
+<tr><td>修改、刪除資料</td><td>不可</td><td>僅限自己建立的</td><td>任何人的資料（被標為異常的記錄例外，見 M4 Q4）</td></tr>
+<tr><td>系統管理（使用者列表、權限管理、系統日誌、資料庫狀態、即時資料的歷史查詢）</td><td>不可</td><td>不可</td><td>可，獨占</td></tr>
+</table></div>
+</div>
+<footer><span class="chip">PRD-02 規則 R6</span></footer></article>
+<article id="m1-q7" class="card" data-state="done">
+<header><span class="qid">M1·Q7</span><h3>Viewer 的範圍是什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>唯讀。可看即時監控、讀取資料、資料分析並下載 Excel。不能新增、導入、修改、刪除。</p></div>
+<footer><span class="chip">PRD-02 規則 R4</span></footer></article>
+<article id="m1-q8" class="card" data-state="done">
+<header><span class="qid">M1·Q8</span><h3>需要哪些環境變數？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>已定：初始 Admin 帳號與密碼、Token 有效期限（預設 12 小時）。其餘變數與預設值在建立 BE 交付 issue 時決定。</p></div>
+<footer><span class="chip">PRD-03 規則 R5</span></footer></article>
+<article id="m1-q9" class="card" data-state="pending">
+<header><span class="qid">M1·Q9</span><h3>資料庫遷移何時執行？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定。屬工程選型，在建立 BE 交付 issue 時決定。</p></div>
+<footer><span class="chip">PRD-03</span></footer></article>
+</section>
+<section class="ms" id="m2" data-ms="m2"><div class="mshead"><h2><span class="mn">M2</span>資料管理</h2><span class="mcount" data-total="9"><b>7</b> / 9 已決定</span></div>
+<article id="m2-q1" class="card" data-state="done">
+<header><span class="qid">M2·Q1</span><h3>資料記錄的時間戳由誰決定？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>手動新增時預設為建立當下，使用者可自行改成其他時間，例如補登過去的量測。這是依我的建議採用。</p>
+<p>系統產生的即時資料一律使用產生當下的時間。</p>
+</div>
+<footer><span class="chip">PRD-04 規則 R8</span></footer></article>
+<article id="m2-q2" class="card" data-state="done">
+<header><span class="qid">M2·Q2</span><h3>「分類」欄位怎麼填？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>自由文字，沒有固定清單，也沒有分類管理功能。可用的分類值就是資料中實際出現的值（手動新增、導入檔案、系統產生的即時資料），供篩選與分類聚合使用。</p>
+</div>
+<footer><span class="chip">PRD-04 規則 R9</span></footer></article>
+<article id="m2-q3" class="card" data-state="done">
+<header><span class="qid">M2·Q3</span><h3>導入的檔案中有幾列格式錯誤時，怎麼處理？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>整批拒絕，一筆都不寫入。系統指出有問題的列號與原因，修正後可重新上傳。</p>
+</div>
+<footer><span class="chip">PRD-06 規則 R5</span></footer></article>
+<article id="m2-q4" class="card" data-state="done">
+<header><span class="qid">M2·Q4</span><h3>同一個檔案被上傳兩次時，怎麼處理？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>只檢查檔案名稱。相同檔名已成功導入過時，拒絕上傳並要求改名後再上傳。</p>
+<p>不比對檔案內容，內容相同的列照單全收。因有問題而整批被拒絕的檔案不算已導入，可用原檔名重新上傳。</p>
+</div>
+<footer><span class="chip">PRD-06 規則 R7</span></footer></article>
+<article id="m2-q5" class="card" data-state="done">
+<header><span class="qid">M2·Q5</span><h3>刪除資料記錄後還能復原嗎？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>不能。刪除是永久刪除，刪除前須確認，確認後記錄無法復原，也不再出現在列表與分析中。</p><p>例外：被標為異常的記錄不能被刪除（見 M4 Q4）。</p>
+</div>
+<footer><span class="chip">PRD-05 規則 R5、R7</span></footer></article>
+<article id="m2-q6" class="card" data-state="done">
+<header><span class="qid">M2·Q6</span><h3>誰可以修改與刪除資料？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>僅限該記錄的創建者或 Admin。User 只能處理自己建立的記錄，Admin 可處理任何人的記錄，Viewer 不能修改或刪除。</p>
+<p>後端會驗證，直接呼叫 API 時沒有權限的操作同樣被拒絕。</p><p>例外：被標為異常的記錄，任何人（含 Admin）都不能修改或刪除（見 M4 Q4）。</p>
+</div>
+<footer><span class="chip">PRD-05 規則 R1、R2、R3</span></footer></article>
+<article id="m2-q7" class="card" data-state="done">
+<header><span class="qid">M2·Q7</span><h3>修改記錄時，哪些欄位可以改？要保留修改紀錄嗎？</h3><span class="badge ok">已決定</span></header>
+<div class="ans">
+<p>可更改標題、數值、分類、時間戳。</p>
+<p>記錄上的「創建者」欄位固定為原本建立它的人，不能被改成別人。這不影響權限：創建者仍可修改與刪除自己的記錄。</p>
+<p>不保留修改紀錄，記錄只保存最新內容。</p>
+</div>
+<footer><span class="chip">PRD-05 規則 R8、R9</span></footer></article>
+<article id="m2-q8" class="card" data-state="pending">
+<header><span class="qid">M2·Q8</span><h3>資料記錄除了標題、數值、分類、時間戳，還有其他欄位嗎？數值有單位或範圍限制嗎？</h3><span class="badge pend">待決定</span></header>
+<div class="ans">
+<p>尚未決定。</p>
+</div>
+<footer><span class="chip">PRD-04 待決定</span></footer></article>
+<article id="m2-q9" class="card" data-state="pending">
+<header><span class="qid">M2·Q9</span><h3>每頁筆數、預設排序、CSV 欄位名稱與 JSON 結構、檔案大小與筆數上限、時間戳格式怎麼定？</h3><span class="badge pend">待決定</span></header>
+<div class="ans">
+<p>尚未決定。每頁筆數與預設排序屬設計選型，在 FE 交付時決定。其餘屬工程選型，在 BE 交付時決定。</p>
+</div>
+<footer><span class="chip">PRD-04、PRD-06</span></footer></article>
+</section>
+<section class="ms" id="m3" data-ms="m3"><div class="mshead"><h2><span class="mn">M3</span>即時監控與告警</h2><span class="mcount" data-total="11"><b>10</b> / 11 已決定</span></div>
+<article id="m3-q1" class="card" data-state="done">
+<header><span class="qid">M3·Q1</span><h3>異常的閾值怎麼訂？每個設備都有各自的閾值時，怎麼辨識設備？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>資料視為時間序列：一筆記錄是某個分類（代表一個指標或設備）在某個時間點的一次讀數，以「分類」區分設備，不新增欄位。</p><p>每個分類各有自己的最小值與最大值，由 Admin 在系統管理設定與修改，修改後不需要重新啟動。其他角色不能修改。</p><p>修改範圍只影響之後的資料，已保存的資料不回頭重判。</p></div>
+<footer><span class="chip">PRD-09 規則 R4、R6、R7</span><span class="chip">PRD-17 規則 R1、R2、R3</span></footer></article>
+<article id="m3-q2" class="card" data-state="done">
+<header><span class="qid">M3·Q2</span><h3>數值剛好等於最小值或最大值時，算異常嗎？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>算。到達最大值或最小值就算異常，只有介於兩者之間（不含邊界）才是正常。</p></div>
+<footer><span class="chip">PRD-09 規則 R7</span></footer></article>
+<article id="m3-q3" class="card" data-state="done">
+<header><span class="qid">M3·Q3</span><h3>還沒有設定範圍的分類，要怎麼判斷？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>不判斷，也不標記為異常。尚未設定範圍的分類在管理介面的標示，由 PRD-17 負責。</p></div>
+<footer><span class="chip">PRD-09 規則 R9</span><span class="chip">PRD-17 規則 R4、R6</span></footer></article>
+<article id="m3-q4" class="card" data-state="done">
+<header><span class="qid">M3·Q4</span><h3>手動新增和導入的資料也要判斷異常嗎？列表能篩選異常嗎？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>所有來源（系統產生、手動新增、導入）都判斷，異常標記隨資料保存。</p><p>資料列表可篩選「僅顯示異常」，並可與分頁、其他篩選、排序同時使用。</p><p>記錄被修改後，這一筆依當下的範圍重新判斷（提案）。</p></div>
+<footer><span class="chip">PRD-09 規則 R10、R11、R12</span><span class="chip">PRD-04 規則 R6</span><span class="chip">PRD-06 規則 R3</span></footer></article>
+<article id="m3-q5" class="card" data-state="done">
+<header><span class="qid">M3·Q5</span><h3>系統自動產生的資料要模擬哪些設備？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>4 個模擬設備（分類），例如溫度（°C）、壓力（kPa）、馬達轉速（rpm）、振動（mm/s），確切名稱與單位在設計時確認。</p><p>系統啟動時各有預設的最小值與最大值；Admin 改過的範圍重啟後不覆寫。約 5% 的讀數會超出範圍，讓異常標記在展示時能被看到。</p></div>
+<footer><span class="chip">PRD-07 規則 R7、R8、R9</span></footer></article>
+<article id="m3-q6" class="card" data-state="done">
+<header><span class="qid">M3·Q6</span><h3>系統產生的記錄，創建者顯示什麼？誰能修改或刪除？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>創建者顯示為「系統」。只有 Admin 可以修改或刪除，User 與 Viewer 不能，也因此能與使用者建立的資料區分。</p></div>
+<footer><span class="chip">PRD-07 規則 R10</span></footer></article>
+<article id="m3-q7" class="card" data-state="done">
+<header><span class="qid">M3·Q7</span><h3>即時監控頁要顯示哪些圖表？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>這題由你委託我提案，採用以下內容，你可以覆蓋任何一項：</p><p>折線圖：各分類最近 5 分鐘的趨勢，圖上畫出最小與最大範圍線，異常的點醒目標示。</p><p>柱狀圖：各分類目前最新的讀數，超出範圍的柱子標為異常。</p><p>異常次數柱狀圖：各分類最近 5 分鐘的異常次數。</p><p>摘要數字：目前異常的分類數、最近 5 分鐘異常筆數、最後收到資料的時間。</p><p>最近異常清單：時間、分類、數值與範圍。</p></div>
+<footer><span class="chip">PRD-08 規則 R7 到 R11</span></footer></article>
+<article id="m3-q8" class="card" data-state="done">
+<header><span class="qid">M3·Q8</span><h3>即時監控頁的互動範圍到哪裡？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>有兩種檢視：「即時窗口」持續自動更新；「自訂時間範圍」可指定開始與結束時間，單次最長 3 個月，超過時拒絕並說明上限。</p><p>自訂時間範圍使用與即時窗口相同的圖表與摘要，資料來自已保存的記錄，不隨新資料自動更新，所有已登入角色都能使用（提案）。</p><p>連線中斷期間遺漏的資料不補進即時窗口，但資料仍已保存，可用自訂時間範圍查看（提案）。</p></div>
+<footer><span class="chip">PRD-08 規則 R12 到 R15（故事 US-21）</span></footer></article>
+<article id="m3-q9" class="card" data-state="done">
+<header><span class="qid">M3·Q9</span><h3>自訂時間範圍與 M4、M5 的分工是什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>已決定，見 M4 Q1：三處各司其職，並共用「單次最長 3 個月」的上限。</p></div>
+<footer><span class="chip">PRD-08 規則 R13</span><span class="chip">PRD-10 規則 R9</span></footer></article>
+<article id="m3-q10" class="card" data-state="done">
+<header><span class="qid">M3·Q10</span><h3>M5 是否要補一則「Admin 設定各分類範圍」的故事？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>要補，而且一併盤點後共補上 4 則故事，既有故事的編號與內容不變：</p><p>US-20 設定各分類的異常範圍（M5），新建 PRD-17。</p><p>US-21 自訂時間範圍檢視監控畫面（M3），併入 PRD-08。</p><p>US-22 查看異常記錄清單（M4），併入 PRD-10。</p><p>US-23 保護異常記錄（M3），新建 PRD-18。</p></div>
+<footer><span class="chip">里程碑文件 US-20 到 US-23</span><span class="chip">PRD-17、PRD-18</span></footer></article>
+<article id="m3-q11" class="card" data-state="pending">
+<header><span class="qid">M3·Q11</span><h3>其餘即時監控的細節呢？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定：是否可選擇要看哪些分類（預設顯示全部）、即時窗口的長度（目前採用 5 分鐘）、異常清單最多顯示幾筆。批次寫入的週期與超長範圍的圖表資料量如何呈現，屬工程選型，在 BE 交付時決定。</p></div>
+<footer><span class="chip">PRD-07、PRD-08 待決定</span></footer></article>
+</section>
+<section class="ms" id="m4" data-ms="m4"><div class="mshead"><h2><span class="mn">M4</span>資料分析與匯出</h2><span class="mcount" data-total="8"><b>6</b> / 8 已決定</span></div>
+<article id="m4-q1" class="card" data-state="done">
+<header><span class="qid">M4·Q1</span><h3>三個「按時間範圍看歷史」的地方怎麼分工？單次可以查多久？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>三處各司其職：即時監控頁的自訂時間範圍檢視（PRD-08）用來看當時的監控畫面與異常；資料分析頁（PRD-10 到 PRD-12）提供統計、分類聚合、趨勢圖與 Excel；Admin 的即時資料歷史查詢（M5）列出原始記錄供追查。</p><p>三處共用同一個上限：單次查詢最長 3 個月，超過時拒絕並說明上限。要看更長的期間就分批查，一次查一段。</p></div>
+<footer><span class="chip">PRD-10 規則 R8、R9</span><span class="chip">PRD-08 規則 R13</span></footer></article>
+<article id="m4-q2" class="card" data-state="done">
+<header><span class="qid">M4·Q2</span><h3>統計分析要顯示哪些數值？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>只顯示需求中的四項：總計、平均、最大值、最小值，不另加筆數或異常筆數。依分類聚合時，每個分類各自顯示這四項。</p></div>
+<footer><span class="chip">PRD-10 規則 R1、R3、R10</span></footer></article>
+<article id="m4-q3" class="card" data-state="done">
+<header><span class="qid">M4·Q3</span><h3>異常的記錄要怎麼特別保留供查看？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>資料分析頁有獨立的「異常記錄」清單，可依時間範圍（同樣受 3 個月上限）與分類查看，並支援分頁。所有已登入角色都能查看（依 PRD-09 的提案）。</p><p>資料列表另有「僅顯示異常」的篩選，沒有時間上限（兩者並存）。</p></div>
+<footer><span class="chip">PRD-10 規則 R11（故事 US-22）</span><span class="chip">PRD-09 規則 R11</span></footer></article>
+<article id="m4-q4" class="card" data-state="done">
+<header><span class="qid">M4·Q4</span><h3>異常記錄能被修改或刪除嗎？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>不能。被標為異常的記錄完全唯讀，任何人（含 Admin）都不能修改或刪除，以確保事後可追查。此規則優先於一般的修改與刪除權限，由 PRD-18（故事 US-23）擁有，PRD-05 只保留指向它的說明。</p><p>一般記錄被修改成超出範圍後成為異常，之後即唯讀。副作用：異常記錄一旦產生就無法更正，即使當初填錯。</p></div>
+<footer><span class="chip">PRD-18 規則 R1 到 R5</span><span class="chip">PRD-09 規則 R12</span></footer></article>
+<article id="m4-q5" class="card" data-state="done">
+<header><span class="qid">M4·Q5</span><h3>下載的 Excel 要包含什麼？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>兩個工作表。「摘要」列出查詢條件（時間範圍、分類），以及總計、平均、最大值、最小值，依分類聚合時每個分類各一列。</p><p>「明細」列出該條件下範圍內的記錄（標題、數值、分類、時間戳、創建者），被標為異常的列有明確標示。不放趨勢圖。</p><p>所有已登入角色（含 Viewer）都能下載；條件內沒有資料時不產生檔案；檔名含產生的日期時間（提案）。</p></div>
+<footer><span class="chip">PRD-12 規則 R2、R3、R4、R5、R6</span></footer></article>
+<article id="m4-q6" class="card" data-state="done">
+<header><span class="qid">M4·Q6</span><h3>查 3 個月的趨勢圖，資料有數百萬筆，圖上怎麼顯示？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>使用者自己選擇彙總粒度，圖表依所選粒度彙總資料。</p><p>以下是我補的提案：可選粒度為每分鐘、每小時、每天；每個區間顯示平均；所選粒度會產生過多資料點時，請使用者改選較粗的粒度；被彙總的區間中若有異常記錄，仍在圖上標記，不被平均掉。</p></div>
+<footer><span class="chip">PRD-11 規則 R6 到 R9</span></footer></article>
+<article id="m4-q7" class="card" data-state="pending">
+<header><span class="qid">M4·Q7</span><h3>資料分析頁是否可再依標題等其他欄位篩選？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定。</p></div>
+<footer><span class="chip">PRD-10 待決定</span></footer></article>
+<article id="m4-q8" class="card" data-state="pending">
+<header><span class="qid">M4·Q8</span><h3>可選粒度清單、資料點上限、時間軸縮放、圖例切換、Excel 明細筆數上限與日期數字格式怎麼定？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定。可選粒度與資料點上限屬設計與工程選型。時間軸縮放與圖例切換屬設計選型，在 FE 交付時決定。Excel 明細筆數上限（3 個月內可能有數百萬筆）以及日期與數字格式屬工程選型，在 BE 交付時決定。</p></div>
+<footer><span class="chip">PRD-11、PRD-12 待決定</span></footer></article>
+</section>
+<section class="ms" id="m5" data-ms="m5"><div class="mshead"><h2><span class="mn">M5</span>系統管理</h2><span class="mcount" data-total="10"><b>8</b> / 10 已決定</span></div>
+<article id="m5-q1" class="card" data-state="done">
+<header><span class="qid">M5·Q1</span><h3>擁有 Admin 專用的即時資料歷史查詢，和所有角色都能用的資料列表有什麼差別？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>Admin 的即時資料歷史只查「即時資料流」，也就是系統產生的記錄（創建者為「系統」）；手動新增與導入的記錄用資料列表（PRD-04）。</p><p>可依時間範圍、分類、僅顯示異常過濾，單次最長 3 個月，結果分頁、唯讀。這一頁不提供匯出，需要匯出請用資料分析頁的 Excel。</p></div>
+<footer><span class="chip">PRD-16 規則 R2、R3、R6、R7、R8</span></footer></article>
+<article id="m5-q2" class="card" data-state="done">
+<header><span class="qid">M5·Q2</span><h3>使用者管理這一版做到哪裡？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>只調整角色（Admin、User、Viewer）。Admin 不能變更自己的角色，嘗試時被拒絕並說明；不做停用與刪除帳號。</p><p>變更角色前須先確認。角色變更後，使用者的下一次請求就依新角色判斷，不需要重新登入（提案）。</p></div>
+<footer><span class="chip">PRD-13 規則 R3、R4、R5、R6、R8</span></footer></article>
+<article id="m5-q3" class="card" data-state="done">
+<header><span class="qid">M5·Q3</span><h3>使用者列表顯示哪些欄位？要不要分頁與搜尋？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>顯示帳號、角色、註冊時間、最後登入時間；分頁，並可依帳號搜尋。使用者登入後，最後登入時間隨之更新。</p></div>
+<footer><span class="chip">PRD-13 規則 R2、R7</span></footer></article>
+<article id="m5-q4" class="card" data-state="done">
+<header><span class="qid">M5·Q4</span><h3>系統日誌要記錄哪些事件？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>登入成功與失敗、登出、因重複登入而使舊登入失效、權限被拒、使用者角色變更、資料記錄的新增／修改／刪除、批量導入的結果、系統錯誤。</p><p>系統每秒產生的模擬資料不列入日誌。每筆日誌至少含時間、事件類型、嚴重程度、相關使用者與簡短說明（後者為提案）。</p></div>
+<footer><span class="chip">PRD-14 規則 R6、R7</span></footer></article>
+<article id="m5-q5" class="card" data-state="done">
+<header><span class="qid">M5·Q5</span><h3>日誌可以怎麼查？保留多久？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>可依時間範圍、事件類型、嚴重程度、使用者過濾，條件可同時使用；不做關鍵字搜尋。</p><p>單次查詢最長 3 個月，與其他歷史查詢一致。日誌保留 1 年，超過的自動清理，保留期限可調整（設定方式屬工程選型）。結果分頁、最新的在前、唯讀。</p></div>
+<footer><span class="chip">PRD-14 規則 R3、R4、R8、R9、R10</span></footer></article>
+<article id="m5-q6" class="card" data-state="done">
+<header><span class="qid">M5·Q6</span><h3>資料庫狀態頁顯示哪些指標？怎麼更新？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>顯示連線狀態、回應時間、連線池使用狀況、資料筆數、最後一次批次寫入時間。</p><p>每 10 秒自動更新並顯示最後更新時間；手動重新整理為提案。資料庫不可用時顯示不可用狀態與說明，而不是錯誤畫面。</p></div>
+<footer><span class="chip">PRD-15 規則 R3、R4、R5</span></footer></article>
+<article id="m5-q7" class="card" data-state="done">
+<header><span class="qid">M5·Q7</span><h3>M5 的所有功能誰可以使用？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>全部限 Admin，User 與 Viewer 被拒絕，直接呼叫 API 也一樣。</p></div>
+<footer><span class="chip">PRD-13 到 PRD-17 的限 Admin 規則</span><span class="chip">PRD-02 規則 R6</span></footer></article>
+<article id="m5-q8" class="card" data-state="done">
+<header><span class="qid">M5·Q8</span><h3>「Admin 設定各分類的最小值與最大值」的畫面由誰負責？</h3><span class="badge ok">已決定</span></header>
+<div class="ans"><p>已補上故事 US-20，由新的 PRD-17 負責。Admin 可為每個分類設定與修改最小值與最大值，修改後不需要重新啟動，之後新產生的資料依新範圍判斷，已保存的資料不回頭重判。</p><p>尚未設定範圍的分類在介面上明確標示；最小值必須小於最大值（提案）。此設定限 Admin，其他角色看不到，直接呼叫 API 也被拒絕。</p><p>規則由 PRD-09 的 R8 移到 PRD-17，PRD-09 只保留判斷規則 R7。</p></div>
+<footer><span class="chip">PRD-17 規則 R1 到 R6</span><span class="chip">PRD-09 規則 R7、R8</span></footer></article>
+<article id="m5-q9" class="card" data-state="pending">
+<header><span class="qid">M5·Q9</span><h3>資料庫狀態各指標的警示門檻要怎麼定？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定。屬設計與工程選型，在 FE、BE 交付時決定。</p></div>
+<footer><span class="chip">PRD-15 待決定</span></footer></article>
+<article id="m5-q10" class="card" data-state="pending">
+<header><span class="qid">M5·Q10</span><h3>異常範圍設定還有哪些細節？</h3><span class="badge pend">待決定</span></header>
+<div class="ans"><p>尚未決定：是否允許只設最小值或只設最大值；是否可以清除某分類的範圍；範圍的修改要不要記入系統日誌（目前 PRD-14 的事件清單沒有包含，建議加入）。</p></div>
+<footer><span class="chip">PRD-17 待決定</span></footer></article>
+</section>
+<div class="empty" id="empty">沒有符合條件的問答。</div>
+</main></div></div>
+<script>
+(function(){try{
+var d=document.getElementById('toc'),mq=window.matchMedia('(max-width:900px)');function sync(){d.open=!mq.matches}sync();mq.addEventListener('change',sync);
+var f='all',cards=[].slice.call(document.querySelectorAll('.card')),box=document.getElementById('q'),links={};
+document.querySelectorAll('.toc a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+function apply(){var t=box.value.trim().toLowerCase(),shown=0;
+cards.forEach(function(c){var ok=(f==='all'||c.dataset.state===f)&&(!t||c.textContent.toLowerCase().indexOf(t)>-1);c.hidden=!ok;if(links[c.id])links[c.id].hidden=!ok;if(ok)shown++});
+document.querySelectorAll('.ms').forEach(function(m){var any=m.querySelector('.card:not([hidden])');m.hidden=!any;if(links[m.id])links[m.id].hidden=!any});
+document.getElementById('empty').style.display=shown?'none':'block'}
+document.querySelectorAll('.seg button').forEach(function(b){b.addEventListener('click',function(){f=b.dataset.f;document.querySelectorAll('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});apply()})});
+box.addEventListener('input',apply);
+var cur=null,io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){if(cur)cur.classList.remove('on');cur=links[e.target.id];if(cur)cur.classList.add('on')}})},{rootMargin:'-10% 0px -80% 0px'});
+document.querySelectorAll('.ms,.card').forEach(function(el){io.observe(el)});
+}catch(e){}})();
+</script>
+
+</body></html>
