@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="100%" role="img" aria-labelledby="t d">
+  <title id="t">YOLO11n-seg pipeline</title>
+  <desc id="d">Animated diagram: an image flows through backbone, neck, then splits into a detection head and a prototype mask branch, which combine into instance masks.</desc>
+  <style>
+    :root { --cycle: 10s; }
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2937; }
+    .title { font-size: 20px; font-weight: 700; }
+    .sub   { font-size: 12px; fill: #6b7280; }
+    .name  { font-size: 15px; font-weight: 700; }
+    .note  { font-size: 11.5px; fill: #4b5563; }
+    .box   { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; }
+    .link  { fill: none; stroke: #94a3b8; stroke-width: 2.5; stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
+    .arrow { fill: #94a3b8; }
+    .glow  { fill: none; stroke-width: 4; opacity: 0; animation: pulse var(--cycle) ease-in-out infinite; }
+    .s1 { animation-delay: 0s; } .s2 { animation-delay: 1.2s; } .s3 { animation-delay: 2.4s; }
+    .s4 { animation-delay: 3.8s; } .s5 { animation-delay: 3.8s; } .s6 { animation-delay: 5.4s; } .s7 { animation-delay: 6.8s; }
+    .reveal { opacity: 0; animation: reveal var(--cycle) ease-in-out infinite; animation-delay: 0s; }
+    .tick { opacity: 0; animation: reveal var(--cycle) ease-in-out infinite; animation-delay: 0s; }
+    @keyframes flow  { to { stroke-dashoffset: -24; } }
+    @keyframes pulse { 0% {opacity:0} 4% {opacity:1} 16% {opacity:1} 24% {opacity:0} 100% {opacity:0} }
+    @keyframes reveal { 0%,62% {opacity:0} 72%,92% {opacity:1} 100% {opacity:0} }
+    @media (prefers-reduced-motion: reduce) {
+      .link, .glow, .reveal { animation: none; }
+      .reveal { opacity: 1; }
+    }
+  </style>
+
+  <rect width="1000" height="500" fill="#f8fafc" rx="12"/>
+  <text x="24" y="38" class="title">YOLO11n-seg: from pixels to instance masks</text>
+  <text x="24" y="58" class="sub">~2.9M parameters · 640×640 input · 80 COCO classes · one forward pass</text>
+
+  <!-- links -->
+  <path class="link" d="M130 250 H160"/>
+  <path class="link" d="M310 250 H340"/>
+  <path class="link" d="M490 250 C510 250 510 160 530 160"/>
+  <path class="link" d="M490 250 C510 250 510 360 530 360"/>
+  <path class="link" d="M700 160 C720 160 720 230 740 230"/>
+  <path class="link" d="M700 360 C720 360 720 270 740 270"/>
+  <path class="link" d="M850 250 H870"/>
+
+  <!-- 1 input -->
+  <g>
+    <rect class="box" x="20" y="195" width="110" height="110" rx="10"/>
+    <rect x="34" y="215" width="82" height="58" rx="4" fill="#cbd5e1"/>
+    <rect x="42" y="236" width="14" height="36" rx="4" fill="#64748b"/>
+    <circle cx="49" cy="230" r="5" fill="#64748b"/>
+    <rect x="82" y="228" width="26" height="44" rx="4" fill="#94a3b8"/>
+    <text x="75" y="290" class="name" text-anchor="middle">Image</text>
+    <rect class="glow s1" x="20" y="195" width="110" height="110" rx="10" stroke="#2563eb"/>
+  </g>
+
+  <!-- 2 backbone -->
+  <g>
+    <rect class="box" x="160" y="180" width="150" height="140" rx="10"/>
+    <text x="235" y="205" class="name" text-anchor="middle">Backbone</text>
+    <text x="235" y="228" class="note" text-anchor="middle">Conv · C3k2 blocks</text>
+    <text x="235" y="246" class="note" text-anchor="middle">SPPF · C2PSA attention</text>
+    <rect x="178" y="262" width="22" height="40" fill="#bfdbfe" rx="2"/>
+    <rect x="208" y="268" width="18" height="34" fill="#93c5fd" rx="2"/>
+    <rect x="234" y="274" width="14" height="28" fill="#60a5fa" rx="2"/>
+    <rect x="256" y="280" width="10" height="22" fill="#3b82f6" rx="2"/>
+    <rect x="274" y="286" width="8" height="16" fill="#1d4ed8" rx="2"/>
+    <rect class="glow s2" x="160" y="180" width="150" height="140" rx="10" stroke="#2563eb"/>
+  </g>
+
+  <!-- 3 neck -->
+  <g>
+    <rect class="box" x="340" y="180" width="150" height="140" rx="10"/>
+    <text x="415" y="205" class="name" text-anchor="middle">Neck (PAN-FPN)</text>
+    <text x="415" y="228" class="note" text-anchor="middle">top-down + bottom-up</text>
+    <text x="415" y="246" class="note" text-anchor="middle">P3 · P4 · P5 (stride 8/16/32)</text>
+    <rect x="362" y="272" width="30" height="30" fill="#bbf7d0" rx="2"/>
+    <rect x="398" y="278" width="24" height="24" fill="#86efac" rx="2"/>
+    <rect x="428" y="284" width="18" height="18" fill="#4ade80" rx="2"/>
+    <rect class="glow s3" x="340" y="180" width="150" height="140" rx="10" stroke="#16a34a"/>
+  </g>
+
+  <!-- 4 head -->
+  <g>
+    <rect class="box" x="530" y="100" width="170" height="120" rx="10"/>
+    <text x="615" y="126" class="name" text-anchor="middle">Segment head</text>
+    <text x="615" y="148" class="note" text-anchor="middle">per cell, per scale:</text>
+    <text x="615" y="166" class="note" text-anchor="middle">box (DFL) · 80 class scores</text>
+    <text x="615" y="184" class="note" text-anchor="middle" font-weight="700">+ 32 mask coefficients</text>
+    <text x="615" y="204" class="note" text-anchor="middle">→ confidence filter + NMS</text>
+    <rect class="glow s4" x="530" y="100" width="170" height="120" rx="10" stroke="#d97706"/>
+  </g>
+
+  <!-- 5 proto -->
+  <g>
+    <rect class="box" x="530" y="300" width="170" height="120" rx="10"/>
+    <text x="615" y="326" class="name" text-anchor="middle">Proto branch</text>
+    <text x="615" y="348" class="note" text-anchor="middle">upsample P3 →</text>
+    <text x="615" y="366" class="note" text-anchor="middle" font-weight="700">32 prototype masks</text>
+    <text x="615" y="384" class="note" text-anchor="middle">160×160, shared by all objects</text>
+    <g>
+      <rect x="570" y="392" width="16" height="16" fill="#fde68a"/><rect x="590" y="392" width="16" height="16" fill="#fca5a5"/>
+      <rect x="610" y="392" width="16" height="16" fill="#c4b5fd"/><rect x="630" y="392" width="16" height="16" fill="#a5f3fc"/>
+      <rect x="650" y="392" width="16" height="16" fill="#bbf7d0"/>
+    </g>
+    <rect class="glow s5" x="530" y="300" width="170" height="120" rx="10" stroke="#d97706"/>
+  </g>
+
+  <!-- 6 assemble -->
+  <g>
+    <rect class="box" x="740" y="195" width="110" height="110" rx="10"/>
+    <text x="795" y="220" class="name" text-anchor="middle">Assemble</text>
+    <text x="795" y="244" class="note" text-anchor="middle">sigmoid(</text>
+    <text x="795" y="260" class="note" text-anchor="middle">coeffs × protos)</text>
+    <text x="795" y="280" class="note" text-anchor="middle">crop to box</text>
+    <text x="795" y="296" class="note" text-anchor="middle">threshold 0.5</text>
+    <rect class="glow s6" x="740" y="195" width="110" height="110" rx="10" stroke="#9333ea"/>
+  </g>
+
+  <!-- 7 output -->
+  <g>
+    <rect class="box" x="870" y="195" width="110" height="110" rx="10"/>
+    <rect x="884" y="215" width="82" height="58" rx="4" fill="#cbd5e1"/>
+    <rect class="reveal" x="892" y="236" width="14" height="36" rx="4" fill="#ef4444" fill-opacity="0.65"/>
+    <circle class="reveal" cx="899" cy="230" r="5" fill="#ef4444" fill-opacity="0.65"/>
+    <rect class="reveal" x="932" y="228" width="26" height="44" rx="4" fill="#22c55e" fill-opacity="0.65"/>
+    <rect class="reveal" x="888" y="224" width="24" height="52" rx="2" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <rect class="reveal" x="928" y="224" width="34" height="52" rx="2" fill="none" stroke="#22c55e" stroke-width="2"/>
+    <text x="925" y="290" class="name" text-anchor="middle">Instances</text>
+    <rect class="glow s7" x="870" y="195" width="110" height="110" rx="10" stroke="#9333ea"/>
+  </g>
+
+  <!-- travelling data dots -->
+  <g fill="#2563eb">
+    <circle r="6"><animateMotion dur="10s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" path="M130 250 H340" calcMode="linear" begin="0s"/></circle>
+  </g>
+  <g fill="#d97706">
+    <circle r="6"><animateMotion dur="10s" repeatCount="indefinite" keyTimes="0;0.25;0.5;1" keyPoints="0;0;1;1" calcMode="linear" path="M490 250 C510 250 510 160 530 160 H700 C720 160 720 230 740 230"/></circle>
+    <circle r="6"><animateMotion dur="10s" repeatCount="indefinite" keyTimes="0;0.25;0.5;1" keyPoints="0;0;1;1" calcMode="linear" path="M490 250 C510 250 510 360 530 360 H700 C720 360 720 270 740 270"/></circle>
+  </g>
+  <g fill="#9333ea">
+    <circle r="6"><animateMotion dur="10s" repeatCount="indefinite" keyTimes="0;0.55;0.7;1" keyPoints="0;0;1;1" calcMode="linear" path="M850 250 H870"/></circle>
+  </g>
+
+  <!-- footer: training signal -->
+  <rect x="24" y="436" width="952" height="52" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="40" y="455" class="note" font-weight="700">Training signal</text>
+  <text x="40" y="471" class="note">loss = box (CIoU) + DFL + classification (BCE) + mask (BCE vs. ground-truth polygons)</text>
+  <text x="560" y="455" class="note">Task-Aligned label assignment · mosaic augmentation ·</text>
+  <text x="560" y="471" class="note">gradients flow back through every stage</text>
+</svg>

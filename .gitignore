@@ -205,6 +205,12 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# Downloaded model and segmentation demo outputs
+/image-segmentation/model/*.pt
+/image-segmentation/model/*.ts
+/image-segmentation/output/
+/image-segmentation/output_crops/
+
 # Ruff stuff:
 .ruff_cache/
 
@@ -218,3 +224,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+QUESTIONS.md
