@@ -1,0 +1,2 @@
+coco_animals,predicted_animals,tp_iou50,fp_iou50,fn_iou50,correct_label,precision,recall,f1,mean_iou_of_matches,mask_ap50,mask_ap75,mask_ap50_95
+21,19,19,0,2,19,1.0,0.905,0.95,0.822,0.901,0.718,0.597

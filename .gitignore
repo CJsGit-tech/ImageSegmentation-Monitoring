@@ -209,7 +209,7 @@ tempCodeRunnerFile.py
 /image-segmentation/model/*.pt
 /image-segmentation/model/*.pth
 /image-segmentation/model/*.ts
-/image-segmentation/results/yoloe/
+/image-segmentation/submission/scripts/outputs/yoloe/
 /image-segmentation/output_crops/
 
 # Ruff stuff:
@@ -225,4 +225,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Private notes, never committed
 QUESTIONS.md
+/image-segmentation/submission/Submission1_Questions.md

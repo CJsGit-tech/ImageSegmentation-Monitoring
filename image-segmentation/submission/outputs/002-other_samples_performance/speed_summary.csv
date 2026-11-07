@@ -1,0 +1,5 @@
+flow,images,mean_ms_per_image,median_ms_per_image,slowest_ms,fps
+YOLOE,12,179.9,178.7,255.2,5.56
+"YOLOE + DINOv2, GrabCut",12,506.1,544.3,737.0,1.98
+"YOLOE + DINOv2, heatmap level",12,253.3,266.2,324.1,3.95
+DINOv2 features per animal,12,96.8,,,

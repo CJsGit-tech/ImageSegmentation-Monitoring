@@ -1,0 +1,7 @@
+{
+  "chip": "Apple M4 Pro",
+  "torch": "2.15.0",
+  "device": "mps",
+  "repeats": 3,
+  "eye_marks_status": "Draft. Marked by Claude Code from zoomed views and not reviewed by a person."
+}

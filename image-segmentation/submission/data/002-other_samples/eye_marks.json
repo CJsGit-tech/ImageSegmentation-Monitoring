@@ -1,0 +1,61 @@
+{
+  "status": "Draft. Marked by Claude Code from zoomed views and not reviewed by a person.",
+  "format": "Boxes are [x1, y1, x2, y2] in image pixels. A predicted eye whose center is inside an ignore box isn't scored, because the eyes there couldn't be judged.",
+  "images": {
+    "000000107226": [
+      {"animal": "husky facing the camera", "eyes": [[163, 354, 170, 361], [179, 353, 186, 360]]},
+      {"animal": "white dog seen from behind", "eyes": [], "note": "No face visible"},
+      {"animal": "white dog at the left edge", "eyes": [], "note": "No face visible"}
+    ],
+    "000000125405": [
+      {"animal": "brown dog", "eyes": [[247, 206, 258, 212], [278, 206, 290, 212]]},
+      {"animal": "brown and white dog", "eyes": [[482, 59, 491, 66], [501, 58, 510, 65]]}
+    ],
+    "000000333772": [
+      {"animal": "black cat, lower", "eyes": [[198, 294, 207, 302], [224, 286, 236, 298]]},
+      {"animal": "black and white cat, upper", "eyes": [[154, 166, 161, 172], [179, 163, 186, 169]]}
+    ],
+    "000000372819": [
+      {"animal": "dog at the right", "eyes": [[435, 205, 440, 209], [445, 204, 450, 208]]},
+      {"animal": "white dog with brown ears", "eyes": [[237, 245, 243, 250], [252, 245, 257, 250]]},
+      {"animal": "small white dog", "eyes": [[300, 143, 303, 146], [308, 142, 311, 145]]}
+    ],
+    "000000402473": [
+      {"animal": "black and white cat, tilted head", "eyes": [[538, 167, 552, 181], [566, 206, 580, 220]]},
+      {"animal": "tabby and white cat, side view", "eyes": [[110, 246, 126, 259]], "note": "Only one eye visible"}
+    ],
+    "000000413395": [
+      {"animal": "tabby cat", "eyes": [[54, 302, 68, 310], [99, 300, 113, 309]], "note": "Eyes closed"},
+      {"animal": "black and white cat", "eyes": [[274, 243, 285, 250], [300, 240, 311, 248]]}
+    ],
+    "000000543581": [],
+    "000000551815": [
+      {"animal": "grey and white cat, head sideways", "eyes": [[190, 216, 199, 230], [150, 263, 161, 273]]},
+      {"animal": "orange cat", "eyes": [[290, 253, 310, 264], [374, 254, 394, 265]], "note": "Eyes half closed"}
+    ],
+    "000000555705": [
+      {"animal": "tabby cat", "eyes": [[342, 106, 358, 118], [393, 107, 409, 119]]},
+      {"animal": "orange cat", "eyes": [[236, 138, 250, 146], [281, 138, 296, 147]]}
+    ],
+    "001-coco-sample": [
+      {"animal": "dog", "eyes": [[205, 208, 224, 226], [246, 210, 272, 227]]},
+      {"animal": "cat behind the glass", "eyes": [[205, 37, 212, 43], [217, 35, 223, 41]]}
+    ],
+    "002-coco-sample": [
+      {"animal": "cat", "eyes": [[326, 181, 358, 206], [401, 178, 435, 205]]},
+      {"animal": "dog", "eyes": [[301, 389, 340, 421], [387, 386, 411, 425]]}
+    ],
+    "003-coco-sample": [
+      {"animal": "dog", "eyes": [[338, 109, 357, 133], [381, 117, 411, 143]]},
+      {"animal": "cat", "eyes": [[151, 308, 173, 326], [192, 310, 213, 326]]}
+    ]
+  },
+  "ignore": {
+    "000000372819": [[220, 145, 265, 195]],
+    "000000543581": [[285, 130, 345, 185], [470, 315, 550, 375]]
+  },
+  "ignore_reasons": {
+    "000000372819": "Husky's dark face mask hides its eyes",
+    "000000543581": "Dog and cat faces too dark to place the eyes"
+  }
+}

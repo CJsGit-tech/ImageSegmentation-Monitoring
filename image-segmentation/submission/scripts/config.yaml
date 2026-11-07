@@ -1,0 +1,29 @@
+# Settings for run_yoloe_test_samples.py.
+# Relative paths start from this folder.
+
+source: ../data/001-test_samples            # sample images, with hand-marked eyes
+output: ../outputs/001-test_samples_yoloe   # YOLOE results for the sample images
+other_source: ../data/002-other_samples     # other COCO images, without eye marks
+other_output: ../outputs/002-other_samples_yoloe
+model: ../../model/yoloe-26l-seg.pt      # model weights
+
+animals: [bird, cat, dog]    # downloaded from the COCO official website
+
+animal_conf: 0.5
+eye_conf: 0.1             # lower finds more eyes and more mistakes
+
+animal_imgsz: 640            # input size for finding animals
+eye_imgsz: 1280              # input size for finding eyes
+
+eye_prompt: eye              # text the model searches for
+image_suffixes: [.jpg, .jpeg, .png, .bmp, .webp]   # files read from source
+
+animal_color: [0, 200, 0]
+eye_color: [0, 0, 255]       
+
+max_eye_distance: 10         # pixels an eye centre may fall outside its animal's outline
+duplicate_overlap: 0.6       # share of the smaller mask that marks two detections as one object
+
+
+# For Measure Eyes
+both_eyes: both-eyes # or use the mode: right-eye-pair 
