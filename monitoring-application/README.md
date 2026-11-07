@@ -39,3 +39,5 @@ This needs no database, so tests that do are skipped with a stated reason. To ru
 ```sh
 backend/tests/run_integration.sh
 ```
+
+Browser tests that click through the running app are in `e2e/`. See [e2e/README.md](e2e/README.md) for setup.
