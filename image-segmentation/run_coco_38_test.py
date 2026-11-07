@@ -8,7 +8,14 @@ influences the references or settings.
 There are no reviewed eye marks for these images, so summary.csv counts outputs and measures
 agreement with YOLOE, not accuracy. overview.jpg in each folder is for checking by eye.
 
-Results go to results/coco_38_test/. Run segment_animals_eyes.py and select_coco_images.py first.
+Results go to results/coco_38_test/:
+    yoloe/                  YOLOE's eye outlines and JSON files.
+    dinov2/heatmaps/        One heatmap per cat or dog, named <image>_<class>_<number>.png.
+    dinov2/grabcut/         GrabCut eye outlines and JSON files.
+    dinov2/heatmap_level/   Heatmap level eye outlines and JSON files.
+    summary.csv             Comparison of the three methods.
+
+Run segment_animals_eyes.py and select_coco_images.py first.
 Usage, from anywhere:
     .venv/bin/python image-segmentation/run_coco_38_test.py
 """
@@ -25,16 +32,20 @@ import run_dinov2_watershed as dinov2
 import run_eye_experiments as experiments
 import segment_animals_eyes as segment
 from crop_animals import CROP_CLASSES, crop as cut_box
-from dino_heatmap import MIN_EYE_COVER
+from dino_heatmap import MIN_EYE_COVER, colorize
 from measure_eyes import centroid
 
 ROOT = segment.ROOT
 IMAGES = ROOT / "data" / "coco_cats_dogs_38"
 OUTPUT = ROOT / "results" / "coco_38_test"
-METHODS = {"dinov2_grabcut": experiments.refine_grabcut, "dinov2_heatmap_level": experiments.refine_heatmap_level}
+DINOV2_OUTPUT = OUTPUT / "dinov2"
+HEATMAPS = DINOV2_OUTPUT / "heatmaps"
+METHODS = {"grabcut": experiments.refine_grabcut, "heatmap_level": experiments.refine_heatmap_level}
 MATCH_DISTANCE = 30     # Pixels. Nearest eyes further apart than this aren't the same eye.
 TILE_HEIGHT = 240
 TILES_PER_ROW = 5
+HEATMAP_TILE_HEIGHT = 180
+HEATMAP_PAIRS_PER_ROW = 4
 
 
 def eye_reference(config, model, device):
@@ -101,9 +112,18 @@ def draw(path, animals, folder):
     return canvas
 
 
-def overview(canvases, path):
-    tiles = [cv2.resize(c, (round(c.shape[1] * TILE_HEIGHT / c.shape[0]), TILE_HEIGHT)) for c in canvases]
-    rows = [np.hstack(tiles[i:i + TILES_PER_ROW]) for i in range(0, len(tiles), TILES_PER_ROW)]
+def save_heatmap(entry, name):
+    """Save an animal's heatmap, and return it beside its crop for the overview."""
+    heatmap = colorize(entry["similarity"])
+    cv2.imwrite(str(HEATMAPS / f"{name}.png"), heatmap)
+    width = max(round(heatmap.shape[1] * HEATMAP_TILE_HEIGHT / heatmap.shape[0]), 1)
+    size = (width, HEATMAP_TILE_HEIGHT)
+    return np.hstack([cv2.resize(entry["image"], size), cv2.resize(heatmap, size, interpolation=cv2.INTER_NEAREST)])
+
+
+def overview(canvases, path, per_row=TILES_PER_ROW, height=TILE_HEIGHT):
+    tiles = [cv2.resize(c, (round(c.shape[1] * height / c.shape[0]), height)) for c in canvases]
+    rows = [np.hstack(tiles[i:i + per_row]) for i in range(0, len(tiles), per_row)]
     width = max(row.shape[1] for row in rows)
     cv2.imwrite(str(path), np.vstack([cv2.copyMakeBorder(r, 0, 4, 0, width - r.shape[1], cv2.BORDER_CONSTANT) for r in rows]))
 
@@ -173,7 +193,8 @@ def main():
 
     yoloe, shapes, method_results = {}, {}, {name: {} for name in METHODS}
     canvases = {name: [] for name in METHODS}
-    yoloe_canvases = []
+    yoloe_canvases, heatmap_tiles = [], []
+    HEATMAPS.mkdir(parents=True, exist_ok=True)
     for path in paths:
         prediction = json.loads((yoloe_folder / f"{path.stem}.json").read_text())
         image = cv2.imread(str(path))
@@ -183,8 +204,9 @@ def main():
                                                                  key=lambda e: -e["confidence"])[:2]} for i, a in indexed]
         for animals_name in METHODS:
             method_results[animals_name][path.name] = []
-        for _, animal in indexed:
+        for number, (_, animal) in enumerate(indexed, start=1):
             entry = animal_entry(image, animal, model, device, reference)
+            heatmap_tiles.append(save_heatmap(entry, f"{path.stem}_{animal['class']}_{number}"))
             located = locate(entry)
             for name, refiner in METHODS.items():
                 eyes = experiments.run_refiner(entry, refiner, located) if located else []
@@ -193,19 +215,20 @@ def main():
         yoloe_canvases.append(draw(path, [{"eyes": a["eyes"]} for a in yoloe[path.name]], yoloe_folder))
 
     rows = []
+    overview(heatmap_tiles, HEATMAPS / "overview.jpg", HEATMAP_PAIRS_PER_ROW, HEATMAP_TILE_HEIGHT)
     overview(yoloe_canvases, yoloe_folder / "overview.jpg")
     yoloe_as_results = {f: [{"eyes": [{"center": list(centroid([tuple(v) for v in e["polygon"]])), "polygon": e["polygon"]}
                                       for e in a["eyes"]]} for a in animals] for f, animals in yoloe.items()}
     rows.append(compare_with_yoloe("yoloe", yoloe, yoloe_as_results, shapes))
     for name in METHODS:
-        folder = OUTPUT / name
-        folder.mkdir(exist_ok=True)
+        folder = DINOV2_OUTPUT / name
+        folder.mkdir(parents=True, exist_ok=True)
         for path in paths:
             animals = method_results[name][path.name]
             canvases[name].append(draw(path, animals, folder))
             (folder / f"{path.stem}.json").write_text(json.dumps({"image": path.name, "animals": animals}, indent=2))
         overview(canvases[name], folder / "overview.jpg")
-        rows.append(compare_with_yoloe(name, yoloe, method_results[name], shapes))
+        rows.append(compare_with_yoloe(f"dinov2_{name}", yoloe, method_results[name], shapes))
 
     animal_count = sum(len(a) for a in yoloe.values())
     print(f"Images: {len(paths)}, cats and dogs detected by YOLOE: {animal_count}, "

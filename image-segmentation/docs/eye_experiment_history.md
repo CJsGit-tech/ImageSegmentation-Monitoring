@@ -215,7 +215,9 @@ such as ears or body patches. These images have no reviewed eye marks, so accura
 | `experiments/archive/` | All other experiments, with the reasons in its README |
 | `experiments/dino_v1_summary.csv` | YOLOE and experiments 01-11, with distance error averaged over animals with both eyes correct |
 | `experiments/dino_v2_summary.csv` | YOLOE, experiment 14 and experiments 16-24, averaged the same way |
-| `coco_38_test/` | The 38-image results and heatmaps, with `summary.csv` comparing the methods |
+| `coco_38_test/yoloe/` | YOLOE results on the 38 images |
+| `coco_38_test/dinov2/` | DINOv2 heatmaps and both selected methods on the 38 images |
+| `coco_38_test/summary.csv` | Comparison of the three methods |
 
 | Script | Purpose |
 |---|---|
@@ -229,8 +231,7 @@ such as ears or body patches. These images have no reviewed eye marks, so accura
 | `run_dinov2_original_images.py` | Runs the full-image experiments |
 | `run_dinov2_experiments.py` | Runs experiment 14 and experiments 16-24 |
 | `select_coco_images.py` | Downloads the 38 COCO images with at least 2 cats or dogs |
-| `run_coco_38_test.py` | Runs YOLOE and the two selected methods on them |
-| `export_coco_38_heatmaps.py` | Exports the heatmaps for the 38-image test |
+| `run_coco_38_test.py` | Runs YOLOE and the two selected methods on them, and exports the DINOv2 heatmaps |
 
 The experiment scripts write new results directly to `results/experiments/`, so a rerun doesn't
 update the `selected/` or `archive/` folders.

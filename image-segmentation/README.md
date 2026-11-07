@@ -59,7 +59,10 @@ image-segmentation/
     ├── experiments/
     │   ├── selected/           GrabCut and heatmap level, both with DINOv2
     │   └── archive/            Other experiments, with reasons in its README
-    ├── coco_38_test/           YOLOE and both selected methods on the 38 images
+    ├── coco_38_test/
+    │   ├── yoloe/              YOLOE results on the 38 images
+    │   ├── dinov2/             DINOv2 heatmaps, GrabCut and heatmap level results
+    │   └── summary.csv         Comparison of the three methods
     └── archive/                Duplicate DINO v1 heatmaps
 ```
 
