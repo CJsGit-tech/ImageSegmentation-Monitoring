@@ -33,19 +33,35 @@ animals are missed or mislabelled at the larger size. An eye is kept only if it
 lies on a detected animal.
 
 Each image in `data/` produces an annotated copy (animals green, eyes red) and a
-JSON file with confidence scores in `output/`. All settings are in `config.yaml`.
+JSON file with confidence scores in `results/yoloe/`. All settings are in `config.yaml`.
 The script uses Apple's GPU through MPS when available and otherwise uses the CPU.
 
 The first run downloads the YOLOE weights and a text encoder of about 250 MB into
 `model/` (ignored by Git).
 
-## Files
+## Folders
 
-- `segment_animals_eyes.py`: outline animals and their eyes separately.
-- `segment_eyes_on_crops.py`: same task, but looks for eyes inside each animal's crop
-  and saves to `output_crops/`.
-- `config.yaml`: settings for both scripts.
-- `requirements.txt`: installed Python package versions.
-- `data/`: sample COCO images.
-- `output/`: annotated images and JSON results (ignored by Git).
-- `model/`: weights, model documentation and animated diagrams.
+```text
+image-segmentation/
+├── config.yaml, requirements.txt, *.py
+├── data/                       Sample images
+│   └── coco_cats_dogs_38/      38 test images with at least 2 cats or dogs each
+├── docs/
+│   ├── answers/                Assignment answers
+│   ├── models/                 YOLOE and YOLO11n-seg notes and diagrams
+│   └── eye_experiment_history.md
+├── model/                      Model weights (ignored by Git)
+└── results/
+    ├── yoloe/                  YOLOE results on the samples (ignored by Git)
+    ├── cropped_animals/        Cat and dog crops
+    ├── heatmaps/               DINO v1 and DINOv2 heatmaps
+    ├── binary_heatmaps/        Black-and-white heatmaps
+    ├── experiments/
+    │   ├── selected/           GrabCut and heatmap level, both with DINOv2
+    │   └── archive/            Other experiments, with reasons in its README
+    ├── coco_38_test/           YOLOE and both selected methods on the 38 images
+    └── archive/                Duplicate DINO v1 heatmaps
+```
+
+[The experiment history](docs/eye_experiment_history.md) explains how the current approach was
+reached and lists what each script does.

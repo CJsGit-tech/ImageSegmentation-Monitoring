@@ -9,7 +9,7 @@ on the left of the image when the animal faces the camera.
 
 The mode is set by both_eyes in config.yaml. Usage:
     .venv/bin/python image-segmentation/measure_eyes.py \
-        --json image-segmentation/output/002-coco-sample.json
+        --json image-segmentation/results/yoloe/002-coco-sample.json
 """
 
 import argparse

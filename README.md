@@ -12,5 +12,5 @@ Run the segmentation from here:
 
 ```bash
 .venv/bin/python image-segmentation/segment_animals_eyes.py
-open image-segmentation/output
+open image-segmentation/results/yoloe
 ```

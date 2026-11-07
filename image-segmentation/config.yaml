@@ -2,7 +2,7 @@
 # Relative paths start from this folder.
 
 source: data                 # test image
-output: output               # output folder name
+output: results/yoloe               # output folder name
 model: model/yoloe-26l-seg.pt      # model weights
 
 animals: [bird, cat, dog]    # downloaded from the COCO official website

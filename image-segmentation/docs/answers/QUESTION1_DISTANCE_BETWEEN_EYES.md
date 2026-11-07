@@ -43,9 +43,9 @@ Then run from the repository root:
 ```
 
 ```bash
-.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/output/002-coco-sample.json
+.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/results/yoloe/002-coco-sample.json
 ```
 
 ```bash
-.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/output/003-coco-sample.json
+.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/results/yoloe/003-coco-sample.json
 ```

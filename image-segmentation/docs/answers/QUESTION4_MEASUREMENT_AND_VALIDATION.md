@@ -12,7 +12,7 @@
 4. **Calculate the distance** between the centers.
 
 ```bash
-.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/output/002-coco-sample.json
+.venv/bin/python image-segmentation/measure_eyes.py --json image-segmentation/results/yoloe/002-coco-sample.json
 ```
 
 The mode is set by `both_eyes` in `image-segmentation/config.yaml`:

@@ -207,8 +207,9 @@ tempCodeRunnerFile.py
 
 # Downloaded model and segmentation demo outputs
 /image-segmentation/model/*.pt
+/image-segmentation/model/*.pth
 /image-segmentation/model/*.ts
-/image-segmentation/output/
+/image-segmentation/results/yoloe/
 /image-segmentation/output_crops/
 
 # Ruff stuff:
