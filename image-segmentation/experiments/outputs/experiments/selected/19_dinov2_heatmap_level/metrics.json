@@ -1,0 +1,12 @@
+{
+  "experiment": "19_dinov2_heatmap_level",
+  "eyes_hit": 12,
+  "total_eyes": 12,
+  "false_eyes": 0,
+  "failed_outlines": 0,
+  "animals_with_two_eyes_output": 6,
+  "animals_with_both_eyes_correct": 6,
+  "distance_mae_px": 2.04,
+  "distance_mape_percent": 3.5,
+  "mean_box_iou": 0.629
+}

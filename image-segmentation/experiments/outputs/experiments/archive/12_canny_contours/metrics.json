@@ -1,0 +1,12 @@
+{
+  "experiment": "12_canny_contours",
+  "eyes_hit": 3,
+  "total_eyes": 12,
+  "false_eyes": 0,
+  "failed_outlines": 9,
+  "animals_with_two_eyes_output": 1,
+  "animals_with_both_eyes_correct": 1,
+  "distance_mae_px": 3.36,
+  "distance_mape_percent": 4.4,
+  "mean_box_iou": 0.497
+}

@@ -1,0 +1,12 @@
+{
+  "experiment": "11_mser",
+  "eyes_hit": 7,
+  "total_eyes": 12,
+  "false_eyes": 1,
+  "failed_outlines": 4,
+  "animals_with_two_eyes_output": 2,
+  "animals_with_both_eyes_correct": 2,
+  "distance_mae_px": 7.03,
+  "distance_mape_percent": 12.5,
+  "mean_box_iou": 0.349
+}

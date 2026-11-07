@@ -1,0 +1,12 @@
+{
+  "experiment": "10_hough_ellipse",
+  "eyes_hit": 5,
+  "total_eyes": 12,
+  "false_eyes": 5,
+  "failed_outlines": 2,
+  "animals_with_two_eyes_output": 5,
+  "animals_with_both_eyes_correct": 1,
+  "distance_mae_px": 5.9,
+  "distance_mape_percent": 14.6,
+  "mean_box_iou": 0.496
+}

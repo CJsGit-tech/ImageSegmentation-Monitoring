@@ -1,0 +1,12 @@
+{
+  "experiment": "15_dinov2_original_1568",
+  "eyes_hit": 10,
+  "total_eyes": 12,
+  "false_eyes": 1,
+  "failed_outlines": 0,
+  "animals_with_two_eyes_output": 5,
+  "animals_with_both_eyes_correct": 5,
+  "distance_mae_px": 4.53,
+  "distance_mape_percent": 6.1,
+  "mean_box_iou": 0.517
+}

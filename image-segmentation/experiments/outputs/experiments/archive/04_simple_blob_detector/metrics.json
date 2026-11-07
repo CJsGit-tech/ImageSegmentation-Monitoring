@@ -1,0 +1,12 @@
+{
+  "experiment": "04_simple_blob_detector",
+  "eyes_hit": 10,
+  "total_eyes": 12,
+  "false_eyes": 2,
+  "failed_outlines": 0,
+  "animals_with_two_eyes_output": 6,
+  "animals_with_both_eyes_correct": 4,
+  "distance_mae_px": 4.81,
+  "distance_mape_percent": 7.4,
+  "mean_box_iou": null
+}

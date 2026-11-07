@@ -1,0 +1,12 @@
+{
+  "experiment": "03_difference_of_gaussians",
+  "eyes_hit": 8,
+  "total_eyes": 12,
+  "false_eyes": 4,
+  "failed_outlines": 0,
+  "animals_with_two_eyes_output": 6,
+  "animals_with_both_eyes_correct": 3,
+  "distance_mae_px": 6.93,
+  "distance_mape_percent": 10.6,
+  "mean_box_iou": null
+}

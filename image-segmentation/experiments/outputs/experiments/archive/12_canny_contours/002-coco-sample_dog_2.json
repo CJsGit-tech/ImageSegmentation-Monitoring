@@ -1,0 +1,15 @@
+{
+  "crop": "002-coco-sample_dog_2",
+  "eyes": [
+    {
+      "hit": false,
+      "center": null,
+      "polygon": null
+    },
+    {
+      "hit": false,
+      "center": null,
+      "polygon": null
+    }
+  ]
+}

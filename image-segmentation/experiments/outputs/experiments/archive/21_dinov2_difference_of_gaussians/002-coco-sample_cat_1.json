@@ -1,0 +1,21 @@
+{
+  "crop": "002-coco-sample_cat_1",
+  "eyes": [
+    {
+      "hit": true,
+      "center": [
+        338.01,
+        194.42
+      ],
+      "polygon": null
+    },
+    {
+      "hit": true,
+      "center": [
+        419.76,
+        193.67
+      ],
+      "polygon": null
+    }
+  ]
+}
