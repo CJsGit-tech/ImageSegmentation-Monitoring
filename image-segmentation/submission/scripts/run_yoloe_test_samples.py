@@ -126,6 +126,7 @@ def main():
     config = load_config()
     # YOLOE saves its text encoder in the working directory. Staying in the weights
     # folder keeps them together and reuses the encoder instead of downloading it again.
+    config["model"].parent.mkdir(parents=True, exist_ok=True)
     os.chdir(config["model"].parent)
 
     paths = sorted(p for p in config["source"].iterdir() if p.suffix.lower() in config["image_suffixes"])

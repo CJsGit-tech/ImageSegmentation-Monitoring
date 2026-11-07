@@ -60,6 +60,7 @@ def image_paths():
 # ----- Speed -----
 
 def yoloe_model(device):
+    CONFIG["model"].parent.mkdir(parents=True, exist_ok=True)
     os.chdir(CONFIG["model"].parent)  # The text encoder is cached beside the weights.
     model = YOLOE(CONFIG["model"].name)
     prompts = [*CONFIG["animals"], CONFIG["eye_prompt"]]

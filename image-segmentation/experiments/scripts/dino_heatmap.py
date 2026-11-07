@@ -108,8 +108,9 @@ class DinoViTSmall8(nn.Module):
 
 
 def load_model(weights_folder, device):
-    state = torch.hub.load_state_dict_from_url(
-        WEIGHTS_URL, model_dir=str(weights_folder), map_location="cpu", weights_only=True)
+    from dinov2_eye_pipeline import download_weights  # Shared downloader in submission/scripts.
+
+    state = torch.load(download_weights(WEIGHTS_URL, weights_folder), map_location="cpu", weights_only=True)
     model = DinoViTSmall8()
     model.load_state_dict(state, strict=True)
     return model.to(device).eval()

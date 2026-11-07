@@ -51,7 +51,8 @@ python3.13 -m venv .venv
 .venv/bin/python image-segmentation/submission/scripts/run_yoloe_test_samples.py
 ```
 
-第一次執行時會下載 YOLOE 權重與文字編碼器 (約 250 MB) 到 `image-segmentation/model/`.
+第一次執行時會自動建立 `image-segmentation/model/`, 並下載 YOLOE 權重 (約 80 MB) 與文字編碼器 (約 250 MB) 到該資料夾.
+之後的執行會直接使用已下載的模型.
 所有腳本 (包含 YOLOE + DINOv2 與距離量測) 請見 [image-segmentation README](image-segmentation/README.md).
 
 ### 監控系統

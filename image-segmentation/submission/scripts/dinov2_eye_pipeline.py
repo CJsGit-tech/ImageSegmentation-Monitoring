@@ -6,7 +6,12 @@ or the heatmap level outlines each one. No model is trained.
 """
 
 import math
+import shutil
+import ssl
+import urllib.request
+from pathlib import Path
 
+import certifi
 import cv2
 import numpy as np
 import torch
@@ -131,9 +136,25 @@ class DinoV2Small14(nn.Module):
         return self.norm(x)[0, 1 + REGISTERS:]
 
 
+def download_weights(url, weights_folder):
+    """Return the weights file in weights_folder, downloading it there first if it's missing.
+
+    Uses certifi's certificates, because some Python installs on macOS have none configured.
+    """
+    path = Path(weights_folder) / url.rsplit("/", 1)[-1]
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"Downloading {path.name} to {path.parent}")
+        partial = path.with_name(path.name + ".part")
+        context = ssl.create_default_context(cafile=certifi.where())
+        with urllib.request.urlopen(url, context=context, timeout=600) as response, open(partial, "wb") as file:
+            shutil.copyfileobj(response, file)
+        partial.replace(path)
+    return path
+
+
 def load_model(weights_folder, device):
-    state = torch.hub.load_state_dict_from_url(
-        WEIGHTS_URL, model_dir=str(weights_folder), map_location="cpu", weights_only=True)
+    state = torch.load(download_weights(WEIGHTS_URL, weights_folder), map_location="cpu", weights_only=True)
     model = DinoV2Small14()
     model.load_state_dict(state, strict=True)
     return model.to(device).eval()
