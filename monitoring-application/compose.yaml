@@ -1,0 +1,85 @@
+name: monitoring-dashboard
+
+services:
+  db:
+    image: mariadb:11.7.2
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_uca1400_ai_ci
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Missing required environment variable MARIADB_ROOT_PASSWORD; see .env.example}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Missing required environment variable MARIADB_PASSWORD; see .env.example}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-monitoring}
+      MARIADB_USER: ${MARIADB_USER:-monitoring}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - monitoring-net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${MARIADB_DATABASE:-monitoring}
+      DB_USER: ${MARIADB_USER:-monitoring}
+      DB_PASSWORD: ${MARIADB_PASSWORD:?Missing required environment variable MARIADB_PASSWORD; see .env.example}
+      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:?Missing required environment variable INITIAL_ADMIN_USERNAME; see .env.example}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:?Missing required environment variable INITIAL_ADMIN_PASSWORD; see .env.example}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Missing required environment variable JWT_SECRET_KEY; see .env.example}
+      ACCESS_TOKEN_EXPIRE_HOURS: ${ACCESS_TOKEN_EXPIRE_HOURS:-12}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-20}
+      DB_POOL_RECYCLE_SECONDS: ${DB_POOL_RECYCLE_SECONDS:-1800}
+      DB_STARTUP_TIMEOUT_SECONDS: ${DB_STARTUP_TIMEOUT_SECONDS:-60}
+    ports:
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${BACKEND_HOST_PORT:-18000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - monitoring-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=4)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runtime
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_HOST_PORT:-18501}:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - monitoring-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=4)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+networks:
+  monitoring-net:
+
+volumes:
+  db_data:

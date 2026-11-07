@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.DS_Store
+
+# Keep these tracked even when a global ignore rule covers dotfiles.
+!.gitignore
+!.env.example
+!.dockerignore
+!frontend/.streamlit/
+!frontend/.streamlit/config.toml
