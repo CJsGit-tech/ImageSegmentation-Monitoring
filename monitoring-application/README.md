@@ -31,7 +31,29 @@ docker compose ps
 | --- | --- |
 | 前端 | http://127.0.0.1:18501 |
 | 後端 API | 不對 Docker 外部開放, 只有 `monitoring-net` 網路內的容器可連線 (`http://backend:8000`) |
-| 資料庫 | 不對 Docker 外部開放 |
+| 資料庫 | 不對 Docker 外部開放, 只有 `monitoring-net` 網路內的容器可連線 (`db:3306`) |
+
+### 連線限制
+
+只有前端會對本機開放連接埠. 後端與資料庫都沒有對外的連接埠, 因此無法從本機或其他電腦直接連線 (包含 `127.0.0.1`), 請勿在 `compose.yaml` 中為它們加上 `ports`.
+
+```text
+瀏覽器 → 127.0.0.1:18501 → 前端 → backend:8000 → db:3306
+                           └───── monitoring-net ─────┘
+```
+
+- 前端預設綁定 `127.0.0.1`, 只有本機可以開啟. 可透過 `.env` 的 `HOST_BIND_ADDRESS` 與 `FRONTEND_HOST_PORT` 修改. 這兩個設定不影響後端與資料庫.
+- `test_only_the_frontend_is_published_to_the_host` 瀏覽器測試會確認只有前端開放連接埠.
+
+需要檢查後端或資料庫時, 請在 `monitoring-application/` 透過容器執行指令:
+
+```sh
+docker compose exec backend python -c "import urllib.request as u; print(u.urlopen('http://127.0.0.1:8000/api/v1/health/ready').status)"
+```
+
+```sh
+docker compose exec db sh -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"'
+```
 
 啟動後:
 
