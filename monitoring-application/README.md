@@ -30,8 +30,7 @@ docker compose ps
 | 服務 | 位址 (預設) |
 | --- | --- |
 | 前端 | http://127.0.0.1:18501 |
-| 後端 API | http://127.0.0.1:18000 |
-| 後端 Swagger | http://127.0.0.1:18000/docs |
+| 後端 API | 不對 Docker 外部開放, 只有 `monitoring-net` 網路內的容器可連線 (`http://backend:8000`) |
 | 資料庫 | 不對 Docker 外部開放 |
 
 啟動後:
@@ -77,7 +76,7 @@ docker compose down
 
 ## API 文件
 
-[`docs/api-documentation.html`](docs/api-documentation.html) 是 API 文件的 Swagger UI 副本. 請下載後以瀏覽器開啟. 檢視時需要網路連線以載入 Swagger UI, 但不需要執行後端. 此副本已關閉 "Try it out", 若要發送請求, 請使用上方的 Swagger 位址. 所有端點都位於 `/api/v1/` 之下. WebSocket (`/api/v1/realtime/ws`) 未列於文件中, 因為 OpenAPI 不涵蓋 WebSocket.
+[`docs/api-documentation.html`](docs/api-documentation.html) 是 API 文件的 Swagger UI 副本. 請下載後以瀏覽器開啟. 檢視時需要網路連線以載入 Swagger UI, 但不需要執行後端. 此副本已關閉 "Try it out". 後端不對 Docker 外部開放, 因此無法從本機直接發送請求. 所有端點都位於 `/api/v1/` 之下. WebSocket (`/api/v1/realtime/ws`) 未列於文件中, 因為 OpenAPI 不涵蓋 WebSocket.
 
 修改 API 後, 請在此資料夾重新產生檔案:
 

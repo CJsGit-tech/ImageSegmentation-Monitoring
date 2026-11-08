@@ -7,10 +7,9 @@ rather than creating data. Charts are drawn by Vega, so the tests check the text
 import re
 from datetime import datetime, timedelta, timezone
 
-import requests
 from playwright.sync_api import Page, expect
 
-from conftest import API_URL, login, open_page
+from conftest import backend_request, login, open_page
 
 DEVICES = ("溫度", "壓力", "馬達轉速", "振動")
 
@@ -20,7 +19,7 @@ def live_chip(page: Page):
 
 
 def test_live_window_api_serves_four_devices_and_refuses_strangers(run):
-    assert requests.get(f"{API_URL}/realtime/window", timeout=10).status_code == 401
+    assert backend_request("GET", "/realtime/window").status_code == 401
     window = run.api("other").call("GET", "/realtime/window").json()
     assert [category["category"] for category in window["categories"]] == list(DEVICES)
     assert window["generator"]["running"] is True

@@ -6,14 +6,14 @@
 - Bar (column) charts: anomaly counts per category on the monitoring and analysis pages.
 """
 
+import json
 import re
 import time
 from datetime import datetime, timedelta, timezone
 
-import requests
 from playwright.sync_api import Page, expect
 
-from conftest import API_URL, APP_DIR, ENV_FILE, _compose, button, choose, login, open_page
+from conftest import APP_DIR, ENV_FILE, _compose, backend_request, button, choose, login, open_page
 
 TAIPEI = timezone(timedelta(hours=8))
 ROLES = {"ADMIN": "Admin", "USER": "User", "VIEWER": "Viewer"}
@@ -35,11 +35,17 @@ def live_chip(page: Page):
     return page.get_by_text(re.compile(r"已連線 · 最後資料 \d\d:\d\d:\d\d"))
 
 
+def test_only_the_frontend_is_published_to_the_host():
+    services = json.loads(_compose("config", "--format", "json"))["services"]
+    published = {name for name, service in services.items() if service.get("ports")}
+    assert published == {"frontend"}
+
+
 def test_test_accounts_from_env_log_in_with_their_roles():
     env = env_values()
     for key, role in ROLES.items():
         username, password = env[f"INITIAL_{key}_USERNAME"], env[f"INITIAL_{key}_PASSWORD"]
-        response = requests.post(f"{API_URL}/auth/login", json={"username": username, "password": password}, timeout=10)
+        response = backend_request("POST", "/auth/login", json={"username": username, "password": password})
         assert response.status_code == 200, f"{key}: {response.text}"
         assert response.json()["user"]["role"] == role
 

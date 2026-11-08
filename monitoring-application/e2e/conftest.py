@@ -2,26 +2,29 @@
 
 Each run registers its own accounts and uses its own categories, all named with a unique
 "e2e-<id>" prefix, and removes them at the end. Roles are set through db_tool.py inside the
-backend container, because the app has no role API yet.
+backend container, because the app has no role API yet. The backend is not published to the host,
+so API calls also run inside that container, through backend_request.py.
 """
 
+import base64
+import json as jsonlib
 import os
 import re
 import subprocess
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
-import requests
 from playwright.sync_api import Page, expect
 
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://127.0.0.1:18501").rstrip("/")
-API_URL = os.environ.get("E2E_API_URL", "http://127.0.0.1:18000").rstrip("/") + "/api/v1"
 ENV_FILE = os.environ.get("E2E_ENV_FILE")
 KEEP_DATA = os.environ.get("E2E_KEEP_DATA") == "1"
 APP_DIR = Path(__file__).resolve().parent.parent
 DB_TOOL = Path(__file__).resolve().parent / "db_tool.py"
+BACKEND_REQUEST = Path(__file__).resolve().parent / "backend_request.py"
 
 # Throwaway accounts, created and removed by every run.
 PASSWORD = "E2e-Run-Pass-7!"
@@ -45,6 +48,35 @@ def db_tool(*args: str) -> str:
     return _compose("exec", "-T", "backend", "python", "-", *args, stdin=DB_TOOL.read_bytes())
 
 
+@dataclass(frozen=True)
+class BackendResponse:
+    status_code: int
+    headers: dict[str, str]  # Names are lower case.
+    content: bytes
+
+    @property
+    def text(self) -> str:
+        return self.content.decode(errors="replace")
+
+    def json(self) -> Any:
+        return jsonlib.loads(self.content)
+
+
+def backend_request(
+    method: str,
+    path: str,
+    *,
+    json: Any = None,
+    params: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
+) -> BackendResponse:
+    """Calls /api/v1<path> from inside the backend container. A refusal is returned, not raised."""
+    request = jsonlib.dumps({"method": method, "path": path, "json": json, "params": params, "headers": headers or {}})
+    output = _compose("exec", "-T", "backend", "python", "-", request, stdin=BACKEND_REQUEST.read_bytes())
+    response = jsonlib.loads(output)
+    return BackendResponse(response["status"], response["headers"], base64.b64decode(response["body"]))
+
+
 @dataclass
 class Account:
     username: str
@@ -52,8 +84,8 @@ class Account:
 
     def token(self) -> str:
         """Logging in ends any other session of this account, including one in the browser."""
-        response = requests.post(f"{API_URL}/auth/login", json={"username": self.username, "password": PASSWORD}, timeout=10)
-        response.raise_for_status()
+        response = backend_request("POST", "/auth/login", json={"username": self.username, "password": PASSWORD})
+        assert response.status_code == 200, f"logging in as {self.username}: {response.text}"
         return response.json()["access_token"]
 
 
@@ -63,9 +95,8 @@ class Api:
     def __init__(self, account: Account):
         self.headers = {"Authorization": f"Bearer {account.token()}"}
 
-    def call(self, method: str, path: str, **kwargs):
-        response = requests.request(method, f"{API_URL}{path}", headers=self.headers, timeout=15, **kwargs)
-        return response
+    def call(self, method: str, path: str, **kwargs) -> BackendResponse:
+        return backend_request(method, path, headers=self.headers, **kwargs)
 
     def create(self, title: str, value: float, category: str, **fields) -> dict:
         response = self.call("POST", "/records", json={"title": title, "value": value, "category": category, **fields})
@@ -108,7 +139,7 @@ def run():
     try:
         for who, role in roles.items():
             account = Account(f"{prefix}-{who}", role)
-            response = requests.post(f"{API_URL}/auth/register", json={"username": account.username, "password": PASSWORD}, timeout=10)
+            response = backend_request("POST", "/auth/register", json={"username": account.username, "password": PASSWORD})
             assert response.status_code == 201, f"registering {account.username}: {response.text}"
             if role != "Viewer":
                 db_tool("promote", account.username, role)

@@ -15,6 +15,7 @@
 - 在本機執行的服務: 在 `monitoring-application/` 執行 `docker compose up -d`.
 - 已安裝 Google Chrome. 測試直接使用它, 因此 Playwright 不需要下載瀏覽器. 若要改用 Playwright 自己的 Chromium, 請執行一次 `.venv/bin/playwright install chromium`, 並將 `E2E_BROWSER_CHANNEL=` 設為空值.
 - 能以 Docker 存取這些服務. 應用程式目前沒有變更角色的 API, 因此測試會透過後端容器內的 `db_tool.py` 設定角色.
+- 後端不對 Docker 外部開放, 因此測試的 API 呼叫會以 `docker compose exec` 在後端容器內透過 `backend_request.py` 執行. 瀏覽器則連線到前端.
 
 ## 初次設定
 
@@ -42,7 +43,6 @@ uv pip install --python .venv/bin/python -r requirements.txt
 | 變數 | 預設值 | 用途 |
 | --- | --- | --- |
 | `E2E_BASE_URL` | `http://127.0.0.1:18501` | 前端位址 |
-| `E2E_API_URL` | `http://127.0.0.1:18000` | 後端位址 |
 | `E2E_ENV_FILE` | 無, 由 Compose 讀取 `.env` | 啟動服務時使用的環境變數檔 |
 | `E2E_BROWSER_CHANNEL` | `chrome` | 使用的瀏覽器; 空值代表 Playwright 的 Chromium |
 | `E2E_KEEP_DATA` | 未設定 | 設為 `1` 時保留該次執行的帳號與記錄以供檢查 |
