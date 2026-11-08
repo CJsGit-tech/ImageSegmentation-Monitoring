@@ -122,6 +122,7 @@ def statistics_statement(window: Window) -> Select[Any]:
             func.avg(Record.value).label("avg"),
             func.max(Record.value).label("max"),
             func.min(Record.value).label("min"),
+            func.sum(case((Record.is_anomaly.is_(True), 1), else_=0)).label("anomalies"),
         )
         .where(*record_conditions(window))
         .group_by(Record.category)
@@ -140,13 +141,18 @@ async def category_statistics(session: AsyncSession, query: AnalysisQuery) -> St
         setting = settings.get(name)
         unit = setting.unit if setting is not None else None
         if row is None:
-            items.append(CategoryStatistics(category=name, unit=unit, count=0, sum=None, avg=None, max=None, min=None))
+            items.append(
+                CategoryStatistics(
+                    category=name, unit=unit, count=0, anomaly_count=0, sum=None, avg=None, max=None, min=None
+                )
+            )
         else:
             items.append(
                 CategoryStatistics(
                     category=name,
                     unit=unit,
                     count=row.count,
+                    anomaly_count=int(row.anomalies),
                     sum=float(row.sum),
                     avg=float(row.avg),
                     max=row.max,

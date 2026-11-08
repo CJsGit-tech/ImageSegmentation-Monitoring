@@ -41,8 +41,8 @@
 
 - **帳號與權限:** 註冊、登入、登出; Admin、User、Viewer 三種角色.
 - **資料管理:** 資料記錄的新增、分頁瀏覽、篩選、排序、修改與刪除, 以及 CSV／JSON 批量導入.
-- **即時監控:** 系統每 30 秒為 4 個模擬設備各產生一筆資料 (可在 `.env` 調整), 圖表自動更新, 超出範圍的數值標記為異常.
-- **資料分析:** 依時間範圍與分類統計、趨勢圖、異常清單與 Excel 下載.
+- **即時監控:** 系統每秒為 4 個模擬設備各產生一筆資料 (可在 `.env` 調整), 經 WebSocket 推送到前端, 折線圖與柱狀圖每秒更新, 超出範圍的數值標記為異常.
+- **資料分析:** 依時間範圍與分類統計、各分類異常次數柱狀圖、趨勢圖、異常清單與 Excel 下載.
 - **系統管理 (Admin):** 使用者與角色管理、系統日誌、資料庫狀態、即時資料歷史與異常範圍設定.
 
 ## 本地運行步驟
@@ -81,9 +81,9 @@ cd ImageSegmentation-Monitoring/monitoring-application
 
 接著依下一節的 Docker 指令啟動. 啟動後:
 
-1. 以瀏覽器開啟 <http://127.0.0.1:18501>, 用 `.env` 中設定的 Admin 帳號登入 (見「測試帳號資訊」).
+1. 以瀏覽器開啟 <http://127.0.0.1:18501>, 用「測試帳號資訊」中的任一帳號登入.
 2. 以 User 或 Admin 到側欄「資料 → 批量導入」上傳 `docs/sample-records-1000.csv`, 即可看到 1000 筆範例資料.
-3. 「即時監控」頁會每 5 秒更新; 模擬資料在啟動後約 30 秒出現.
+3. 「即時監控」頁經 WebSocket 接收即時資料並每秒更新; 模擬資料在啟動後約 1 秒出現.
 
 執行測試 (選用):
 
@@ -101,7 +101,7 @@ docker run --rm monitoring-dashboard-backend-test
 
 監控系統以 Docker Compose 部署. 請在 `monitoring-application/` 中執行以下指令.
 
-1. 建立環境變數檔, 並填入所有必填值:
+1. 建立環境變數檔, 並填入所有必填值 (資料庫密碼與 `JWT_SECRET_KEY`; 三個測試帳號已有範例值):
 
 ```bash
 cp .env.example .env
@@ -171,15 +171,17 @@ docker compose down
 
 ## 測試帳號資訊
 
-監控系統有三種角色: **Admin**、**User** 與 **Viewer**.
+監控系統有三種角色: **Admin**、**User** 與 **Viewer**. 三個測試帳號都在 `.env` 中設定, 後端每次啟動時會建立尚不存在的帳號. 若沿用 `.env.example` 的範例值, 可直接用以下帳號登入:
 
-資料庫一開始沒有任何帳號, 本專案也不提供預設帳號或密碼. 請自行設定:
+| 角色 | 帳號 | 密碼 | `.env` 變數 |
+|---|---|---|---|
+| **Admin** | `admin` | `Admin@12345` | `INITIAL_ADMIN_USERNAME`、`INITIAL_ADMIN_PASSWORD` |
+| **User** | `user` | `User@12345` | `INITIAL_USER_USERNAME`、`INITIAL_USER_PASSWORD` |
+| **Viewer** | `viewer` | `Viewer@12345` | `INITIAL_VIEWER_USERNAME`、`INITIAL_VIEWER_PASSWORD` |
 
-| 角色 | 建立方式 |
-|---|---|
-| **Admin** | 在 `.env` 自行設定 `INITIAL_ADMIN_USERNAME` 與 `INITIAL_ADMIN_PASSWORD`. 後端第一次啟動時自動建立 |
-| **User** | 在註冊頁註冊 (新帳號為 Viewer), 再由 Admin 在「系統管理 → 使用者管理」把角色改為 User |
-| **Viewer** | 在註冊頁註冊即可 |
+- **必填:** 這六個變數都必須設定, 缺少時 `docker compose` 會停止並顯示缺少的變數名稱; 三個帳號名稱不可相同.
+- **只用於測試:** 範例密碼是公開的, 部署到本機以外的環境前請在 `.env` 改成自己的值.
+- **其他帳號:** 在註冊頁註冊的新帳號為 Viewer, 可由 Admin 在「系統管理 → 使用者管理」修改角色.
 
 各角色可以做的事:
 
@@ -190,7 +192,7 @@ docker compose down
 | **Viewer** | 只能瀏覽即時監控、資料列表與資料分析, 並下載 Excel |
 
 - **密碼規則:** 至少 8 個字元, 需包含大寫字母、小寫字母、數字與符號.
-- **Admin 設定值:** 只在第一次建立帳號時套用, 之後修改 `.env` 不會改變已存在的帳號.
+- **帳號設定值:** 只在第一次建立帳號時套用, 之後修改 `.env` 不會改變已存在的帳號 (包含密碼與角色).
 - **單一登入:** 同一帳號在別處登入時, 先前的登入會失效.
 - **異常記錄:** 被標記為異常的記錄任何人都不能修改或刪除 (包含 Admin).
 
@@ -198,7 +200,7 @@ docker compose down
 
 ![MonitoringDashboard 系統架構圖](monitoring-application/docs/system-architecture-modules.svg)
 
-瀏覽器連到 Streamlit 前端容器; 前端以 REST 呼叫 FastAPI 後端容器, 經 JWT 認證後進入五個功能模組, 再透過 SQLAlchemy 存取 MariaDB. 模擬器是後端內的背景任務. 互動版本與各元件說明請見 [`system-architecture-modules.html`](monitoring-application/docs/system-architecture-modules.html) 與 [`system-architecture.html`](monitoring-application/docs/system-architecture.html) (下載後以瀏覽器開啟).
+瀏覽器連到 Streamlit 前端容器; 前端以 REST 呼叫 FastAPI 後端容器, 並由 Streamlit 服務端以 WebSocket 接收即時資料, 經 JWT 認證後進入五個功能模組, 再透過 SQLAlchemy 存取 MariaDB. 模擬器是後端內的背景任務. 互動版本與各元件說明請見 [`system-architecture-modules.html`](monitoring-application/docs/system-architecture-modules.html) 與 [`system-architecture.html`](monitoring-application/docs/system-architecture.html) (下載後以瀏覽器開啟).
 
 ## 相關文件
 

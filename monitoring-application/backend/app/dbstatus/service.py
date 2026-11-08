@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.db.session import get_engine
 from app.dbstatus.schemas import DbError, DbStatus, DbWarning, ErrorCategory, PoolUsage
 from app.models.record import Record
+from app.simulator.service import FLUSH_SECONDS
 
 logger = logging.getLogger("app.dbstatus")
 
@@ -206,7 +207,9 @@ class DbStatusMonitor:
             warnings.append(DbWarning(code="SLOW_RESPONSE", message=f"回應時間超過 {SLOW_RESPONSE_MS:.0f} ms"))
         if pool.usage_ratio >= POOL_HIGH_RATIO:
             warnings.append(DbWarning(code="POOL_HIGH", message=f"連線池使用超過 {POOL_HIGH_RATIO:.0%}"))
-        stale_after = BATCH_STALE_INTERVALS * simulator_interval_seconds
+        # Readings reach the database at most once per flush, so a fast simulator (1 s) still writes
+        # only every FLUSH_SECONDS; the batch is stale after three of whichever is slower.
+        stale_after = BATCH_STALE_INTERVALS * max(simulator_interval_seconds, FLUSH_SECONDS)
         if last_batch is not None and (checked_at - last_batch).total_seconds() > stale_after:
             warnings.append(DbWarning(code="BATCH_STALE", message=f"超過 {stale_after:.0f} 秒沒有新的批次寫入"))
         return warnings

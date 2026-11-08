@@ -39,7 +39,7 @@ ANOMALIES = "/api/v1/analytics/anomalies"
 ENDPOINTS = (STATISTICS, TREND, ANOMALIES)
 ROLES = ("admin1", "user1", "viewer1")
 TAIPEI = timezone(timedelta(hours=8))
-STAT_KEYS = {"category", "unit", "count", "sum", "avg", "max", "min"}
+STAT_KEYS = {"category", "unit", "count", "anomaly_count", "sum", "avg", "max", "min"}
 
 
 class Env:
@@ -223,8 +223,8 @@ def test_statistics_match_hand_computed_values_per_category_without_a_total_row(
     rows = body["categories"]
     assert [row["category"] for row in rows] == ["lb-a", "lb-b"]  # One row each, no total row.
     assert all(set(row) == STAT_KEYS for row in rows)
-    assert rows[0] == {"category": "lb-a", "unit": "°C", "count": 4, "sum": 10.0, "avg": 2.5, "max": 10.0, "min": -4.0}
-    assert rows[1] == {"category": "lb-b", "unit": None, "count": 2, "sum": 300.0, "avg": 150.0, "max": 200.0, "min": 100.0}
+    assert rows[0] == {"category": "lb-a", "unit": "°C", "count": 4, "anomaly_count": 1, "sum": 10.0, "avg": 2.5, "max": 10.0, "min": -4.0}
+    assert rows[1] == {"category": "lb-b", "unit": None, "count": 2, "anomaly_count": 0, "sum": 300.0, "avg": 150.0, "max": 200.0, "min": 100.0}
 
 
 def test_both_edges_are_inclusive_with_offsets(client):

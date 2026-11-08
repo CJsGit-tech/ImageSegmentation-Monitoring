@@ -74,6 +74,7 @@ class CategoryStatistics(BaseModel):
     count: int = Field(
         description="範圍內的記錄數。僅供人工核對（各分類 count 加總 = 記錄列表同條件的 total），畫面不顯示（PRD-10-R10）"
     )
+    anomaly_count: int = Field(description="範圍內被標記為異常的記錄數；畫面以柱狀圖顯示各分類的異常次數")
     sum: float | None = Field(description="總計；此分類在範圍內沒有資料時為 null")
     avg: float | None = Field(description="平均")
     max: float | None = Field(description="最大值")
