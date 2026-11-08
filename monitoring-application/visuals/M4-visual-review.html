@@ -1,0 +1,232 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M4 資料分析與匯出 視覺審閱稿</title><style>
+:root{--bg:#F2F4F6;--surface:#fff;--text:#1F2933;--muted:#5B6773;--line:#D9DFE5;--series:#4A6075;--band:#E4EAF0;--bandline:#8896A4;
+--an:#C8372D;--an-bg:#FBEAE8;--warn:#B26A00;--warn-bg:#FFF4E0;--pri:#2563A8;--pri-bg:#E8F0FA;--ok-bg:#EEF2F5;
+--font:system-ui,-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;}
+@media (prefers-color-scheme:dark){:root.autodark{}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:#E9ECEF;color:var(--text);font:14px/1.5 var(--font)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+/* review page chrome (not product chrome) */
+.rv-head{background:#1F2933;color:#fff;padding:20px 24px}
+.rv-head h1{margin:0 0 4px;font-size:20px}
+.rv-head p{margin:0;color:#C5CCD3;max-width:980px}
+.rv-tag{display:inline-block;background:#FFD27A;color:#3a2a00;font-size:12px;padding:2px 8px;border-radius:3px;margin-right:8px;font-weight:600}
+.rv-nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #cfd5db;padding:8px 24px;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:13px}
+.rv-nav a{color:#1d4e89;text-decoration:none;padding:2px 4px;border-radius:3px}
+.rv-nav a:focus-visible,.rv-nav a:hover{background:#E8F0FA;outline:2px solid #2563A8}
+.rv-nav .sep{color:#9aa4ae}
+.rv-sec{padding:20px 24px 8px}
+.rv-sec h2{margin:0;font-size:18px}
+.rv-sec .meta{color:#4b5762;font-size:13px;margin:2px 0 4px}
+.rv-sec .meta a{color:#1d4e89}
+.rv-sec .cap{color:#33404b;margin:4px 0 10px;max-width:1000px}
+.rv-grid{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+figure.board{margin:0;background:#fff;border:1px solid #cfd5db;border-radius:6px;padding:8px;max-width:100%}
+figure.board figcaption{font-size:12.5px;color:#33404b;padding:2px 2px 8px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+figure.board figcaption b{color:#111}
+figure.board figcaption button{font:inherit;font-size:12px;border:1px solid #9aa4ae;background:#fff;border-radius:4px;padding:1px 8px;cursor:pointer}
+figure.board figcaption button:focus-visible{outline:2px solid #2563A8}
+.vp{overflow-x:auto;max-width:100%}
+.simnote{font-size:12px;color:#6a5200;background:#FFF4E0;border:1px dashed #d9a441;padding:2px 8px;border-radius:3px}
+/* modal viewer */
+#viewer{position:fixed;inset:0;background:rgba(15,23,32,.82);display:none;z-index:100;flex-direction:column}
+#viewer.open{display:flex}
+#viewer .bar{display:flex;gap:8px;align-items:center;padding:8px 14px;color:#fff;font-size:13px}
+#viewer .bar button{font:inherit;padding:3px 10px;border-radius:4px;border:1px solid #aab4be;background:#2b3743;color:#fff;cursor:pointer}
+#viewer .bar button:focus-visible{outline:2px solid #FFD27A}
+#viewer .stage{flex:1;overflow:auto;padding:0 14px 14px}
+#viewer .stage .inner{background:#fff;display:inline-block;transform-origin:top left}
+/* ---------- product frame ---------- */
+.app{display:flex;background:var(--bg);color:var(--text);font:14px/1.5 var(--font);position:relative;min-height:420px;width:1180px;border:1px solid var(--line)}
+.app.w-s{width:560px}.app.w-m{width:820px}.app.w-n{width:390px}
+.app aside{width:208px;flex:none;background:#fff;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+.app.w-s aside,.app.w-m aside{display:none}
+.app.w-n aside{display:none}
+.app main{flex:1;min-width:0;padding:18px 22px;display:flex;flex-direction:column;gap:14px}
+.app.w-n main{padding:12px}
+.brand{font-weight:700;font-size:15px;padding:2px 8px 10px;display:flex;align-items:center;gap:8px}
+.brand i{width:14px;height:14px;background:var(--band);border:2px solid var(--series);border-radius:3px;display:inline-block;position:relative}
+.nav-g{font-size:11.5px;color:var(--muted);padding:10px 8px 2px;letter-spacing:.04em}
+.nav-i{padding:6px 8px;border-radius:5px;color:#2b3640;display:block}
+.nav-i.cur{background:var(--pri-bg);color:#17467e;font-weight:600}
+.me{margin-top:auto;border-top:1px solid var(--line);padding:10px 8px 2px;font-size:13px}
+.role{display:inline-block;font-size:11.5px;border:1px solid var(--bandline);border-radius:10px;padding:0 8px;color:var(--muted);margin-left:4px}
+h3.pt{margin:0;font-size:20px;font-weight:650}
+.ptr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.sub{color:var(--muted);font-size:13px;margin-top:-8px}
+.btn{font:inherit;border:1px solid var(--bandline);background:#fff;color:var(--text);padding:5px 14px;border-radius:5px;cursor:default;white-space:nowrap}
+.btn.p{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.d{background:#fff;border-color:var(--an);color:var(--an);font-weight:600}
+.btn[disabled],.btn.off{background:#EEF1F4;color:#8b96a1;border-color:#d3d9df}
+.btn.busy::before{content:"";display:inline-block;width:11px;height:11px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-1px;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.seg{display:inline-flex;border:1px solid var(--bandline);border-radius:6px;overflow:hidden;background:#fff}
+.seg span{padding:4px 14px;border-right:1px solid var(--line)}
+.seg span:last-child{border-right:0}
+.seg span.on{background:var(--series);color:#fff}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bandline);border-radius:12px;padding:1px 10px;font-size:12.5px;background:#fff}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--series);display:inline-block}
+.chip.pause{background:#EEF1F4;color:#37424d}.chip.pause i{background:#8b96a1}
+.chip.recon{background:var(--warn-bg);border-color:#e3b96a;color:#6a4300}.chip.recon i{background:var(--warn)}
+.an{display:inline-flex;align-items:center;gap:4px;color:var(--an);font-weight:650;font-size:12.5px;white-space:nowrap}
+.an::before{content:"";width:8px;height:8px;background:var(--an);transform:rotate(45deg);display:inline-block}
+.lock{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-left:4px}
+.unset{display:inline-block;border:1px solid var(--warn);color:var(--warn);border-radius:3px;font-size:12px;padding:0 6px;background:#fff}
+.set{display:inline-block;border:1px solid var(--bandline);color:var(--muted);border-radius:3px;font-size:12px;padding:0 6px}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h4{margin:0 0 8px;font-size:13.5px;font-weight:650}
+.card .u{color:var(--muted);font-weight:400;margin-left:4px}
+.ban{border-radius:5px;padding:8px 12px;border:1px solid var(--line);background:#fff;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:13px}
+.ban.info{background:var(--pri-bg);border-color:#b7cfeb;color:#17467e}
+.ban.warn{background:var(--warn-bg);border-color:#e3b96a;color:#5c3a00}
+.ban.err{background:var(--an-bg);border-color:#e7b3ae;color:#8f231b}
+.ban.ok{background:#EAF3EE;border-color:#b9d6c5;color:#1f5a38}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 14px}
+.stat .l{color:var(--muted);font-size:12.5px}
+.stat .v{font-size:26px;font-weight:650;line-height:1.2}
+.stat.an{display:block;border-color:#e7b3ae;background:var(--an-bg);color:inherit;font-size:inherit}
+.stat.an::before{display:none}
+.stat.an .v{color:var(--an)}
+.stat .v small{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
+.grid2{display:grid;grid-template-columns:1.9fr 1fr;gap:12px;align-items:start}
+.app.w-n .grid2,.app.w-n .stats{grid-template-columns:1fr}
+.charts{display:flex;flex-direction:column;gap:8px}
+.ch{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 12px 4px}
+.ch .hd{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+.ch .hd b{font-weight:650}
+.ch .hd .lv{font-variant-numeric:tabular-nums}
+.ch svg{width:100%;height:auto;display:block}
+.ch.dim svg{opacity:.55}
+.bl{display:flex;flex-direction:column;gap:12px}
+.bl .row{display:grid;grid-template-columns:78px 1fr 86px;gap:8px;align-items:center;font-size:13px}
+.trk{position:relative;height:14px;background:#F6F8FA;border-radius:2px}
+.trk .bd{position:absolute;left:20%;right:20%;top:0;bottom:0;background:var(--band);border-left:1.5px dashed var(--bandline);border-right:1.5px dashed var(--bandline)}
+.trk .mk{position:absolute;top:-2px;width:4px;height:18px;background:var(--series);border-radius:1px;transform:translateX(-2px)}
+.trk.bad .mk{background:var(--an)}
+.trk.bad{box-shadow:0 0 0 1px #e7b3ae}
+.bl .val{text-align:right}
+.bl .val.bad{color:var(--an);font-weight:650}
+.cnt{display:flex;flex-direction:column;gap:8px}
+.cnt .row{display:grid;grid-template-columns:78px 1fr 34px;gap:8px;align-items:center;font-size:13px}
+.cnt .bar{height:12px;background:#F6F8FA;border-radius:2px;position:relative}
+.cnt .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--an);border-radius:2px}
+.cnt .row b{text-align:right;font-weight:600}
+table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:13px}
+table.t th{background:#F7F9FA;text-align:left;font-weight:600;padding:7px 10px;border-bottom:1px solid var(--line);color:#37424d;white-space:nowrap}
+table.t td{padding:6px 10px;border-bottom:1px solid #E7EBEF;vertical-align:middle}
+table.t tr.an-r td{background:#FDF5F4}
+table.t tr.sel td{background:var(--pri-bg)}
+table.t tr.an-r.sel td{background:#F6DEDB}
+table.t td.r,table.t th.r{text-align:right}
+.mini{display:inline-block;width:54px;height:8px;background:#F0F3F5;position:relative;vertical-align:middle;margin-left:8px;border-radius:2px}
+.mini::before{content:"";position:absolute;left:20%;right:20%;top:0;bottom:0;background:var(--band);border-left:1px dashed var(--bandline);border-right:1px dashed var(--bandline)}
+.mini i{position:absolute;top:-2px;width:3px;height:12px;background:var(--series);transform:translateX(-1px)}
+.mini.bad i{background:var(--an)}
+.filters{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+.inp{border:1px solid var(--bandline);border-radius:5px;background:#fff;color:var(--text);padding:5px 9px;min-width:130px;font-size:13.5px;min-height:30px}
+.inp.err{border-color:var(--an);background:#fffafa}
+.inp.ph{color:#97a2ac}
+.ferr{color:var(--an);font-size:12.5px;margin-top:2px}
+.fhint{color:var(--muted);font-size:12.5px}
+.toggle{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-size:13px}
+.toggle i{width:30px;height:16px;border-radius:8px;background:#C3CBD3;position:relative;display:inline-block}
+.toggle i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.toggle.on i{background:var(--series)}.toggle.on i::after{left:16px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:var(--ok-bg);border:1px solid var(--line);border-radius:3px;padding:0 8px;font-size:12.5px}
+.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;color:var(--muted);font-size:13px}
+.actbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+.actbar .why{color:var(--muted);font-size:12.5px}
+.empty{background:#fff;border:1px dashed var(--bandline);border-radius:6px;padding:28px 14px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.sk{background:linear-gradient(90deg,#E9EDF0,#F4F6F8,#E9EDF0);background-size:200% 100%;border-radius:3px;animation:sh 1.6s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.scrim{position:absolute;inset:0;background:rgba(31,41,51,.38);display:flex;align-items:center;justify-content:center;padding:20px}
+.dlg{background:#fff;border-radius:8px;width:440px;max-width:100%;padding:18px 20px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+.dlg h4{margin:0;font-size:16px}
+.dlg .ft{display:flex;gap:10px;justify-content:flex-end}
+.checkrow{display:flex;gap:8px;align-items:flex-start;background:var(--an-bg);border:1px solid #e7b3ae;border-radius:5px;padding:8px 10px;font-size:13px;color:#7a1f18}
+.cb{width:16px;height:16px;border:1.5px solid #7a1f18;border-radius:3px;flex:none;margin-top:2px;background:#fff;position:relative}
+.cb.on::after{content:"";position:absolute;left:4px;top:0;width:4px;height:9px;border:solid #7a1f18;border-width:0 2px 2px 0;transform:rotate(40deg)}
+.login{margin:auto;width:360px;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.login h3{margin:0;font-size:20px}
+.rules{margin:0;padding:0;list-style:none;font-size:12.5px;color:var(--muted);display:grid;gap:2px}
+.rules li::before{content:"○ ";color:#98a3ad}
+.rules li.bad{color:var(--an);font-weight:600}.rules li.bad::before{content:"✕ ";color:var(--an)}
+.rules li.good::before{content:"✓ ";color:var(--series)}
+.center{margin:auto;text-align:center;max-width:420px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.sm{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs span{padding:6px 16px;border-bottom:2px solid transparent;color:var(--muted)}
+.tabs span.on{color:var(--text);border-color:var(--series);font-weight:650}
+.dbstat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pool{height:10px;background:#F0F3F5;border-radius:2px;margin-top:6px;position:relative}
+.pool i{position:absolute;left:0;top:0;bottom:0;background:var(--series);border-radius:2px}
+.sev{font-size:12px;border:1px solid var(--bandline);border-radius:3px;padding:0 6px;color:var(--muted)}
+.sev.e{border-color:var(--an);color:var(--an);font-weight:600}.sev.w{border-color:var(--warn);color:var(--warn)}
+@media (max-width:700px){.rv-head,.rv-sec,.rv-nav{padding-left:14px;padding-right:14px}}
+</style></head><body>
+<header class="rv-head"><h1><span class="rv-tag">審閱草稿・未核准</span>MonitoringDashboard M4 資料分析與匯出 視覺審閱稿</h1><p>涵蓋 SCREEN-30 的主要狀態：未查詢、結果、條件已變更、下載、異常記錄分頁、無資料、查詢中，以及兩種「條件過大」的拒絕。統計表附單位（來自分類設定），沒有跨分類合計。</p>
+<p style="margin-top:6px;font-size:12.5px">所有資料皆為模擬示意，不來自任何真實設備或使用者；畫面是設計意圖的靜態呈現，不代表 Streamlit 實作行為，也不是可用性證據。此頁不會連線到任何服務、也不會寫入任何資料；本頁不是核准紀錄，需求與核准以 LinearBoard 為準。</p></header>
+<nav class="rv-nav" aria-label="畫面導覽"><span class="sep">畫面：</span><a href="#screen-30">30 資料分析</a><span class="sep">｜ 其他里程碑：</span><a href="M1-visual-review.html">M1</a><a href="M2-visual-review.html">M2</a><a href="M3-visual-review.html">M3</a><a href="M5-visual-review.html">M5</a></nav>
+<section class="rv-sec" id="screen-30"><h2>SCREEN-30 資料分析</h2><div class="meta"><a href="http://127.0.0.1:8765/#/documents/d71eeb66b9964180b8afb26e34ba8952" target="_blank" rel="noopener">畫面與互動規格</a> · <a href="http://127.0.0.1:8765/#/documents/39d3bf41f25b43e8891076e702563f7e" target="_blank" rel="noopener">設計總覽</a>（LinearBoard，需本機服務執行中）</div><p class="cap">條件列是頁面錨點：一個表單、按「查詢」才套用；條件一旦變更，結果標示為舊結果並停用下載，確保下載內容與畫面一致。統計是每個分類一列的表格（沒有跨分類合計），趨勢沿用範圍帶小圖，彙總後的異常仍保留標記。</p><div class="rv-grid"><figure class="board" id="screen-30-unq"><figcaption><span><b>SCREEN-30 尚未查詢</b> </span><button type="button" aria-label="放大檢視 SCREEN-30 尚未查詢">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 尚未查詢"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：尚未查詢</div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><div class="empty"><b>設定條件後按「查詢」</b>統計與趨勢會顯示在這裡。</div></main></div></div></figure><figure class="board" id="screen-30-ok"><figcaption><span><b>SCREEN-30 統計與趨勢（結果）</b> <span class="simnote">模擬資料</span></span><button type="button" aria-label="放大檢視 SCREEN-30 統計與趨勢（結果）">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 統計與趨勢（結果）"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn p" >下載 Excel</span></span></div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><table class="t"><thead><tr><th>分類</th><th class=r>總計</th><th class=r>平均</th><th class=r>最大值</th><th class=r>最小值</th></tr></thead><tbody><tr class=""><td>溫度 <span class='sm'>°C</span></td><td><span class="num">302,114.6</span></td><td><span class="num">58.7</span></td><td><span class="num">86.2</span></td><td><span class="num">31.0</span></td></tr><tr class=""><td>壓力 <span class='sm'>kPa</span></td><td><span class="num">1,504,200</span></td><td><span class="num">292</span></td><td><span class="num">531</span></td><td><span class="num">104</span></td></tr><tr class=""><td>振動 <span class='sm'>mm/s</span></td><td><span class="num">17,982.4</span></td><td><span class="num">3.5</span></td><td><span class="num">8.9</span></td><td><span class="num">0.7</span></td></tr></tbody></table><div class="charts"><div class="ch" ><div class="hd"><b>溫度<span class="sm"> °C</span></b><span class="lv num"></span></div><svg class="bc" data-cat="temp" data-n="120" data-an="30,31" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="21" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>壓力<span class="sm"> kPa</span></b><span class="lv num"></span></div><svg class="bc" data-cat="pres" data-n="120" data-an="90" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="22" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>振動<span class="sm"> mm/s</span></b><span class="lv num"></span></div><svg class="bc" data-cat="vib" data-n="120" data-an="" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="23" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div></div></main></div></div></figure><figure class="board" id="screen-30-changed"><figcaption><span><b>SCREEN-30 條件已變更（舊結果、下載停用）</b> <span class="simnote">模擬資料</span></span><button type="button" aria-label="放大檢視 SCREEN-30 條件已變更（舊結果、下載停用）">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 條件已變更（舊結果、下載停用）"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：條件已變更，請先查詢</div><div class="ban warn"><span>條件已變更，尚未查詢。下方是<b>上一次查詢</b>的結果。</span></div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><table class="t"><thead><tr><th>分類</th><th class=r>總計</th><th class=r>平均</th><th class=r>最大值</th><th class=r>最小值</th></tr></thead><tbody><tr class=""><td>溫度 <span class='sm'>°C</span></td><td><span class="num">302,114.6</span></td><td><span class="num">58.7</span></td><td><span class="num">86.2</span></td><td><span class="num">31.0</span></td></tr><tr class=""><td>壓力 <span class='sm'>kPa</span></td><td><span class="num">1,504,200</span></td><td><span class="num">292</span></td><td><span class="num">531</span></td><td><span class="num">104</span></td></tr><tr class=""><td>振動 <span class='sm'>mm/s</span></td><td><span class="num">17,982.4</span></td><td><span class="num">3.5</span></td><td><span class="num">8.9</span></td><td><span class="num">0.7</span></td></tr></tbody></table><div class="charts"><div class="ch" ><div class="hd"><b>溫度<span class="sm"> °C</span></b><span class="lv num"></span></div><svg class="bc" data-cat="temp" data-n="120" data-an="30,31" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="21" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>壓力<span class="sm"> kPa</span></b><span class="lv num"></span></div><svg class="bc" data-cat="pres" data-n="120" data-an="90" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="22" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>振動<span class="sm"> mm/s</span></b><span class="lv num"></span></div><svg class="bc" data-cat="vib" data-n="120" data-an="" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="23" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div></div></main></div></div></figure><figure class="board" id="screen-30-done"><figcaption><span><b>SCREEN-30 下載完成</b> <span class="simnote">模擬資料</span></span><button type="button" aria-label="放大檢視 SCREEN-30 下載完成">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 下載完成"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn p" >下載 Excel</span></span></div><div class="ban ok"><span>已下載 mdash-20261106-1410.xlsx（條件：2026-11-01 – 2026-11-05 · 溫度、壓力、振動）。</span></div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><table class="t"><thead><tr><th>分類</th><th class=r>總計</th><th class=r>平均</th><th class=r>最大值</th><th class=r>最小值</th></tr></thead><tbody><tr class=""><td>溫度 <span class='sm'>°C</span></td><td><span class="num">302,114.6</span></td><td><span class="num">58.7</span></td><td><span class="num">86.2</span></td><td><span class="num">31.0</span></td></tr><tr class=""><td>壓力 <span class='sm'>kPa</span></td><td><span class="num">1,504,200</span></td><td><span class="num">292</span></td><td><span class="num">531</span></td><td><span class="num">104</span></td></tr><tr class=""><td>振動 <span class='sm'>mm/s</span></td><td><span class="num">17,982.4</span></td><td><span class="num">3.5</span></td><td><span class="num">8.9</span></td><td><span class="num">0.7</span></td></tr></tbody></table><div class="charts"><div class="ch" ><div class="hd"><b>溫度<span class="sm"> °C</span></b><span class="lv num"></span></div><svg class="bc" data-cat="temp" data-n="120" data-an="30,31" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="21" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>壓力<span class="sm"> kPa</span></b><span class="lv num"></span></div><svg class="bc" data-cat="pres" data-n="120" data-an="90" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="22" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div><div class="ch" ><div class="hd"><b>振動<span class="sm"> mm/s</span></b><span class="lv num"></span></div><svg class="bc" data-cat="vib" data-n="120" data-an="" data-xl="11-01,11-02,11-03,11-04,11-05" data-seed="23" data-h="112" data-lastv=""></svg><div class="sm" style="padding:0 0 4px">每小時平均；含異常的區間仍以標記顯示</div></div></div></main></div></div></figure><figure class="board" id="screen-30-anom"><figcaption><span><b>SCREEN-30 分頁二：異常記錄</b> <span class="simnote">模擬資料</span></span><button type="button" aria-label="放大檢視 SCREEN-30 分頁二：異常記錄">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 分頁二：異常記錄"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn p" >下載 Excel</span></span></div><div class="tabs"><span>統計與趨勢</span><span class="on">異常記錄</span></div><table class="t"><thead><tr><th>狀態</th><th>標題</th><th>分類</th><th>數值</th><th>時間戳</th><th>創建者</th></tr></thead><tbody><tr class="an-r "><td><span class="an">異常</span><svg class="lock" viewBox="0 0 12 12" aria-label="已鎖定"><rect x="2" y="5.5" width="8" height="6" rx="1" fill="#8896A4"/><path d="M4 5.5V4a2 2 0 014 0v1.5" fill="none" stroke="#8896A4" stroke-width="1.4"/></svg></td><td>馬達轉速 讀數</td><td>馬達轉速</td><td><span class="num">3012</span> <span class="sm">rpm</span><span class="mini bad"><i style="left:80.36%"></i></span></td><td><span class="num">2026-11-05 13:12:08</span></td><td>系統</td></tr><tr class="an-r "><td><span class="an">異常</span><svg class="lock" viewBox="0 0 12 12" aria-label="已鎖定"><rect x="2" y="5.5" width="8" height="6" rx="1" fill="#8896A4"/><path d="M4 5.5V4a2 2 0 014 0v1.5" fill="none" stroke="#8896A4" stroke-width="1.4"/></svg></td><td>壓力 讀數</td><td>壓力</td><td><span class="num">512</span> <span class="sm">kPa</span><span class="mini bad"><i style="left:81.80000000000001%"></i></span></td><td><span class="num">2026-11-05 11:40:51</span></td><td>系統</td></tr><tr class="an-r "><td><span class="an">異常</span><svg class="lock" viewBox="0 0 12 12" aria-label="已鎖定"><rect x="2" y="5.5" width="8" height="6" rx="1" fill="#8896A4"/><path d="M4 5.5V4a2 2 0 014 0v1.5" fill="none" stroke="#8896A4" stroke-width="1.4"/></svg></td><td>手動補登：振動</td><td>振動</td><td><span class="num">8.3</span> <span class="sm">mm/s</span><span class="mini bad"><i style="left:82.4%"></i></span></td><td><span class="num">2026-11-04 09:58:10</span></td><td>chen.wang</td></tr></tbody></table><div class="pager"><span class="btn off">上一頁</span><span class="num">第 1 / 5 頁</span><span class="btn">下一頁</span></div></main></div></div></figure><figure class="board" id="screen-30-empty"><figcaption><span><b>SCREEN-30 條件內沒有資料（下載停用）</b> </span><button type="button" aria-label="放大檢視 SCREEN-30 條件內沒有資料（下載停用）">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 條件內沒有資料（下載停用）"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：沒有可下載的內容</div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><div class="empty"><b>這段條件內沒有資料</b>2026-11-01 – 2026-11-05 · 分類：溫度、壓力、振動。這不是 0，而是沒有記錄。</div></main></div></div></figure><figure class="board" id="screen-30-busy"><figcaption><span><b>SCREEN-30 查詢中</b> </span><button type="button" aria-label="放大檢視 SCREEN-30 查詢中">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 查詢中"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p busy" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：查詢中</div><div class="ban info"><span>查詢中…顯示的是舊結果。</span></div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><div class="sk" style="height:120px"></div><div class="charts"><div class="sk" style="height:128px"></div><div class="sk" style="height:128px"></div><div class="sk" style="height:128px"></div></div></main></div></div></figure><figure class="board" id="screen-30-over"><figcaption><span><b>SCREEN-30 超過 3 個月</b> </span><button type="button" aria-label="放大檢視 SCREEN-30 超過 3 個月">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 超過 3 個月"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2027-03-01 00:00</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：條件有誤</div><div class="ban err"><span>時間範圍超過 3 個月上限。要看更長的期間，請分批查詢（一次一段）。</span></div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><div class="empty"><b>尚未查詢</b></div></main></div></div></figure><figure class="board" id="screen-30-fine"><figcaption><span><b>SCREEN-30 粒度過細（請改選較粗）</b> </span><button type="button" aria-label="放大檢視 SCREEN-30 粒度過細（請改選較粗）">放大</button></figcaption><div class="vp" role="group" aria-label="SCREEN-30 粒度過細（請改選較粗）"><div class="app "><aside><div class="brand"><i></i>MonitoringDashboard</div><div class="nav-g">監控</div><span class="nav-i">即時監控</span><div class="nav-g">資料</div><span class="nav-i">資料列表</span><div class="nav-g">分析</div><span class="nav-i cur">資料分析</span><div class="me">wei.huang<span class="role">Viewer</span><div style="margin-top:6px"><span class="btn" style="padding:2px 10px">登出</span></div></div></aside><main><div class="ptr"><h3 class="pt">資料分析</h3><div style="display:flex;gap:8px;align-items:center"></div></div><div class="filters"><div class="fld" style="">開始時間<div class="inp">2026-11-01 00:00</div></div><div class="fld" style="">結束時間<div class="inp">2026-11-05 23:59</div></div><div class="fld" style="min-width:220px">分類<div class="inp">溫度 · 壓力 · 振動（3 個）</div></div><div class="fld" style="">趨勢粒度<div class="inp">每小時 ▾</div></div><span class="btn p" >查詢</span><span style="margin-left:auto"><span class="btn off" >下載 Excel</span></span></div><div class="sm" style="text-align:right;margin-top:-8px">下載停用：請先調整粒度</div><div class="tabs"><span class="on">統計與趨勢</span><span>異常記錄</span></div><table class="t"><thead><tr><th>分類</th><th class=r>總計</th><th class=r>平均</th><th class=r>最大值</th><th class=r>最小值</th></tr></thead><tbody><tr class=""><td>溫度 <span class='sm'>°C</span></td><td><span class="num">302,114.6</span></td><td><span class="num">58.7</span></td><td><span class="num">86.2</span></td><td><span class="num">31.0</span></td></tr><tr class=""><td>壓力 <span class='sm'>kPa</span></td><td><span class="num">1,504,200</span></td><td><span class="num">292</span></td><td><span class="num">531</span></td><td><span class="num">104</span></td></tr><tr class=""><td>振動 <span class='sm'>mm/s</span></td><td><span class="num">17,982.4</span></td><td><span class="num">3.5</span></td><td><span class="num">8.9</span></td><td><span class="num">0.7</span></td></tr></tbody></table><div class="charts"><div class="ban warn"><span>所選粒度（每分鐘）× 時間範圍會產生過多資料點。請改選較粗的粒度（每小時或每天）。</span></div></div></main></div></div></figure></div></section>
+<div id="viewer" role="dialog" aria-modal="true" aria-label="放大檢視"><div class="bar"><span class="ttl"></span><button class="prev" type="button">上一個</button><button class="next" type="button">下一個</button><button class="fit" type="button">符合視窗</button><button class="orig" type="button">原始大小</button><button class="close" type="button">關閉 (Esc)</button></div><div class="stage"><div class="inner"></div></div></div>
+<script>
+(function(){
+function rng(seed){var s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
+var CATS={temp:{n:'溫度',u:'°C',min:20,max:80,base:55,amp:9,dec:1},pres:{n:'壓力',u:'kPa',min:100,max:500,base:300,amp:55,dec:0},
+rpm:{n:'馬達轉速',u:'rpm',min:1000,max:3000,base:2000,amp:320,dec:0},vib:{n:'振動',u:'mm/s',min:0.5,max:8,base:3.6,amp:1.1,dec:1}};
+function draw(svg){
+ var c=CATS[svg.dataset.cat],N=+svg.dataset.n||300,seed=(+svg.dataset.seed||1)+(+svg.dataset.tick||0),r=rng(seed*7919+N);
+ var an=(svg.dataset.an||'').split(',').filter(Boolean).map(Number);
+ var W=640,H=+svg.dataset.h||120,L=46,R=12,T=8,B=20;
+ var lo=c.min-(c.max-c.min)*.28,hi=c.max+(c.max-c.min)*.28;
+ function y(v){return T+(hi-v)/(hi-lo)*(H-T-B)}function x(i){return L+i/(N-1)*(W-L-R)}
+ var pts=[],v=c.base;
+ for(var i=0;i<N;i++){v+= (r()-.5)*c.amp*.5; v+=(c.base-v)*.08; var vv=v;
+  if(an.indexOf(i)>=0||an.indexOf(i-N)>=0){vv=c.max+(c.max-c.min)*(.02+r()*.1);} else {vv=Math.min(c.max-(c.max-c.min)*.06,Math.max(c.min+(c.max-c.min)*.06,vv));}
+  pts.push(vv)}
+ if(svg.dataset.lastv)pts[N-1]=+svg.dataset.lastv;
+ var o='';
+ o+='<rect x="'+L+'" y="'+y(c.max)+'" width="'+(W-L-R)+'" height="'+(y(c.min)-y(c.max))+'" fill="#E4EAF0"/>';
+ [c.max,c.min].forEach(function(b,k){o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(b)+'" y2="'+y(b)+'" stroke="#8896A4" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  o+='<text x="'+(L-5)+'" y="'+(y(b)+4)+'" text-anchor="end" font-size="10.5" fill="#5B6773">'+b+'</text>';});
+ o+='<text x="'+(L+4)+'" y="'+(y(c.max)-3)+'" font-size="10" fill="#7a8794">異常界線（含）</text>';
+ o+='<text x="'+(L+4)+'" y="'+(y(c.min)+11)+'" font-size="10" fill="#7a8794">異常界線（含）</text>';
+ o+='<polyline fill="none" stroke="#4A6075" stroke-width="1.6" stroke-linejoin="round" points="'+pts.map(function(p,i){return x(i).toFixed(1)+','+Math.max(T,Math.min(H-B,y(p))).toFixed(1)}).join(' ')+'"/>';
+ an.forEach(function(a){var i=a<0?N+a:a;if(i<0||i>=N)return;var px=x(i),py=Math.max(T+3,Math.min(H-B-3,y(pts[i])));
+  o+='<path d="M'+px+' '+(py-6)+' L'+(px+6)+' '+py+' L'+px+' '+(py+6)+' L'+(px-6)+' '+py+'Z" fill="#C8372D" stroke="#fff" stroke-width="1"/>';});
+ var last=an.filter(function(a){return a<0||a==N-1}).length;
+ if(last){var i=N-1,px=x(i),py=Math.max(T+3,Math.min(H-B-3,y(pts[i])));o+='<text x="'+(px-10)+'" y="'+(py-9)+'" text-anchor="end" font-size="11" font-weight="700" fill="#C8372D">異常 '+pts[i].toFixed(c.dec)+'</text>';}
+ var xl=(svg.dataset.xl||'-5:00,-2:30,現在').split(',');
+ xl.forEach(function(t,k){var px=L+k/(xl.length-1)*(W-L-R);o+='<text x="'+px+'" y="'+(H-5)+'" text-anchor="'+(k==0?'start':k==xl.length-1?'end':'middle')+'" font-size="10.5" fill="#5B6773">'+t+'</text>';});
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('role','img');
+ svg.setAttribute('aria-label',c.n+'（'+c.u+'）趨勢，範圍 '+c.min+'–'+c.max+(an.length?'，含 '+an.length+' 個異常點':'，無異常點'));
+ svg.innerHTML=o;
+}
+window.drawAll=function(root){(root||document).querySelectorAll('svg.bc').forEach(draw)};
+drawAll();
+// viewer
+var viewer=document.getElementById('viewer'),stage=viewer&&viewer.querySelector('.inner'),figs=[].slice.call(document.querySelectorAll('figure.board')),cur=-1,opener=null,zoom=1;
+function show(i){cur=(i+figs.length)%figs.length;var f=figs[cur],src=f.querySelector('.vp');stage.innerHTML='';var cl=src.cloneNode(true);cl.style.overflow='visible';stage.appendChild(cl);drawAll(stage);
+ viewer.querySelector('.ttl').textContent=f.querySelector('figcaption b').textContent+'（'+(cur+1)+'/'+figs.length+'）';applyZoom();}
+function applyZoom(){stage.style.transform='scale('+zoom+')';}
+function open(i,btn){opener=btn;zoom=1;viewer.classList.add('open');show(i);viewer.querySelector('.close').focus();}
+function close(){viewer.classList.remove('open');if(opener)opener.focus();}
+document.querySelectorAll('figure.board figcaption button').forEach(function(b,i){b.addEventListener('click',function(){open(figs.indexOf(b.closest('figure')),b)})});
+if(viewer){viewer.querySelector('.close').onclick=close;viewer.querySelector('.prev').onclick=function(){show(cur-1)};viewer.querySelector('.next').onclick=function(){show(cur+1)};
+ viewer.querySelector('.fit').onclick=function(){var w=viewer.querySelector('.stage').clientWidth-28,iw=stage.firstChild.scrollWidth;zoom=Math.min(1.6,w/iw);applyZoom()};
+ viewer.querySelector('.orig').onclick=function(){zoom=1;applyZoom()};
+ document.addEventListener('keydown',function(ev){if(!viewer.classList.contains('open'))return;if(ev.key==='Escape')close();if(ev.key==='ArrowLeft')show(cur-1);if(ev.key==='ArrowRight')show(cur+1);});}
+// optional simulated live tick (M3 only)
+var sim=document.getElementById('sim'),timer=null;
+if(sim){sim.addEventListener('change',function(){if(timer){clearInterval(timer);timer=null}
+ if(sim.checked&&!matchMedia('(prefers-reduced-motion:reduce)').matches){timer=setInterval(function(){document.querySelectorAll('[data-live="1"] svg.bc').forEach(function(s){s.dataset.tick=(+s.dataset.tick||0)+1;draw(s)});},1000);}
+ document.getElementById('simstate').textContent=sim.checked?(matchMedia('(prefers-reduced-motion:reduce)').matches?'已啟用，但系統偏好為減少動效，維持靜態':'模擬更新中（假資料，每秒重畫）'):'已關閉';});}
+})();
+</script></body></html>
