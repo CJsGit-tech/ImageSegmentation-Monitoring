@@ -3,10 +3,9 @@
 import time
 from datetime import datetime, timedelta, timezone
 
-import requests
 from playwright.sync_api import Page, expect
 
-from conftest import API_URL, login, open_page
+from conftest import backend_request, login, open_page
 
 ADMIN_PAGES = ("admin-users", "admin-logs", "admin-database", "admin-realtime-history")
 
@@ -40,7 +39,7 @@ def test_role_change_applies_on_the_next_request_and_self_change_is_refused(run)
 
 def test_failed_login_is_saved_to_the_system_log(run):
     stranger = run.accounts["other"].username
-    requests.post(f"{API_URL}/auth/login", json={"username": stranger, "password": "Wrong-Pass-1!"}, timeout=10)
+    backend_request("POST", "/auth/login", json={"username": stranger, "password": "Wrong-Pass-1!"})
     admin = run.api("setup_admin")
     params = {**recent_window(), "event_type": "login_failure", "username": stranger}
     for _ in range(20):  # events reach the database about a second after they happen

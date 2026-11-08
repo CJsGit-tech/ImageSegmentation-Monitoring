@@ -48,8 +48,6 @@ services:
       DB_STARTUP_TIMEOUT_SECONDS: ${DB_STARTUP_TIMEOUT_SECONDS:-60}
       SIMULATOR_INTERVAL_SECONDS: ${SIMULATOR_INTERVAL_SECONDS:-1}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-365}
-    ports:
-      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${BACKEND_HOST_PORT:-18000}:8000"
     depends_on:
       db:
         condition: service_healthy
