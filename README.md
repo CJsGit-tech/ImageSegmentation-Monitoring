@@ -173,13 +173,13 @@ docker compose down
 
 監控系統有三種角色: **Admin**、**User** 與 **Viewer**.
 
-資料庫一開始沒有任何帳號. 以下是建議的本機示範帳號, 只用於本機測試, 請勿用於公開部署:
+資料庫一開始沒有任何帳號, 本專案也不提供預設帳號或密碼. 請自行設定:
 
-| 角色 | 帳號 | 密碼 | 建立方式 |
-|---|---|---|---|
-| **Admin** | `demo_admin` | `Demo-Admin-2026!` | 在 `.env` 設定 `INITIAL_ADMIN_USERNAME=demo_admin` 與 `INITIAL_ADMIN_PASSWORD=Demo-Admin-2026!`. 後端第一次啟動時自動建立 |
-| **User** | `demo_user` | `Demo-User-2026!` | 在註冊頁註冊 (新帳號為 Viewer), 再由 Admin 在「系統管理 → 使用者管理」把角色改為 User |
-| **Viewer** | `demo_viewer` | `Demo-Viewer-2026!` | 在註冊頁註冊即可 |
+| 角色 | 建立方式 |
+|---|---|
+| **Admin** | 在 `.env` 自行設定 `INITIAL_ADMIN_USERNAME` 與 `INITIAL_ADMIN_PASSWORD`. 後端第一次啟動時自動建立 |
+| **User** | 在註冊頁註冊 (新帳號為 Viewer), 再由 Admin 在「系統管理 → 使用者管理」把角色改為 User |
+| **Viewer** | 在註冊頁註冊即可 |
 
 各角色可以做的事:
 
