@@ -21,7 +21,7 @@ from app.auth.tokens import decode_token, issue_token
 from app.auth.validation import normalize_username, password_problems, username_problems
 from app.core.config import Settings
 from app.core.errors import ConflictError
-from app.models.user import Role, User
+from app.models.user import Role, User, _utc_now
 
 
 async def register_user(session: AsyncSession, username: str, password: str) -> User:
@@ -58,9 +58,13 @@ async def login(session: AsyncSession, username: str, password: str, settings: S
 
     displaced = user.current_session_id is not None
     session_id = uuid.uuid4().hex
+    logged_in_at = _utc_now()
     # One atomic write: when logins race, the last one to commit is the valid one.
-    await session.execute(update(User).where(User.id == user.id).values(current_session_id=session_id))
+    await session.execute(
+        update(User).where(User.id == user.id).values(current_session_id=session_id, last_login_at=logged_in_at)
+    )
     await session.commit()
+    user.last_login_at = logged_in_at
 
     token, expires_at = issue_token(user.id, session_id, settings)
     if displaced:

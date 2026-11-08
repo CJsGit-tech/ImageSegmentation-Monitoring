@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     # Fractional hours are allowed so that expiry can be tested with short lifetimes.
     access_token_expire_hours: float = Field(default=12, gt=0, allow_inf_nan=False)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    # Seconds between readings of each simulated device (PRD-07-R1). Read at start; small values are for tests.
+    simulator_interval_seconds: float = Field(default=30, ge=0.1, le=3600, allow_inf_nan=False)
+    # Days the system log is kept (PRD-14-R10). Fractions are allowed so that cleanup can be tested.
+    log_retention_days: float = Field(default=365, gt=0, le=36500, allow_inf_nan=False)
 
     @field_validator("db_password", "initial_admin_username", "initial_admin_password", mode="after")
     @classmethod

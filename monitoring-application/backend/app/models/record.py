@@ -20,6 +20,10 @@ class Record(Base):
     __table_args__ = (
         Index("ix_records_category_timestamp", "category", "timestamp"),
         Index("ix_records_is_anomaly_timestamp", "is_anomaly", "timestamp"),
+        # Data analysis (LB-331): statistics and trends read only this index.
+        Index("ix_records_category_timestamp_value", "category", "timestamp", "value", "is_anomaly"),
+        # System-record history (LB-336): creator IS NULL, time range, category, anomaly from the index.
+        Index("ix_records_creator_timestamp_category", "created_by_user_id", "timestamp", "category", "is_anomaly"),
         # Several NULLs are allowed, so imported and generated records are not affected.
         UniqueConstraint("client_request_id", "created_by_user_id", name="uq_records_client_request"),
         {"mariadb_charset": "utf8mb4", "mariadb_collate": TABLE_COLLATION},

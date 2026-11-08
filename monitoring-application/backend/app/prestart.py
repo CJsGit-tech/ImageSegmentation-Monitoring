@@ -14,10 +14,12 @@ from sqlalchemy.exc import InterfaceError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.auth.bootstrap import ensure_initial_admin
+from app.categories.seed import ensure_category_defaults
 from app.core.config import ConfigurationError, Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.migrate import upgrade_to_head
 from app.db.session import create_unpooled_engine, ping
+from app.simulator.devices import DEVICE_DEFAULTS
 
 logger = logging.getLogger("app.prestart")
 
@@ -44,6 +46,8 @@ async def _prepare_database(settings: Settings) -> None:
         await upgrade_to_head(engine)
         # Before the port opens, so that nobody can register this account name first.
         await ensure_initial_admin(engine, settings)
+        # Every start: a default applies only to a range or unit that was never configured.
+        await ensure_category_defaults(engine, DEVICE_DEFAULTS)
     finally:
         await engine.dispose()
 

@@ -1,4 +1,8 @@
-"""Authentication and permission events for PRD-14-R6. Never pass passwords or tokens here."""
+"""Audit events for PRD-14-R6. Never pass passwords, tokens or record contents here.
+
+Each event is a JSON line on stdout. While the backend runs, app.syslog also keeps the events
+listed in app/syslog/catalog.py in the system_logs table, from these same log records.
+"""
 
 import logging
 from typing import Any

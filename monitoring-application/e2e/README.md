@@ -1,6 +1,6 @@
 # Browser tests
 
-These Playwright tests drive the real app in Chrome, the way a person would. They cover Batch 1 (register, log in and out, staying logged in, role-based pages) and Batch 2 (add, list, edit, delete, anomaly warning and lock, range settings).
+These Playwright tests drive the real app in Chrome, the way a person would. They cover Batch 1 (register, log in and out, staying logged in, role-based pages), Batch 2 (add, list, edit, delete, anomaly warning and lock, range settings), Batch 3 (bulk CSV and JSON import), Batch 4 (simulated data, the live monitoring screen and its custom time range), Batch 5 (statistics, trend, anomaly list and Excel export) and Batch 6 (user roles, system log, database status and system data history). Each later batch adds its own tests here.
 
 ## What they need
 
@@ -41,12 +41,14 @@ Settings, all optional:
 
 ## Data
 
-Each run registers its own accounts and creates records in its own categories, all named with a random `e2e-<id>` prefix (categories start with `!e2e-<id>` so they list first). At the end it deletes everything with that prefix, including anomalous records, which the app itself never allows. `db_tool.py` refuses to delete anything whose prefix doesn't start with `e2e-`.
+Each run registers its own accounts and creates records in its own categories, all named with a random `e2e-<id>` prefix (categories start with `!e2e-<id>` so they list first). At the end it deletes everything with that prefix, including anomalous records and import records, which the app itself never allows. `db_tool.py` refuses to delete anything whose prefix doesn't start with `e2e-`.
 
 Only run these tests against a local or test stack. They write to whatever database the stack uses.
 
 ## Not covered here
 
-- A save that times out and is retried: that needs a 30-second stall. The backend side is checked by `test_retrying_a_save_with_the_same_key_adds_one_record` and by the backend suite.
+- A save or import that times out and is retried: that needs a 30-second stall. The backend side is checked by `test_retrying_a_save_with_the_same_key_adds_one_record` and by the backend suite.
 - Backend outages, phone widths, screen readers and keyboard focus.
+- The monitoring screen's paused, reconnecting and first-load states, and the chart drawings themselves.
+- The live-update test waits for the simulator's next reading, up to its interval (30 s by default) plus 15 s.
 - Anything visual: the list's anomaly marks and range bars are drawn on a canvas that these tests can't read, so they check the action row and the API instead.

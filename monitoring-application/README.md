@@ -19,7 +19,10 @@ Database data lives in the `db_data` volume and survives `docker compose down`. 
 - Every `docker compose` command reads `.env`, including `down`, and stops with an error naming the variable if a required one is missing.
 - MariaDB applies `MARIADB_*` credentials only when the volume is first created. To change them later, change them in the database as well, or recreate the volume, which deletes the data.
 - Schema migrations run automatically each time the backend container starts.
+- The backend generates simulated readings for 4 devices, one per device every `SIMULATOR_INTERVAL_SECONDS` (default 30). The value is read when the backend starts, so restart it after a change: `docker compose up -d backend`.
 - The initial Admin is created from `INITIAL_ADMIN_USERNAME` and `INITIAL_ADMIN_PASSWORD` when that account does not exist. Once it exists, these values are not applied, so changing them does not change the account. A password that does not meet the registration rules still works, but the backend logs an `initial_admin_weak_password` warning naming the missing conditions. Use one with at least 8 characters, including uppercase, lowercase, a digit and a symbol.
+- The system log (Admin, `GET /api/v1/logs`) keeps logins, logouts, permission denials, role changes, record changes, import results, range and unit changes and system errors. It never keeps simulated readings. Rows older than `LOG_RETENTION_DAYS` (default 365) are removed automatically, at backend start and then at most hourly. Restart the backend after changing it: `docker compose up -d backend`.
+- Every system log event is also written to the backend's stdout as a JSON line. Rows reach the database in batches about once a second, so a backend crash can lose roughly the last second of rows from the database, though not from stdout. While the database is unavailable, rows wait in memory (up to 10,000; beyond that the oldest are dropped, with a warning) and are written when it recovers.
 
 ## Frontend
 

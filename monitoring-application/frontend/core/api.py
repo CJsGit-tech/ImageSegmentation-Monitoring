@@ -1,7 +1,9 @@
 """Backend API client. Every page calls the backend through get/post/put/patch/delete here."""
 
 import os
+from dataclasses import dataclass
 from typing import Any
+from urllib.parse import unquote
 
 import requests
 import streamlit as st
@@ -71,6 +73,66 @@ def request(method: str, path: str, *, timeout: float = DEFAULT_TIMEOUT_SECONDS,
     """Send an authenticated request. A lost session leaves the page and goes to SCREEN-01."""
     try:
         return send(method, path, token=st.session_state.get(TOKEN_STATE_KEY), timeout=timeout, **kwargs)
+    except ApiError as exc:
+        if exc.status == 401 and exc.code in SESSION_LOSS_CODES:
+            from core import session  # session imports this module for send().
+
+            session.lose_session(exc.code)
+        raise
+
+
+@dataclass(frozen=True)
+class Download:
+    content: bytes
+    filename: str | None
+
+
+def _filename(disposition: str | None) -> str | None:
+    """The UTF-8 filename* of a Content-Disposition header, else its plain filename."""
+    if not disposition:
+        return None
+    plain = None
+    for part in disposition.split(";"):
+        name, _, value = part.strip().partition("=")
+        name = name.lower()
+        if name == "filename*" and value.lower().startswith("utf-8''"):
+            return unquote(value[7:]) or None
+        if name == "filename":
+            plain = value.strip('"') or None
+    return plain
+
+
+def send_bytes(
+    method: str,
+    path: str,
+    *,
+    token: str | None = None,
+    timeout: float | tuple[float, float] = DEFAULT_TIMEOUT_SECONDS,
+    **kwargs: Any,
+) -> Download:
+    """Like send(), for a file: returns the raw body and its filename. Errors raise as in send()."""
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    url = f"{os.environ['BACKEND_URL'].rstrip('/')}{path}"
+    try:
+        response = requests.request(method, url, headers=headers, timeout=timeout, **kwargs)
+    except requests.Timeout as exc:
+        raise BackendTimeout from exc
+    except requests.RequestException as exc:
+        raise BackendUnavailable from exc
+
+    if response.ok:
+        return Download(response.content, _filename(response.headers.get("Content-Disposition")))
+    try:
+        error = response.json()["error"]
+        raise ApiError(response.status_code, error["code"], error["message"], error.get("details"), error.get("request_id"))
+    except (ValueError, KeyError, TypeError) as exc:
+        raise BackendUnavailable from exc
+
+
+def get_bytes(path: str, *, timeout: float | tuple[float, float] = DEFAULT_TIMEOUT_SECONDS, **kwargs: Any) -> Download:
+    """Authenticated GET of a file. A lost session leaves the page and goes to SCREEN-01."""
+    try:
+        return send_bytes("GET", path, token=st.session_state.get(TOKEN_STATE_KEY), timeout=timeout, **kwargs)
     except ApiError as exc:
         if exc.status == 401 and exc.code in SESSION_LOSS_CODES:
             from core import session  # session imports this module for send().

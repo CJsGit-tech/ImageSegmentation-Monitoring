@@ -16,7 +16,7 @@ request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 _STANDARD_ATTRS = frozenset(logging.makeLogRecord({}).__dict__) | {"message", "asctime", "taskName", "color_message"}
-_QUIET_PATHS = ("/api/v1/health",)
+_QUIET_PATHS = ("/api/v1/health", "/api/v1/realtime/window")
 
 logger = logging.getLogger("app.request")
 

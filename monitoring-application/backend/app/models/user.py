@@ -37,3 +37,5 @@ class User(Base):
     # The only login that is valid. A new login overwrites it and logout clears it.
     current_session_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_utc_now)
+    # Set by each successful login. Null means the account has not logged in since the column was added.
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

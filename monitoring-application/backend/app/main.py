@@ -8,12 +8,19 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import RequestContextMiddleware, configure_logging
-from app.db.session import get_engine
+from app.db.session import get_engine, get_session_factory
+from app.realtime.runtime import start_realtime
+from app.syslog.runtime import start_syslog
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # First in, last out, so that simulator start, stop and failures reach the system log.
+    syslog = await start_syslog(get_session_factory(), get_settings().log_retention_days)
+    realtime = await start_realtime(app)
     yield
+    await realtime.stop()
+    await syslog.stop()
     await get_engine().dispose()
 
 
