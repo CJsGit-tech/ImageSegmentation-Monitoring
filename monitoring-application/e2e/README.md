@@ -1,56 +1,64 @@
-# Browser tests
+# 瀏覽器測試
 
-These Playwright tests drive the real app in Chrome, the way a person would. They cover Batch 1 (register, log in and out, staying logged in, role-based pages), Batch 2 (add, list, edit, delete, anomaly warning and lock, range settings), Batch 3 (bulk CSV and JSON import), Batch 4 (simulated data, the live monitoring screen and its custom time range), Batch 5 (statistics, trend, anomaly list and Excel export) Batch 6 (user roles, system log, database status and system data history) and Batch 7 (the .env test accounts, the one-second simulator, the WebSocket-fed live window and the anomaly-count bar charts). Each later batch adds its own tests here.
+這些 Playwright 測試會像真人一樣, 在 Chrome 中操作實際的應用程式. 涵蓋範圍如下, 之後的每個批次都會在此新增自己的測試:
 
-## What they need
+- **Batch 1:** 註冊、登入與登出、保持登入、依角色顯示的頁面
+- **Batch 2:** 新增、列表、編輯、刪除、異常警告與鎖定、範圍設定
+- **Batch 3:** CSV 與 JSON 批量導入
+- **Batch 4:** 模擬資料、即時監控畫面及其自訂時間範圍
+- **Batch 5:** 統計、趨勢、異常列表與 Excel 匯出
+- **Batch 6:** 使用者角色、系統日誌、資料庫狀態與系統資料歷史
+- **Batch 7:** `.env` 測試帳號、每秒一筆的模擬器、由 WebSocket 提供資料的即時視窗與異常數量長條圖
 
-- The stack running locally: `docker compose up -d` from `monitoring-application/`.
-- Google Chrome installed. The tests use it directly, so Playwright needs no browser download. To use Playwright's own Chromium instead, run `.venv/bin/playwright install chromium` once and set `E2E_BROWSER_CHANNEL=` (empty).
-- Docker access to the stack. The app has no API to change roles yet, so the tests set roles through `db_tool.py` inside the backend container.
+## 需要的環境
 
-## Set up once
+- 在本機執行的服務: 在 `monitoring-application/` 執行 `docker compose up -d`.
+- 已安裝 Google Chrome. 測試直接使用它, 因此 Playwright 不需要下載瀏覽器. 若要改用 Playwright 自己的 Chromium, 請執行一次 `.venv/bin/playwright install chromium`, 並將 `E2E_BROWSER_CHANNEL=` 設為空值.
+- 能以 Docker 存取這些服務. 應用程式目前沒有變更角色的 API, 因此測試會透過後端容器內的 `db_tool.py` 設定角色.
 
-From `monitoring-application/e2e/`:
+## 初次設定
+
+在 `monitoring-application/e2e/` 執行:
 
 ```sh
 uv venv --python 3.13 .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
-## Run
+## 執行
 
 ```sh
 .venv/bin/python -m pytest
 ```
 
-Useful options:
+常用選項:
 
-- `--headed --slowmo 300`: watch the browser.
-- `-k edit`: run tests whose names contain `edit`.
-- `--screenshot only-on-failure --output <folder>`: keep a screenshot of each failure.
+- `--headed --slowmo 300`: 觀看瀏覽器操作.
+- `-k edit`: 執行名稱包含 `edit` 的測試.
+- `--screenshot only-on-failure --output <folder>`: 保留每個失敗的截圖.
 
-Settings, all optional:
+以下設定皆為選填:
 
-| Variable | Default | Use |
+| 變數 | 預設值 | 用途 |
 | --- | --- | --- |
-| `E2E_BASE_URL` | `http://127.0.0.1:18501` | Frontend address |
-| `E2E_API_URL` | `http://127.0.0.1:18000` | Backend address |
-| `E2E_ENV_FILE` | none, so Compose reads `.env` | Env file the stack was started with |
-| `E2E_BROWSER_CHANNEL` | `chrome` | Browser to use; empty means Playwright's Chromium |
-| `E2E_KEEP_DATA` | unset | `1` keeps the run's accounts and records for inspection |
+| `E2E_BASE_URL` | `http://127.0.0.1:18501` | 前端位址 |
+| `E2E_API_URL` | `http://127.0.0.1:18000` | 後端位址 |
+| `E2E_ENV_FILE` | 無, 由 Compose 讀取 `.env` | 啟動服務時使用的環境變數檔 |
+| `E2E_BROWSER_CHANNEL` | `chrome` | 使用的瀏覽器; 空值代表 Playwright 的 Chromium |
+| `E2E_KEEP_DATA` | 未設定 | 設為 `1` 時保留該次執行的帳號與記錄以供檢查 |
 
-## Data
+## 資料
 
-Each run registers its own accounts and creates records in its own categories, all named with a random `e2e-<id>` prefix (categories start with `!e2e-<id>` so they list first). At the end it deletes everything with that prefix, including anomalous records and import records, which the app itself never allows. `db_tool.py` refuses to delete anything whose prefix doesn't start with `e2e-`.
+每次執行都會註冊自己的帳號, 並在自己的分類中建立記錄, 名稱都帶有隨機的 `e2e-<id>` 前綴 (分類以 `!e2e-<id>` 開頭, 因此會排在最前面). 結束時會刪除所有帶此前綴的資料, 包含異常記錄與導入記錄, 這是應用程式本身不允許的操作. `db_tool.py` 會拒絕刪除前綴不是 `e2e-` 開頭的任何資料.
 
-Only run these tests against a local or test stack. They write to whatever database the stack uses.
+請只對本機或測試環境執行這些測試. 它們會寫入服務所使用的資料庫.
 
-## Not covered here
+## 未涵蓋的範圍
 
-- A save or import that times out and is retried: that needs a 30-second stall. The backend side is checked by `test_retrying_a_save_with_the_same_key_adds_one_record` and by the backend suite.
-- Backend outages, phone widths, screen readers and keyboard focus.
-- The monitoring screen's paused, reconnecting and first-load states, and the chart drawings themselves.
-- The live-update test waits for the simulator's next reading, up to its interval (1 s by default) plus 15 s.
-- The WebSocket test checks that the frontend container holds an open connection to the backend and that the screen changes about every second; it does not read the WebSocket frames themselves.
-- The Excel file is checked by its raw text (headers and units), not cell by cell; the backend suite reads it back with openpyxl.
-- Anything visual: the list's anomaly marks and range bars are drawn on a canvas that these tests can't read, so they check the action row and the API instead.
+- 儲存或導入逾時後重試: 這需要 30 秒的停滯. 後端部分由 `test_retrying_a_save_with_the_same_key_adds_one_record` 與後端測試檢查.
+- 後端中斷、手機寬度、螢幕閱讀器與鍵盤焦點.
+- 監控畫面的暫停、重新連線與首次載入狀態, 以及圖表本身的繪製.
+- 即時更新測試會等待模擬器的下一筆讀數, 最長為其間隔 (預設 1 秒) 加 15 秒.
+- WebSocket 測試檢查前端容器與後端保持開啟的連線, 以及畫面約每秒變化一次, 但不讀取 WebSocket 訊框本身.
+- Excel 檔只檢查原始文字 (標題與單位), 不逐格檢查; 後端測試會以 openpyxl 讀回檔案.
+- 所有視覺呈現: 列表的異常標記與範圍條繪製在這些測試無法讀取的 canvas 上, 因此改為檢查操作列與 API.

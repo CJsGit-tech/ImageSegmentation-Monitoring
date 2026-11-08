@@ -82,47 +82,36 @@
     - 重複上傳只以檔名判斷, 不比對內容.
 
 
-## 測試帳號資訊
+## 開發方式 （以實時監控平台為例）
 
-監控系統有三種角色: **Admin**、**User** 與 **Viewer**. 三個測試帳號都在 `.env` 中設定, 後端每次啟動時會建立尚不存在的帳號. 若沿用 `.env.example` 的範例值, 可直接用以下帳號登入:
+監控系統的工作以 [LinearBoard](https://github.com/CJsGit-tech/LinearBoard) 管理. 
 
-| 角色 | 帳號 | 密碼 | `.env` 變數 |
-|---|---|---|---|
-| **Admin** | `admin` | `Admin@12345` | `INITIAL_ADMIN_USERNAME`、`INITIAL_ADMIN_PASSWORD` |
-| **User** | `user` | `User@12345` | `INITIAL_USER_USERNAME`、`INITIAL_USER_PASSWORD` |
-| **Viewer** | `viewer` | `Viewer@12345` | `INITIAL_VIEWER_USERNAME`、`INITIAL_VIEWER_PASSWORD` |
+這是我開發的本機專案管理工具, 用來協調我與 AI Agent 之間的工作. 
 
-- **必填:** 這六個變數都必須設定, 缺少時 `docker compose` 會停止並顯示缺少的變數名稱; 三個帳號名稱不可相同.
-- **只用於測試:** 範例密碼是公開的, 部署到本機以外的環境前請在 `.env` 改成自己的值.
-- **其他帳號:** 在註冊頁註冊的新帳號為 Viewer, 可由 Admin 在「系統管理 → 使用者管理」修改角色.
+需求、決策、任務與驗證證據都存放在本地的管理專案服務器. 可幫助在我與Agent在協作中保持目標的一致性.
 
-各角色可以做的事:
+### 開發流程
 
-| 角色 | 權限 |
-|---|---|
-| **Admin** | 所有功能, 包含系統管理頁面; 可修改或刪除任何人的一般記錄 |
-| **User** | 瀏覽、新增、批量導入; 只能修改或刪除自己建立的記錄 |
-| **Viewer** | 只能瀏覽即時監控、資料列表與資料分析, 並下載 Excel |
+| 階段 | 做法 | 產出 |
+|---|---|---|
+| **1. 規劃** | 先釐清題目與要解決的問題, 再寫成願景文件 | 願景文件 |
+| **2. 里程碑** | 由願景推導使用者故事, 再依成果分組 | 里程碑 M1 到 M5 與分組的使用者故事 |
+| **3. 需求** | 為每個里程碑撰寫 PRD, 逐一釐清會影響使用者行為或測試方式的規則 | PRD 與[決策問答頁](monitoring-application/docs/MonitoringDashboard-decision-qa.html) |
+| **4. 設計** | 比較版面方向, 選定後製作完整畫面供審閱 | 設計規格與設計審閱圖庫 |
+| **5. 任務** | 將需求與設計拆成前端與後端任務, 再依相依性排成批次 | 連回 PRD 的任務與批次 |
+| **6. 交付** | AI Agent 依批次實作, 再由實作者以外的審閱者操作實際系統並記錄證據 | 程式碼、驗證紀錄與[瀏覽器測試](monitoring-application/e2e/README.md) |
 
-- **密碼規則:** 至少 8 個字元, 需包含大寫字母、小寫字母、數字與符號.
-- **帳號設定值:** 只在第一次建立帳號時套用, 之後修改 `.env` 不會改變已存在的帳號 (包含密碼與角色).
-- **單一登入:** 同一帳號在別處登入時, 先前的登入會失效.
-- **異常記錄:** 被標記為異常的記錄任何人都不能修改或刪除 (包含 Admin).
+**我與 AI Agent 的分工:**
 
-## 系統架構圖
+- 我負責決定: 
+    - 每個階段由我進行大方向的規劃. 並梳理專案中可能遺漏的一些設置或應該做的假設
+    - 專案的開發在取捨與設計核准都由我決定
+    - 特別是針對里程碑的制定上主要由我這邊決定實施範圍
+    - 需求變更：
+        - 開發中確認的變更要更新到對應的 PRD, 影響多筆紀錄時, 先預覽修改內容.
+        - 經我核准後才更新. 驗收時發現的問題則記錄為有來源連結的修復任務.
 
-![MonitoringDashboard 系統架構圖](monitoring-application/docs/system-architecture-modules.svg)
+- AI Agent 負責執行與提問
+    - AI Agent 依指令撰寫文件與實作, 遇到會影響產品行為的問題時會停下指出不自行假設
 
-瀏覽器連到 Streamlit 前端容器; 前端以 REST 呼叫 FastAPI 後端容器, 並由 Streamlit 服務端以 WebSocket 接收即時資料, 經 JWT 認證後進入五個功能模組, 再透過 SQLAlchemy 存取 MariaDB. 模擬器是後端內的背景任務. 互動版本與各元件說明請見 [`system-architecture-modules.html`](monitoring-application/docs/system-architecture-modules.html) 與 [`system-architecture.html`](monitoring-application/docs/system-architecture.html) (下載後以瀏覽器開啟).
-
-## 相關文件
-
-| 文件 | 位置 |
-|---|---|
-| 環境變數範例 | [`monitoring-application/.env.example`](monitoring-application/.env.example) |
-| 測試資料 CSV 範例 (1000 筆, 含 50 筆異常) | [`monitoring-application/docs/sample-records-1000.csv`](monitoring-application/docs/sample-records-1000.csv) |
-| 測試資料 JSON 範例 | [`monitoring-application/docs/sample-records-1000.json`](monitoring-application/docs/sample-records-1000.json) |
-| 系統架構圖 | [`monitoring-application/docs/system-architecture-modules.svg`](monitoring-application/docs/system-architecture-modules.svg) |
-| 監控系統操作說明 (英文) | [`monitoring-application/README.md`](monitoring-application/README.md) |
-| 瀏覽器測試說明 | [`monitoring-application/e2e/README.md`](monitoring-application/e2e/README.md) |
-
+註記： 圖像分割屬於實驗性質, 是透過多輪實驗比較方法, 過程記錄於[實驗歷程](image-segmentation/submission/reports/supporting/experiment_history.md).

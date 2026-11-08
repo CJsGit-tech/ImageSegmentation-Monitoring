@@ -1,96 +1,133 @@
 # MonitoringDashboard
 
-## Run
+## 執行
 
-Requires Git, Docker and Docker Compose v2. Get the project from GitHub:
+需要 Git、Docker 與 Docker Compose v2. 從 GitHub 取得專案:
 
 ```sh
 git clone https://github.com/CJsGit-tech/ImageSegmentation-Monitoring.git
 cd ImageSegmentation-Monitoring/monitoring-application
 ```
 
-Create the environment file, then fill in the database passwords and `JWT_SECRET_KEY` (the three test accounts already have example values):
+建立環境變數檔, 再填入資料庫密碼與 `JWT_SECRET_KEY` (三個測試帳號已有範例值):
 
 ```sh
 cp .env.example .env
 ```
 
-Build and start the database, backend and frontend:
+建置並啟動資料庫、後端與前端:
 
 ```sh
 docker compose up -d --build
 ```
 
-Check that all three services are healthy:
+確認三個服務都處於健康狀態:
 
 ```sh
 docker compose ps
 ```
 
-| Service | Address (default) |
+| 服務 | 位址 (預設) |
 | --- | --- |
-| Frontend | http://127.0.0.1:18501 |
-| Backend API | http://127.0.0.1:18000 |
-| Backend Swagger | http://127.0.0.1:18000/docs |
-| Database | Not published outside Docker |
+| 前端 | http://127.0.0.1:18501 |
+| 後端 API | http://127.0.0.1:18000 |
+| 後端 Swagger | http://127.0.0.1:18000/docs |
+| 資料庫 | 不對 Docker 外部開放 |
 
-Once it is running:
+啟動後:
 
-1. Open http://127.0.0.1:18501 and log in with any account from [the test accounts](../README.md#測試帳號資訊).
-2. As User or Admin, go to 資料 → 批量導入 in the sidebar and upload `docs/sample-records-1000.csv` to load 1000 sample records.
-3. The 即時監控 page receives live data over WebSocket and updates every second. Simulated data appears about 1 second after startup.
+1. 開啟 http://127.0.0.1:18501, 以下方說明中三個測試帳號的任一個登入.
+2. 以 User 或 Admin 身分, 在側邊欄進入 資料 → 批量導入, 上傳 `docs/sample-records-1000.csv` 以載入 1000 筆範例記錄.
+3. 即時監控 頁面透過 WebSocket 接收即時資料, 每秒更新一次. 模擬資料會在啟動後約 1 秒出現.
 
-Follow the backend logs:
+查看後端日誌:
 
 ```sh
 docker compose logs -f backend
 ```
 
-Stop the services and keep the database:
+停止服務並保留資料庫:
 
 ```sh
 docker compose down
 ```
 
-Database data lives in the `db_data` volume and survives `docker compose down`. `docker compose down -v` deletes it.
+資料庫資料存放在 `db_data` volume, 執行 `docker compose down` 後仍會保留. `docker compose down -v` 則會刪除資料.
 
-- Every `docker compose` command reads `.env`, including `down`, and stops with an error naming the variable if a required one is missing.
-- MariaDB applies `MARIADB_*` credentials only when the volume is first created. To change them later, change them in the database as well, or recreate the volume, which deletes the data.
-- Schema migrations run automatically each time the backend container starts.
-- The backend generates simulated readings for 4 devices, one per device every `SIMULATOR_INTERVAL_SECONDS` (default 1, so one reading per device per second). The value is read when the backend starts, so restart it after a change: `docker compose up -d backend`. Simulated readings are kept in the database without a time limit; at the default rate that is about 345,000 rows a day.
-- The monitoring screen's live window receives readings over the backend WebSocket (`/api/v1/realtime/ws`): the Streamlit server holds one connection per viewer that shows the live window and redraws every second. A connection nobody is looking at closes after 30 seconds. `GET /api/v1/realtime/window` returns the same snapshot over REST.
-- Three test accounts, one per role, come from `.env`: `INITIAL_ADMIN_*` (Admin), `INITIAL_USER_*` (User) and `INITIAL_VIEWER_*` (Viewer). All six variables are required, and the three usernames must differ. `.env.example` has example values (`admin` / `Admin@12345`, `user` / `User@12345`, `viewer` / `Viewer@12345`); change them for anything other than local testing. Each account is created at backend start when it does not exist. Once it exists, these values are not applied, so changing them does not change its password or role. A password that does not meet the registration rules still works, but the backend logs an `initial_<role>_weak_password` warning naming the missing conditions. Use one with at least 8 characters, including uppercase, lowercase, a digit and a symbol.
-- The system log (Admin, `GET /api/v1/logs`) keeps logins, logouts, permission denials, role changes, record changes, import results, range and unit changes and system errors. It never keeps simulated readings. Rows older than `LOG_RETENTION_DAYS` (default 365) are removed automatically, at backend start and then at most hourly. Restart the backend after changing it: `docker compose up -d backend`.
-- Every system log event is also written to the backend's stdout as a JSON line. Rows reach the database in batches about once a second, so a backend crash can lose roughly the last second of rows from the database, though not from stdout. While the database is unavailable, rows wait in memory (up to 10,000; beyond that the oldest are dropped, with a warning) and are written when it recovers.
+- 每個 `docker compose` 指令都會讀取 `.env`, 包含 `down`. 缺少必填變數時會停止, 並顯示該變數名稱.
+- MariaDB 只在第一次建立 volume 時套用 `MARIADB_*` 帳密. 之後若要變更, 需同時在資料庫中修改, 或重新建立 volume, 但這會刪除資料.
+- 每次後端容器啟動時, 都會自動執行資料庫遷移.
+- 後端會產生 4 個設備的模擬讀數, 每個設備每隔 `SIMULATOR_INTERVAL_SECONDS` 產生一筆 (預設為 1, 即每個設備每秒一筆). 此值在後端啟動時讀取, 修改後請重新啟動: `docker compose up -d backend`. 模擬讀數會保留在資料庫中, 沒有時間限制; 以預設速率計算, 每天約 345,000 筆.
+- 監控畫面的即時視窗透過後端 WebSocket (`/api/v1/realtime/ws`) 接收讀數: Streamlit 服務端會為每位顯示即時視窗的使用者維持一條連線, 並每秒重繪. 沒有人查看的連線會在 30 秒後關閉. `GET /api/v1/realtime/window` 透過 REST 回傳相同的快照.
+- 三個測試帳號各對應一種角色, 都來自 `.env`: `INITIAL_ADMIN_*` (Admin)、`INITIAL_USER_*` (User) 與 `INITIAL_VIEWER_*` (Viewer). 這六個變數都必須設定, 三個帳號名稱也不可相同. `.env.example` 提供範例值 (`admin` / `Admin@12345`、`user` / `User@12345`、`viewer` / `Viewer@12345`), 用於本機測試以外的用途時請更改. 帳號不存在時, 會在後端啟動時建立. 帳號建立後不再套用這些值, 因此修改它們不會改變該帳號的密碼或角色. 不符合註冊規則的密碼仍可使用, 但後端會記錄 `initial_<role>_weak_password` 警告, 並列出缺少的條件. 請使用至少 8 個字元, 且包含大寫字母、小寫字母、數字與符號的密碼.
+- 系統日誌 (Admin, `GET /api/v1/logs`) 會保存登入、登出、權限拒絕、角色變更、記錄變更、導入結果、範圍與單位變更, 以及系統錯誤, 但不保存模擬讀數. 超過 `LOG_RETENTION_DAYS` (預設 365) 的資料列會自動移除, 時機是後端啟動時, 之後最多每小時一次. 修改後請重新啟動後端: `docker compose up -d backend`.
+- 每個系統日誌事件也會以 JSON 行的形式寫入後端的 stdout. 資料列約每秒批次寫入資料庫一次, 因此後端當機時, 資料庫可能遺失約最後一秒的資料列, 但 stdout 不受影響. 資料庫無法使用時, 資料列會暫存在記憶體中 (最多 10,000 筆, 超過時會捨棄最舊的資料並發出警告), 待資料庫恢復後再寫入.
 
-## API documentation
+## 角色
 
-[`docs/api-documentation.html`](docs/api-documentation.html) is a Swagger UI copy of the API documentation. Download it and open it in a browser. It needs internet access to load Swagger UI, but no running backend. "Try it out" is turned off in this copy, so use the Swagger address above to send requests. All endpoints are under `/api/v1/`, and the WebSocket (`/api/v1/realtime/ws`) isn't listed, because OpenAPI doesn't cover WebSockets.
+| 角色 | 權限 |
+| --- | --- |
+| Admin | 所有功能, 包含系統管理頁面. 可修改或刪除任何人的一般記錄 |
+| User | 瀏覽、新增與批量導入. 只能修改或刪除自己建立的記錄 |
+| Viewer | 瀏覽即時監控、資料列表與資料分析, 並下載 Excel 檔 |
 
-After changing the API, regenerate the file from this folder:
+- 在註冊頁建立的帳號預設為 Viewer. Admin 可在 系統管理 → 使用者管理 修改其角色.
+- 同一帳號在別處登入時, 先前的登入會失效.
+- 被標記為異常的記錄任何人都不能修改或刪除, 包含 Admin.
+
+## API 文件
+
+[`docs/api-documentation.html`](docs/api-documentation.html) 是 API 文件的 Swagger UI 副本. 請下載後以瀏覽器開啟. 檢視時需要網路連線以載入 Swagger UI, 但不需要執行後端. 此副本已關閉 "Try it out", 若要發送請求, 請使用上方的 Swagger 位址. 所有端點都位於 `/api/v1/` 之下. WebSocket (`/api/v1/realtime/ws`) 未列於文件中, 因為 OpenAPI 不涵蓋 WebSocket.
+
+修改 API 後, 請在此資料夾重新產生檔案:
 
 ```sh
 docker build --target test -t monitoring-dashboard-backend-test backend
 docker run --rm -v "$PWD/docs:/out" monitoring-dashboard-backend-test python -m scripts.export_api_docs /out/api-documentation.html
 ```
 
-## Frontend
+## 前端
 
-The frontend is a Streamlit app. `frontend/asgi.py` is the server entry point and `frontend/app.py` is the shell that every page runs through. Screens live in `frontend/screens/`. Do not rename that folder to `pages/`: Streamlit then lists every file in the sidebar, including admin pages, during the first session after a server start.
+前端是 Streamlit 應用程式. `frontend/asgi.py` 是伺服器進入點, `frontend/app.py` 是每個頁面都會經過的外殼. 畫面位於 `frontend/screens/`. 請勿將該資料夾改名為 `pages/`: 否則在伺服器啟動後的第一個工作階段, Streamlit 會在側邊欄列出所有檔案, 包含管理頁面.
 
-Login is stored in an HttpOnly cookie, `md_session`, so it survives a refresh or a new tab. It has no `Secure` attribute over plain HTTP, and browsers send cookies to every port on a host. Keep the default `HOST_BIND_ADDRESS=127.0.0.1` unless the frontend is behind TLS on its own hostname. The frontend must run as a single replica.
+登入狀態存放在 HttpOnly cookie `md_session` 中, 因此重新整理或開新分頁後仍會保留. 在純 HTTP 下它沒有 `Secure` 屬性, 而瀏覽器會把 cookie 傳送到同一主機的所有連接埠. 除非前端位於有 TLS 的獨立主機名稱之後, 否則請維持預設的 `HOST_BIND_ADDRESS=127.0.0.1`. 前端只能以單一副本執行.
 
-## Test
+## 測試
 
 ```sh
 docker build --target test -t monitoring-dashboard-backend-test backend
 docker run --rm monitoring-dashboard-backend-test
 ```
 
-This needs no database, so tests that do are skipped with a stated reason. To run everything, use the script below. It starts a throwaway MariaDB container on a temporary network and removes both when it finishes:
+這不需要資料庫, 因此需要資料庫的測試會被略過並說明原因. 若要執行全部測試, 請使用下方腳本. 它會在臨時網路上啟動一次性的 MariaDB 容器, 完成後兩者都會移除:
 
 ```sh
 backend/tests/run_integration.sh
 ```
 
-Browser tests that click through the running app are in `e2e/`. See [e2e/README.md](e2e/README.md) for setup.
+實際操作應用程式的瀏覽器測試位於 `e2e/`. 設定方式請見 [e2e/README.md](e2e/README.md).
+
+### 前端單元測試
+
+前端單元測試檢查 `frontend/core/` 中的邏輯, 不需要後端、資料庫或瀏覽器. 畫面的實際操作由 `e2e/` 的瀏覽器測試負責.
+
+在 `frontend/` 建立環境並執行:
+
+```sh
+uv venv --python 3.13 .venv
+uv pip install --python .venv/bin/python -r requirements.txt -r requirements-dev.txt
+.venv/bin/python -m pytest tests
+```
+
+測試檔案位於 `frontend/tests/`:
+
+* `test_records.py`
+   * 檢查時間與數值的格式、範圍位置、記錄的操作權限、查詢參數, 以及列表換頁與載入失敗時的狀態.
+* `test_record_form.py`
+   * 檢查數值欄位的解析與錯誤訊息, 以及範圍與單位的說明文字.
+* `test_live_feed.py`
+   * 檢查 WebSocket 網址, 以及即時資料與心跳訊息如何更新畫面資料、異常列表、停滯狀態與時間視窗.
+* `test_nav.py`
+   * 檢查頁面登記、每個頁面所需的權限、公開頁面, 以及導覽列依權限隱藏頁面.
+* `test_charts.py`
+   * 檢查異常範圍的讀取, 以及圖表 Y 軸範圍在無資料、單一數值與超出範圍時的計算.

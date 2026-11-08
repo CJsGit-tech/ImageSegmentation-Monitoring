@@ -1,21 +1,18 @@
-# Eye experiments
+# 眼睛實驗
 
-This folder holds earlier work that isn't part of the submission. It covers the DINO v1 and DINOv2
-experiments, heatmap comparisons, binary heatmaps and background notes.
-[The experiment history](../submission/reports/supporting/experiment_history.md) explains what was
-tried and why.
+此資料夾存放先前的工作, 不屬於提交內容. 內容包含 DINO v1 與 DINOv2 實驗、熱圖比較、二值化熱圖與背景筆記.
+[實驗歷程](../submission/reports/supporting/experiment_history.md)說明嘗試過哪些方法及其原因.
 
-| Location | Contents |
+| 位置 | 內容 |
 |---|---|
-| `scripts/` | Experiment, heatmap and binary image scripts |
-| `outputs/experiments/selected/` | The original runs of the two selected methods |
-| `outputs/experiments/archive/` | Other experiments, with the reasons in its README |
-| `outputs/heatmaps/` | DINO v1 and DINOv2 heatmap sets |
-| `outputs/cropped_animals/` | Cat and dog crops from the sample images |
-| `notes/` | YOLO11n-seg notes and diagrams |
+| `scripts/` | 實驗、熱圖與二值化影像腳本 |
+| `outputs/experiments/selected/` | 兩種入選方法的原始執行結果 |
+| `outputs/experiments/archive/` | 其他實驗, 原因記錄在該資料夾的 README |
+| `outputs/heatmaps/` | DINO v1 與 DINOv2 熱圖集 |
+| `outputs/cropped_animals/` | 從範例圖片裁切的貓狗圖片 |
+| `notes/` | YOLO11n-seg 筆記與圖表 |
 
-These scripts use YOLOE results, datasets and shared code from `../submission/`. Run them from the
-repository root, for example:
+這些腳本會使用 `../submission/` 中的 YOLOE 結果、資料集與共用程式碼. 請在專案根目錄執行, 例如:
 
 ```bash
 .venv/bin/python image-segmentation/experiments/scripts/run_dinov2_experiments.py

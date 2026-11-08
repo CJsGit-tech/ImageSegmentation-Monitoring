@@ -1,43 +1,35 @@
-# Model choice: YOLOE with Ultralytics
+# 模型選擇: YOLOE 與 Ultralytics
 
-This project uses `yoloe-26l-seg.pt` through the Ultralytics Python SDK to segment animals
-and their eyes.
+本專案透過 Ultralytics Python SDK 使用 `yoloe-26l-seg.pt` 分割動物及其眼睛.
 
-## Why the Ultralytics SDK
+## 為什麼使用 Ultralytics SDK
 
-Ultralytics is a Python SDK that makes object detection and instance segmentation models easy
-to use. The same package covers the steps this project needs:
+Ultralytics 是 Python SDK, 讓物件偵測與實例分割模型容易使用. 同一個套件涵蓋本專案需要的步驟:
 
-| Need | What the SDK provides | Source |
+| 需求 | SDK 提供的功能 | 來源 |
 |---|---|---|
-| Prediction | Load a model, set text prompts and predict in a few lines | [YOLOE docs][yoloe-docs] |
-| Visualization | Display results directly with `results[0].show()` | [YOLOE docs][yoloe-docs] |
-| Inference on exported models | Predict or validate directly on an exported file, such as `yolo26n.onnx` | [Detection docs][detect-docs] |
-| Custom training | Prepare a labeled dataset, adjust a config file and train from Python | [Ultralytics training guide][train-guide] |
-| Fine-tuning YOLOE | Dedicated trainers such as `YOLOEPESegTrainer` | [YOLOE docs][yoloe-docs] |
-| Model export | ONNX, CoreML, NCNN, LiteRT and other formats | [Export docs][export-docs] |
+| 預測 | 用幾行程式載入模型、設定文字提示並預測 | [YOLOE 文件][yoloe-docs] |
+| 視覺化 | 以 `results[0].show()` 直接顯示結果 | [YOLOE 文件][yoloe-docs] |
+| 在匯出模型上推論 | 直接在匯出的檔案上預測或驗證, 例如 `yolo26n.onnx` | [偵測文件][detect-docs] |
+| 自訂訓練 | 準備標註資料集、調整設定檔, 並從 Python 訓練 | [Ultralytics 訓練指南][train-guide] |
+| 微調 YOLOE | 專用的訓練器, 例如 `YOLOEPESegTrainer` | [YOLOE 文件][yoloe-docs] |
+| 模型匯出 | ONNX、CoreML、NCNN、LiteRT 與其他格式 | [匯出文件][export-docs] |
 
-YOLOE itself is documented as exporting to ONNX, OpenVINO, TensorRT, CoreML, LiteRT and RKNN
-([YOLOE docs][yoloe-docs]).
+依文件記載, YOLOE 本身可匯出為 ONNX、OpenVINO、TensorRT、CoreML、LiteRT 與 RKNN ([YOLOE 文件][yoloe-docs]).
 
-## Why YOLOE
+## 為什麼使用 YOLOE
 
-COCO has no eye class, so COCO-trained models can't segment eyes. YOLOE is an open-vocabulary
-model: it segments what it is told to look for in text, so `eye` can be requested without any
-training ([YOLOE docs][yoloe-docs]).
+COCO 沒有眼睛類別, 因此以 COCO 訓練的模型無法分割眼睛. YOLOE 是開放詞彙模型: 它會依文字指示分割目標, 因此不需訓練就能要求尋找 `eye` ([YOLOE 文件][yoloe-docs]).
 
-## Performance on edge devices
+## 在邊緣裝置上的效能
 
-**Summary:** published results support real-time YOLOE on some edge hardware, mainly at smaller
-model sizes. This project's current setup hasn't been tested on an edge device, and it uses a
-larger model than the edge results below.
+**摘要:** 已發表的結果支持 YOLOE 在部分邊緣硬體上即時執行, 主要是較小的模型尺寸. 本專案目前的設定尚未在邊緣裝置上測試, 使用的模型也比下方邊緣結果中的模型大.
 
-### Published results
+### 已發表的結果
 
-The [YOLOE paper][yoloe-paper] measured speed on an Nvidia T4 GPU with TensorRT and an iPhone 12
-with CoreML, using exported models on LVIS:
+[YOLOE 論文][yoloe-paper]在使用 TensorRT 的 Nvidia T4 GPU 與使用 CoreML 的 iPhone 12 上量測速度, 使用 LVIS 上的匯出模型:
 
-| Model | Nvidia T4 (FPS) | iPhone 12 (FPS) |
+| 模型 | Nvidia T4 (FPS) | iPhone 12 (FPS) |
 |---|---|---|
 | YOLOE-11-S | 301.2 | 73.3 |
 | YOLOE-11-M | 168.3 | 39.2 |
@@ -45,130 +37,99 @@ with CoreML, using exported models on LVIS:
 | YOLOE-v8-S | 305.8 | 64.3 |
 | YOLOE-v8-M | 156.7 | 41.7 |
 | YOLOE-v8-L | 102.5 | 27.2 |
-| YOLO-Worldv2-S (for comparison) | 216.4 | 48.9 |
-| YOLO-Worldv2-L (for comparison) | 80.0 | 22.1 |
+| YOLO-Worldv2-S (供比較) | 216.4 | 48.9 |
+| YOLO-Worldv2-L (供比較) | 80.0 | 22.1 |
 
-The paper reports YOLOE-v8-S as 1.4× faster on the T4 and 1.3× faster on the iPhone 12 than
-YOLO-Worldv2-S ([paper][yoloe-paper]).
+論文指出 YOLOE-v8-S 比 YOLO-Worldv2-S 在 T4 上快 1.4×, 在 iPhone 12 上快 1.3× ([論文][yoloe-paper]).
 
-The [YOLOE docs][yoloe-docs] say the `n` and `s` sizes run on edge GPUs such as Jetson or on CPU
-at reduced resolution. They also state that inference generally needs an NVIDIA GPU with 4–8 GB
-of VRAM.
+[YOLOE 文件][yoloe-docs]表示, `n` 與 `s` 尺寸可在 Jetson 等邊緣 GPU 上執行, 或在降低解析度後於 CPU 上執行. 文件也指出推論通常需要有 4–8 GB VRAM 的 NVIDIA GPU.
 
-### What the evidence doesn't show
+### 證據未能說明的部分
 
-- **YOLOE-26 on devices:** the paper predates YOLOE-26, so the figures above are for the older
-  YOLOE-v8 and YOLOE-11 models. No on-device speeds for YOLOE-26 were found.
-- **Jetson and Raspberry Pi:** no published YOLOE speed measurements were found for these.
-- **Independence:** the speed figures come from the model's authors, not an independent benchmark.
-- **Segmentation overhead:** the docs note that the loaded `yoloe-26l-seg.pt` is larger than its
-  detection figures, at 35.4 M parameters and 142.0 B FLOPs ([YOLOE docs][yoloe-docs]).
+- **YOLOE-26 在裝置上的表現:** 論文早於 YOLOE-26, 因此上方數據是較舊的 YOLOE-v8 與 YOLOE-11 模型. 沒有找到 YOLOE-26 的裝置端速度.
+- **Jetson 與 Raspberry Pi:** 沒有找到已發表的 YOLOE 速度量測.
+- **獨立性:** 速度數據來自模型作者, 而非獨立的效能測試.
+- **分割的額外負擔:** 文件提到載入的 `yoloe-26l-seg.pt` 比其偵測數據大, 為 35.4 M 參數與 142.0 B FLOPs ([YOLOE 文件][yoloe-docs]).
 
-### How this applies to this project
+### 對本專案的影響
 
-| Current setup | Effect on edge use |
+| 目前設定 | 對邊緣使用的影響 |
 |---|---|
-| Large model (`26l`) | The docs point to `n` and `s` for edge GPUs and CPU |
-| Eye search at size 1280 | Much slower than 640: about 0.8 vs 0.22 s per image on an Apple M4 Pro CPU in our rough test |
-| Two passes per image | About double the model runs of a single pass |
-| Text encoder of about 254 MB | Can be avoided after export, because prompts are saved into the exported model ([YOLOE docs][yoloe-docs]) |
+| 大型模型 (`26l`) | 文件建議邊緣 GPU 與 CPU 使用 `n` 與 `s` |
+| 以 1280 尺寸搜尋眼睛 | 比 640 慢許多: 在我們於 Apple M4 Pro CPU 的粗略測試中, 每張約 0.8 秒對 0.22 秒 |
+| 每張圖片推論兩次 | 模型執行次數約為單次推論的兩倍 |
+| 文字編碼器約 254 MB | 匯出後可避免, 因為提示會儲存在匯出的模型中 ([YOLOE 文件][yoloe-docs]) |
 
-Moving to a smaller model or input size would probably lower eye accuracy. On our images, at
-conf 0.1, `26s` found 7 of 13 eyes against 9 for `26l`, and size 640 found 5 against 9 for 1280.
-Edge deployment should be tested on the target device.
+改用較小的模型或輸入尺寸可能會降低眼睛準確度. 在我們的圖片上, conf 0.1 時, `26s` 找到 13 個眼睛中的 7 個, `26l` 則為 9 個; 尺寸 640 找到 5 個, 1280 則為 9 個.
+邊緣部署應在目標裝置上測試.
 
-Exported YOLOE models are static: `set_classes()` and visual prompts stop working after export,
-so prompts must be chosen first ([YOLOE docs][yoloe-docs]).
+匯出的 YOLOE 模型是靜態的: `set_classes()` 與視覺提示在匯出後無法使用, 因此必須先選定提示 ([YOLOE 文件][yoloe-docs]).
 
-## Limitations of the current approach
+## 目前方法的限制
 
-### Only specific animals were tested
+### 只測試了特定動物
 
-The config prompts `bird`, `cat` and `dog`, and testing used 3 images containing only those
-animals. COCO's other animal classes (horse, sheep, cow, elephant, bear, zebra, giraffe) haven't
-been tested, so results may not carry over to them.
+設定檔提示 `bird`、`cat` 與 `dog`, 測試也只用了含有這些動物的 3 張圖片. COCO 的其他動物類別 (馬、羊、牛、大象、熊、斑馬、長頸鹿) 尚未測試, 因此結果不一定適用.
 
-### Eye confidence is low
+### 眼睛信心分數低
 
-| Detection | Confidence on the sample images |
+| 偵測對象 | 範例圖片上的信心分數 |
 |---|---|
-| Animals | 0.52–0.90 |
-| Eyes | 0.12–0.35 |
+| 動物 | 0.52–0.90 |
+| 眼睛 | 0.12–0.35 |
 
-Because of this, `eye_conf` must stay low at 0.1. Raising it to 0.25 would lose most eyes. Four of
-the 13 marked eyes are still missed, all in image 001.
+因此 `eye_conf` 必須維持在較低的 0.1. 提高到 0.25 會失去大部分眼睛. 13 個標記眼睛中仍有 4 個被漏掉, 都在圖片 001.
 
-### Suggested next step: custom training
+### 建議的下一步: 自訂訓練
 
-Build our own training dataset and run custom training. This is a main reason the SDK is a good
-fit, because the same package used for prediction also covers training, validation and export.
+建立自己的訓練資料集並進行自訂訓練. 這是 SDK 適合本專案的主要原因之一, 因為用於預測的同一個套件也涵蓋訓練、驗證與匯出.
 
-1. **Build the dataset.** [Pascal-Part][pascal-part] already includes eye part masks for cats,
-   dogs, cows, horses and sheep, and the related [Pascal-Part-116][pascal-part-116] benchmark
-   lists bird eyes. COCO images can be hand-labeled to match this project, since COCO has no eye masks.
-2. **Train.** Either train a YOLO segmentation model with an `eye` class ([training
-   guide][train-guide]) or fine-tune YOLOE ([YOLOE docs][yoloe-docs]).
-3. **Evaluate.** Keep a separate test set and report mask mAP, precision and recall.
-4. **Export.** Export to a format that suits the target device ([export docs][export-docs]).
+1. **建立資料集.** [Pascal-Part][pascal-part] 已包含貓、狗、牛、馬與羊的眼睛部位遮罩, 相關的 [Pascal-Part-116][pascal-part-116] 基準也列出鳥眼. 因為 COCO 沒有眼睛遮罩, 可以手動標註 COCO 圖片以符合本專案.
+2. **訓練.** 訓練帶有 `eye` 類別的 YOLO 分割模型 ([訓練指南][train-guide]), 或微調 YOLOE ([YOLOE 文件][yoloe-docs]).
+3. **評估.** 保留獨立的測試集, 並回報遮罩 mAP、精確率與召回率.
+4. **匯出.** 匯出為適合目標裝置的格式 ([匯出文件][export-docs]).
 
-Things to expect:
+預期情況:
 
-- **Small eyes stay hard:** [small objects can still be missed][roboflow] after fine-tuning, and
-  training can't add detail to an eye only a few pixels wide.
-- **Fixed classes after fine-tuning:** a checkpoint fine-tuned with `YOLOEPESegTrainer` raises an
-  error if the classes change ([YOLOE docs][yoloe-docs]).
-- **Licensing:** a maintainer comment on the [YOLOE docs][yoloe-docs] says production use requires
-  either AGPL-3.0 compliance or an Enterprise License. Confirm this before any commercial use.
+- **小眼睛依然困難:** 微調後[小物件仍可能被漏掉][roboflow], 訓練也無法為只有幾個像素寬的眼睛增加細節.
+- **微調後類別固定:** 以 `YOLOEPESegTrainer` 微調的檢查點在類別變更時會報錯 ([YOLOE 文件][yoloe-docs]).
+- **授權:** [YOLOE 文件][yoloe-docs]中維護者的留言表示, 正式環境使用需遵守 AGPL-3.0 或取得企業授權. 商業使用前請先確認.
 
-### Reducing the labeling work with vision-language models
+### 以視覺語言模型減少標註工作
 
-Labeling eyes by hand is tedious, so vision-language models (VLMs) could create first-draft
-labels for people to correct. We have used recent models such as GPT to help label document
-layouts, and the same idea could apply here.
+手動標註眼睛很繁瑣, 因此視覺語言模型 (VLM) 可以產生初步標籤供人修正. 我們曾使用 GPT 等近期模型協助標註文件版面, 相同的想法也可應用於此.
 
-The approach has support in published work. One [2025 paper][auto-label-paper] used
-vision-language models to generate labels, then trained lightweight detectors on them, and
-reported competitive performance with large cuts in labeling time and cost. It used YOLO-World,
-YOLOE and Grounding DINO rather than GPT or Gemini.
+這個方法有已發表研究支持. 一篇 [2025 年的論文][auto-label-paper]使用視覺語言模型產生標籤, 再以這些標籤訓練輕量偵測器, 報告了具競爭力的效能, 同時大幅減少標註時間與成本. 它使用的是 YOLO-World、YOLOE 與 Grounding DINO, 而非 GPT 或 Gemini.
 
-**Proposed workflow:**
+**建議流程:**
 
-1. **Draft boxes.** Ask a VLM for eye boxes on each animal crop. The [Gemini API][gemini-docs], for
-   example, can return boxes as normalized coordinates, and they need converting to pixels.
-2. **Create masks.** Pass each box to SAM to produce an eye mask. SAM accepts box prompts, and
-   Ultralytics' [`auto_annotate`][auto-annotate] already pairs a detector with SAM and writes
-   YOLO-format polygon labels, though its detector must be a YOLO model that has the class.
-3. **Review.** Have a person correct or reject every label.
-4. **Train.** Train on the reviewed labels with the Ultralytics SDK.
+1. **產生初步外框.** 請 VLM 為每張動物裁切圖提供眼睛外框. 例如 [Gemini API][gemini-docs] 可回傳正規化座標的外框, 需要再換算為像素.
+2. **產生遮罩.** 將每個外框交給 SAM 產生眼睛遮罩. SAM 接受外框提示, Ultralytics 的 [`auto_annotate`][auto-annotate] 也已將偵測器與 SAM 串接, 並寫出 YOLO 格式的多邊形標籤, 但其偵測器必須是具有該類別的 YOLO 模型.
+3. **審閱.** 請人修正或退回每個標籤.
+4. **訓練.** 使用 Ultralytics SDK 以審閱後的標籤訓練.
 
-**Risks to manage:**
+**需要管理的風險:**
 
-- **Eyes are harder than document layouts:** layout regions are large, while some eyes here are
-  only a few pixels wide. No controlled comparison of GPT or Gemini box accuracy on small objects
-  was found, so this should first be tested on a small hand-labeled sample.
-- **Wrong labels teach the model mistakes:** auto-labels can [add wrong labels][auto-label-review],
-  especially for hard objects or at low confidence, which is why step 3 matters.
-- **Keep testing separate:** the final test set must be labeled and checked by people, not taken
-  from VLM output. Otherwise the score only shows agreement with the VLM.
-- **Segmentation support varies:** Gemini's [image understanding docs][gemini-docs] describe
-  contour masks from Gemini 2.5, but its [Gemini 3 guide][gemini-3] says Gemini 3 Pro and Flash
-  don't support them. Using SAM for the masks avoids depending on this.
+- **眼睛比文件版面更難:** 版面區域很大, 而這裡有些眼睛只有幾個像素寬. 沒有找到 GPT 或 Gemini 在小物件上外框準確度的對照比較, 因此應先在少量手動標註的樣本上測試.
+- **錯誤標籤會教壞模型:** 自動標籤可能[加入錯誤標籤][auto-label-review], 尤其是困難物件或低信心時, 這正是第 3 步重要的原因.
+- **測試要保持獨立:** 最終測試集必須由人標註與檢查, 不可取自 VLM 輸出. 否則分數只顯示與 VLM 的一致程度.
+- **分割支援不一:** Gemini 的[影像理解文件][gemini-docs]描述了 Gemini 2.5 起的輪廓遮罩, 但 [Gemini 3 指南][gemini-3]表示 Gemini 3 Pro 與 Flash 不支援. 使用 SAM 產生遮罩可避免依賴這一點.
 
-## References
+## 參考資料
 
-- [YOLOE: Real-Time Seeing Anything (paper)][yoloe-paper]
-- [Ultralytics YOLOE documentation][yoloe-docs]
-- [Ultralytics model export documentation][export-docs]
-- [Ultralytics object detection documentation][detect-docs]
-- [Ultralytics custom training guide for instance segmentation][train-guide]
-- [Roboflow: training YOLO26 segmentation on custom data][roboflow]
+- [YOLOE: Real-Time Seeing Anything (論文)][yoloe-paper]
+- [Ultralytics YOLOE 文件][yoloe-docs]
+- [Ultralytics 模型匯出文件][export-docs]
+- [Ultralytics 物件偵測文件][detect-docs]
+- [Ultralytics 實例分割自訂訓練指南][train-guide]
+- [Roboflow: 以自訂資料訓練 YOLO26 分割模型][roboflow]
 - [Going Denser with Open-Vocabulary Part Segmentation (Pascal-Part)][pascal-part]
 - [Understanding Multi-Granularity for Open-Vocabulary Part Segmentation (Pascal-Part-116)][pascal-part-116]
-- [Auto-Labeling Data for Object Detection (paper)][auto-label-paper]
-- [Literature review of Auto-Labeling Data for Object Detection][auto-label-review]
-- [Gemini API image understanding documentation][gemini-docs]
-- [Gemini 3 developer guide][gemini-3]
-- [Ultralytics SAM documentation, including auto-annotation][auto-annotate]
+- [Auto-Labeling Data for Object Detection (論文)][auto-label-paper]
+- [Auto-Labeling Data for Object Detection 文獻評論][auto-label-review]
+- [Gemini API 影像理解文件][gemini-docs]
+- [Gemini 3 開發者指南][gemini-3]
+- [Ultralytics SAM 文件, 包含自動標註][auto-annotate]
 
 [yoloe-paper]: https://arxiv.org/abs/2503.07465
 [yoloe-docs]: https://docs.ultralytics.com/models/yoloe
