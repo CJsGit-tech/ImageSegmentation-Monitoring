@@ -30,7 +30,7 @@
 
 ## 本地運行步驟
 
-使用專案根目錄的 `.venv` (Python 3.13). 若要在相容的 Apple Silicon Mac 上重新建立, 請在專案根目錄執行:
+本子專案直接以 Python 執行, 不使用 Docker. 請在專案根目錄, 於 Apple Silicon Mac 或其他裝有 Python 3.13 的電腦上建立 `.venv` 並安裝套件:
 
 ```bash
 python3.13 -m venv .venv
