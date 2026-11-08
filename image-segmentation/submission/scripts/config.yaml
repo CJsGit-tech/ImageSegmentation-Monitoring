@@ -7,7 +7,7 @@ other_source: ../data/002-other_samples     # other COCO images, without eye mar
 other_output: ../outputs/002-other_samples_yoloe
 model: ../../model/yoloe-26l-seg.pt      # model weights
 
-animals: [bird, cat, dog]    # downloaded from the COCO official website
+animals: [cat, dog]    # downloaded from the COCO official website
 
 animal_conf: 0.5
 eye_conf: 0.1             # lower finds more eyes and more mistakes

@@ -106,3 +106,28 @@ backend/tests/run_integration.sh
 ```
 
 實際操作應用程式的瀏覽器測試位於 `e2e/`. 設定方式請見 [e2e/README.md](e2e/README.md).
+
+### 前端單元測試
+
+前端單元測試檢查 `frontend/core/` 中的邏輯, 不需要後端、資料庫或瀏覽器. 畫面的實際操作由 `e2e/` 的瀏覽器測試負責.
+
+在 `frontend/` 建立環境並執行:
+
+```sh
+uv venv --python 3.13 .venv
+uv pip install --python .venv/bin/python -r requirements.txt -r requirements-dev.txt
+.venv/bin/python -m pytest tests
+```
+
+測試檔案位於 `frontend/tests/`:
+
+* `test_records.py`
+   * 檢查時間與數值的格式、範圍位置、記錄的操作權限、查詢參數, 以及列表換頁與載入失敗時的狀態.
+* `test_record_form.py`
+   * 檢查數值欄位的解析與錯誤訊息, 以及範圍與單位的說明文字.
+* `test_live_feed.py`
+   * 檢查 WebSocket 網址, 以及即時資料與心跳訊息如何更新畫面資料、異常列表、停滯狀態與時間視窗.
+* `test_nav.py`
+   * 檢查頁面登記、每個頁面所需的權限、公開頁面, 以及導覽列依權限隱藏頁面.
+* `test_charts.py`
+   * 檢查異常範圍的讀取, 以及圖表 Y 軸範圍在無資料、單一數值與超出範圍時的計算.
