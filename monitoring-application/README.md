@@ -2,17 +2,55 @@
 
 ## Run
 
-Requires Docker with Docker Compose v2.
+Requires Git, Docker and Docker Compose v2. Get the project from GitHub:
 
 ```sh
-cp .env.example .env    # then fill in the database passwords and JWT_SECRET_KEY
+git clone https://github.com/CJsGit-tech/ImageSegmentation-Monitoring.git
+cd ImageSegmentation-Monitoring/monitoring-application
+```
+
+Create the environment file, then fill in the database passwords and `JWT_SECRET_KEY` (the three test accounts already have example values):
+
+```sh
+cp .env.example .env
+```
+
+Build and start the database, backend and frontend:
+
+```sh
 docker compose up -d --build
+```
+
+Check that all three services are healthy:
+
+```sh
+docker compose ps
 ```
 
 | Service | Address (default) |
 | --- | --- |
 | Frontend | http://127.0.0.1:18501 |
+| Backend API | http://127.0.0.1:18000 |
 | Backend Swagger | http://127.0.0.1:18000/docs |
+| Database | Not published outside Docker |
+
+Once it is running:
+
+1. Open http://127.0.0.1:18501 and log in with any account from [the test accounts](../README.md#測試帳號資訊).
+2. As User or Admin, go to 資料 → 批量導入 in the sidebar and upload `docs/sample-records-1000.csv` to load 1000 sample records.
+3. The 即時監控 page receives live data over WebSocket and updates every second. Simulated data appears about 1 second after startup.
+
+Follow the backend logs:
+
+```sh
+docker compose logs -f backend
+```
+
+Stop the services and keep the database:
+
+```sh
+docker compose down
+```
 
 Database data lives in the `db_data` volume and survives `docker compose down`. `docker compose down -v` deletes it.
 
@@ -24,6 +62,17 @@ Database data lives in the `db_data` volume and survives `docker compose down`. 
 - Three test accounts, one per role, come from `.env`: `INITIAL_ADMIN_*` (Admin), `INITIAL_USER_*` (User) and `INITIAL_VIEWER_*` (Viewer). All six variables are required, and the three usernames must differ. `.env.example` has example values (`admin` / `Admin@12345`, `user` / `User@12345`, `viewer` / `Viewer@12345`); change them for anything other than local testing. Each account is created at backend start when it does not exist. Once it exists, these values are not applied, so changing them does not change its password or role. A password that does not meet the registration rules still works, but the backend logs an `initial_<role>_weak_password` warning naming the missing conditions. Use one with at least 8 characters, including uppercase, lowercase, a digit and a symbol.
 - The system log (Admin, `GET /api/v1/logs`) keeps logins, logouts, permission denials, role changes, record changes, import results, range and unit changes and system errors. It never keeps simulated readings. Rows older than `LOG_RETENTION_DAYS` (default 365) are removed automatically, at backend start and then at most hourly. Restart the backend after changing it: `docker compose up -d backend`.
 - Every system log event is also written to the backend's stdout as a JSON line. Rows reach the database in batches about once a second, so a backend crash can lose roughly the last second of rows from the database, though not from stdout. While the database is unavailable, rows wait in memory (up to 10,000; beyond that the oldest are dropped, with a warning) and are written when it recovers.
+
+## API documentation
+
+[`docs/api-documentation.html`](docs/api-documentation.html) is a Swagger UI copy of the API documentation. Download it and open it in a browser. It needs internet access to load Swagger UI, but no running backend. "Try it out" is turned off in this copy, so use the Swagger address above to send requests. All endpoints are under `/api/v1/`, and the WebSocket (`/api/v1/realtime/ws`) isn't listed, because OpenAPI doesn't cover WebSockets.
+
+After changing the API, regenerate the file from this folder:
+
+```sh
+docker build --target test -t monitoring-dashboard-backend-test backend
+docker run --rm -v "$PWD/docs:/out" monitoring-dashboard-backend-test python -m scripts.export_api_docs /out/api-documentation.html
+```
 
 ## Frontend
 

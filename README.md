@@ -1,173 +1,86 @@
-# ImageSegmentation-Monitoring
+# 圖像分割 & 實時監控平台
 
 ## 專案介紹
 
-這是一個個人專案, 包含兩個子專案:
-
-| 子專案 | 資料夾 | 內容 |
+| 專案 | 資料夾 | 內容 |
 |---|---|---|
 | **圖像分割與眼距量測** | [`image-segmentation/`](image-segmentation/README.md) | 在 COCO 圖片中分割貓、狗及其眼睛, 並量測每隻動物的雙眼距離, 以及兩隻動物之間的右眼距離 |
 | **即時資料分析與監控系統** | [`monitoring-application/`](monitoring-application/README.md) | 由 FastAPI 後端、Streamlit 前端與 MariaDB 資料庫組成, 以 Docker Compose 部署 |
 
-圖像分割的方法、結果與限制請見 [image-segmentation/submission/README.md](image-segmentation/submission/README.md).
+各類專案的詳細結果與復現方法可在專案 ***README*** 中查閱.
 
-## 技術棧
+## 專案結構
 
-**圖像分割**
-
-| 項目 | 技術 |
-|---|---|
-| 程式語言 | Python 3.13 |
-| 動物與眼睛分割 | YOLOE (`yoloe-26l-seg`), 透過 Ultralytics 8.4 |
-| 眼睛特徵 | DINOv2 ViT-S/14 (含 registers), 透過 PyTorch 2.15 |
-| 影像處理 | OpenCV 5 (GrabCut、輪廓) 與 NumPy |
-| 資料 | COCO val2017 圖片與標註 |
-
-**監控系統**
-
-| 項目 | 技術 |
-|---|---|
-| 程式語言 | Python 3.13 |
-| 後端 | FastAPI (非同步 REST 與 WebSocket)、Pydantic、JWT (PyJWT) 與 Argon2 密碼雜湊, 以 Uvicorn 執行 |
-| 資料庫 | MariaDB 11.7, 透過 SQLAlchemy 2 ORM 與 asyncmy 存取, 以 Alembic 管理遷移 |
-| 前端 | Streamlit 1.67, 以 Altair 與 pandas 繪製圖表 |
-| 檔案處理 | python-multipart (CSV／JSON 上傳)、XlsxWriter (Excel 匯出) |
-| 部署 | Docker 多階段建置與 Docker Compose (資料庫、後端、前端三個容器) |
-| 測試 | pytest (後端單元與整合測試), 以及使用 Playwright 的瀏覽器測試 |
-
-各套件的確切版本請見 `monitoring-application/backend/requirements.txt` 與 `monitoring-application/frontend/requirements.txt`.
-
-監控系統的主要功能:
-
-- **帳號與權限:** 註冊、登入、登出; Admin、User、Viewer 三種角色.
-- **資料管理:** 資料記錄的新增、分頁瀏覽、篩選、排序、修改與刪除, 以及 CSV／JSON 批量導入.
-- **即時監控:** 系統每秒為 4 個模擬設備各產生一筆資料 (可在 `.env` 調整), 經 WebSocket 推送到前端, 折線圖與柱狀圖每秒更新, 超出範圍的數值標記為異常.
-- **資料分析:** 依時間範圍與分類統計、各分類異常次數柱狀圖、趨勢圖、異常清單與 Excel 下載.
-- **系統管理 (Admin):** 使用者與角色管理、系統日誌、資料庫狀態、即時資料歷史與異常範圍設定.
-
-## 本地運行步驟
-
-### 圖像分割
-
-圖像分割程式直接以 Python 執行. 請在專案根目錄, 於 Apple Silicon Mac 或其他裝有 Python 3.13 的電腦上執行:
-
-```bash
-python3.13 -m venv .venv
+```text
+.
+├── image-segmentation/          圖像分割與眼距量測
+│   ├── submission/              報告、資料、腳本與結果
+│   ├── experiments/             先前的實驗
+│   └── model/                   模型權重 (不納入版本控制)
+└── monitoring-application/      即時資料分析與監控系統
+    ├── backend/                 FastAPI 程式、資料庫遷移與測試
+    ├── frontend/                Streamlit 程式
+    ├── e2e/                     瀏覽器測試
+    ├── docs/                    範例資料與系統架構圖
+    ├── compose.yaml
+    └── .env.example
 ```
 
-```bash
-.venv/bin/python -m pip install -r image-segmentation/submission/requirements.txt
-```
+## 圖像分割與眼距量測 （相關假設）
 
-```bash
-.venv/bin/python image-segmentation/submission/scripts/run_yoloe_test_samples.py
-```
+- 輸入資料:
+    - 靜態的 COCO val2017 圖片, 每張至少有 2 隻動物. 此專案的量測對象為 **貓與狗**.
 
-第一次執行時會自動建立 `image-segmentation/model/`, 並下載 YOLOE 權重 (約 80 MB) 與文字編碼器 (約 250 MB) 到該資料夾.
-之後的執行會直接使用已下載的模型.
-所有腳本 (包含 YOLOE + DINOv2 與距離量測) 請見 [image-segmentation README](image-segmentation/README.md).
+- 不微調模型: 
+    - 預設是 PoC 專案, 目標放在探索開源專案中是否有可行的思路
+    - COCO 沒有**眼睛類別**, 因此僅使用預訓練模型可導致準確率不足
 
-### 監控系統
+- 眼睛歸屬:
+    - 圖片中的動物皆以正面朝前.
+    - 右眼定義:
+        - 假設動物臉朝鏡頭且頭部直立因此取影像中 x 較小的眼睛
+        - 側臉時可能判斷錯誤.
 
-監控系統以 Docker 在本地執行, 需要安裝 Git、Docker 與 Docker Compose v2. 從 GitHub 取得專案:
+- 眼睛距離定義:
+    - 兩個劃定的眼睛的圓圈之中心點, 使用歐氏距離, 單位為影像像素, 同時換算並推估公分(cm)
+    - 量測條件
+        - 一隻動物要有 2 個眼睛才量測雙眼距離並區分左右
+        - 右眼距離需要至少 2 隻這樣的動物, 並計算每一對
+        - 不校正頭部轉向與動物離鏡頭的遠近, 因此結果不等於實際的距離
 
-```bash
-git clone https://github.com/CJsGit-tech/ImageSegmentation-Monitoring.git
-```
+- 驗證可行性
+    - 準確度以 3 張測試圖的眼睛標記為基準. 參數也是依這 3 張圖調整的.
+    - 有附上其他 9 張測試圖片, 當作 PoC 可行性之評估.
 
-```bash
-cd ImageSegmentation-Monitoring/monitoring-application
-```
+## 即時資料分析與監控系統 （相關假設）
 
-接著依下一節的 Docker 指令啟動. 啟動後:
+- 資料模型:
+    - 假設**應用場景為設備感測器讀數**
+    -  一筆記錄代表某個分類在某個時間點的一次讀數. 
+    - 以「分類」區分設備或指標, 沒有獨立的設備欄位, 可以自由設定新設備與讀數
+    - 導入資料的時間戳需含時區資訊 (UTC 為主) 未填時以導入時間為準.
+    - 系統日誌預設保留 365 天.
 
-1. 以瀏覽器開啟 <http://127.0.0.1:18501>, 用「測試帳號資訊」中的任一帳號登入.
-2. 以 User 或 Admin 到側欄「資料 → 批量導入」上傳 `docs/sample-records-1000.csv`, 即可看到 1000 筆範例資料.
-3. 「即時監控」頁經 WebSocket 接收即時資料並每秒更新; 模擬資料在啟動後約 1 秒出現.
+- 資料來源: 
+    - 沒有串接真實設備, 由後端模擬 4 個設備 (溫度、壓力、馬達轉速、振動)
+    - 預設每秒各產生一筆, 其中約 5% 刻意超出範圍以展示異常.
+    - 歷史查詢單次最長 3 個月, 假設更長的期間可分段查詢.
+        - 避免服務器負擔也預防大量的導出行為
+    兒
 
-執行測試 (選用):
+- 異常判斷:
+    - 數值小於等於最小值或大於等於最大值即為異常, 碰到邊界也算. 
+    - 異常數據的最大／最小可以自行設定, 尚未設定範圍的分類不判斷.
+        - **範圍由 Admin賬號依分類設定, 只影響之後的判斷, 已保存的記錄不回頭重判.**
+    - 為了事後可追查, 異常記錄一律唯讀 (包含 Admin), 即使當初填錯也無法更正.
+    
+- 帳號管控：
+    - 註冊不需核准, 新帳號一律為 Viewer, 由 Admin 調整權限. 
 
-```bash
-docker build --target test -t monitoring-dashboard-backend-test backend
-```
+- 批量導入:
+    - 檔案視為一個整體, 有任何一列錯誤就全部不寫入. 上限為 5 MB、10,000 列. 
+    - 重複上傳只以檔名判斷, 不比對內容.
 
-```bash
-docker run --rm monitoring-dashboard-backend-test
-```
-
-需要資料庫的整合測試請執行 `backend/tests/run_integration.sh`, 它會自動啟動並移除一個暫時的 MariaDB 容器. 瀏覽器測試的安裝與執行方式請見 [`monitoring-application/e2e/README.md`](monitoring-application/e2e/README.md).
-
-## Docker 部署指令
-
-監控系統以 Docker Compose 部署. 請在 `monitoring-application/` 中執行以下指令.
-
-1. 建立環境變數檔, 並填入所有必填值 (資料庫密碼與 `JWT_SECRET_KEY`; 三個測試帳號已有範例值):
-
-```bash
-cp .env.example .env
-```
-
-2. 建置並啟動資料庫、後端與前端:
-
-```bash
-docker compose up -d --build
-```
-
-3. 確認三個服務皆為健康狀態:
-
-```bash
-docker compose ps
-```
-
-| 服務 | 預設位址 |
-|---|---|
-| 前端 | <http://127.0.0.1:18501> |
-| 後端 API | <http://127.0.0.1:18000> |
-| 資料庫 | 不對 Docker 外部公開 |
-
-查看後端日誌:
-
-```bash
-docker compose logs -f backend
-```
-
-停止服務並保留資料庫:
-
-```bash
-docker compose down
-```
-
-`docker compose down -v` 會一併刪除資料庫 volume 與其中所有資料.
-
-- **缺少設定值:** 每個 `docker compose` 指令都會讀取 `.env`, 若缺少必填值會停止並顯示缺少的變數名稱.
-- **資料庫遷移:** 每次後端啟動時會自動執行.
-
-圖像分割不使用 Docker.
-
-## API 文件連結
-
-後端執行時會提供自身的 API 文件:
-
-| 文件 | 位址 |
-|---|---|
-| Swagger UI | <http://127.0.0.1:18000/docs> |
-| ReDoc | <http://127.0.0.1:18000/redoc> |
-| OpenAPI JSON | <http://127.0.0.1:18000/openapi.json> |
-
-所有端點皆位於 `/api/v1/` 之下:
-
-| 類別 | 端點 |
-|---|---|
-| 健康檢查 | `GET /health`、`GET /health/ready` |
-| 使用者認證 | `POST /auth/register`、`POST /auth/login`、`POST /auth/logout`、`GET /auth/me` |
-| 資料記錄 | `GET /records` (分頁、篩選、排序)、`POST /records`、`GET /records/{id}`、`PATCH /records/{id}`、`DELETE /records/{id}`、`GET /records/categories`、`GET /records/anomaly-check` (儲存前檢查是否異常) |
-| 批量導入 | `POST /records/imports` (CSV 或 JSON, 全部成功才寫入) |
-| 分類設定 | `GET /category-settings`、`PATCH /category-settings` (Admin 設定異常範圍與單位)、`GET /category-display` |
-| 即時監控 | `GET /realtime/window` (最近 5 分鐘)、`GET /realtime/range` (自訂時間範圍)、WebSocket `/realtime/ws` |
-| 資料分析 | `GET /analytics/statistics`、`GET /analytics/trend`、`GET /analytics/anomalies`、`GET /analytics/export` (Excel) |
-| 系統管理 (Admin) | `GET /users`、`PATCH /users/{id}/role`、`GET /logs`、`GET /logs/options`、`GET /db-status`、`GET /history/records` |
-
-完整路徑、請求內容與回應格式請見 Swagger. 圖像分割為腳本形式, 沒有 API.
 
 ## 測試帳號資訊
 
@@ -213,19 +126,3 @@ docker compose down
 | 監控系統操作說明 (英文) | [`monitoring-application/README.md`](monitoring-application/README.md) |
 | 瀏覽器測試說明 | [`monitoring-application/e2e/README.md`](monitoring-application/e2e/README.md) |
 
-## 專案結構
-
-```text
-.
-├── image-segmentation/          圖像分割與眼距量測
-│   ├── submission/              報告、資料、腳本與結果
-│   ├── experiments/             先前的實驗
-│   └── model/                   模型權重 (不納入版本控制)
-└── monitoring-application/      即時資料分析與監控系統
-    ├── backend/                 FastAPI 程式、資料庫遷移與測試
-    ├── frontend/                Streamlit 程式
-    ├── e2e/                     瀏覽器測試
-    ├── docs/                    範例資料與系統架構圖
-    ├── compose.yaml
-    └── .env.example
-```
