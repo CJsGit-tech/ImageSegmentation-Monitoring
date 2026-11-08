@@ -6,6 +6,10 @@ REQUIRED = {
     "DB_PASSWORD": "test-db-password",
     "INITIAL_ADMIN_USERNAME": "test-admin",
     "INITIAL_ADMIN_PASSWORD": "test-admin-password",
+    "INITIAL_USER_USERNAME": "test-user",
+    "INITIAL_USER_PASSWORD": "test-user-password",
+    "INITIAL_VIEWER_USERNAME": "test-viewer",
+    "INITIAL_VIEWER_PASSWORD": "test-viewer-password",
     "JWT_SECRET_KEY": "x" * 32,
 }
 

@@ -384,6 +384,16 @@ def test_warning_thresholds():
     assert codes == ["SLOW_RESPONSE", "POOL_HIGH", "BATCH_STALE"]
 
 
+def test_batch_stale_threshold_follows_the_flush_cadence_for_a_fast_simulator():
+    """At one reading per second, batches still land every 5 s, so stale means over 15 s."""
+    monitor = DbStatusMonitor()
+    now = utc_now()
+    quiet = PoolUsage(in_use=1, idle=0, open=1, capacity=30, usage_ratio=1 / 30)
+    assert monitor._warnings(1.0, quiet, now - timedelta(seconds=15), now, 1) == []
+    [warning] = monitor._warnings(1.0, quiet, now - timedelta(seconds=16), now, 1)
+    assert warning.code == "BATCH_STALE" and "15 秒" in warning.message
+
+
 def test_no_raw_sql():
     root = Path(service.__file__).resolve().parents[1]
     for path in [*root.joinpath("dbstatus").glob("*.py"), root / "api" / "v1" / "db_status.py"]:

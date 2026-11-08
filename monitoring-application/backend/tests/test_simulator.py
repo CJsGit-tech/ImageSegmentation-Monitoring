@@ -83,8 +83,8 @@ def test_a_very_narrow_range_still_gives_correct_sides():
 # --- Interval setting (PRD-07-R1) ---
 
 
-def test_interval_defaults_to_30_seconds():
-    assert load_settings().simulator_interval_seconds == 30
+def test_interval_defaults_to_one_second():
+    assert load_settings().simulator_interval_seconds == 1
 
 
 @pytest.mark.parametrize("raw, expected", [("2", 2.0), ("0.1", 0.1), ("3600", 3600.0)])

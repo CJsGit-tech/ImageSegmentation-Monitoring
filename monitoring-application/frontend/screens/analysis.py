@@ -549,6 +549,18 @@ def _draw_statistics(state: AnalysisState) -> None:
     )
     if any(item["sum"] is None for item in state.statistics["categories"]):
         st.caption(f"「{_EMPTY}」表示此分類在範圍內沒有資料。")
+    _draw_anomaly_columns(state)
+
+
+def _draw_anomaly_columns(state: AnalysisState) -> None:
+    """A column per category: how many records in the range are flagged as anomalies."""
+    assert state.statistics is not None
+    rows = [{"name": item["category"], "count": item["anomaly_count"]} for item in state.statistics["categories"]]
+    with st.container(border=True):
+        st.markdown("**各分類異常次數（柱狀圖）**")
+        st.altair_chart(charts.anomaly_count_bars(rows), width="stretch")
+        if not any(row["count"] for row in rows):
+            st.caption("這段條件內沒有異常記錄。")
 
 
 def _draw_trend(state: AnalysisState) -> None:

@@ -1,15 +1,17 @@
-"""SCREEN-20: the live window (polled from a fragment) and the custom time range (saved data).
+"""SCREEN-20: the live window (pushed over a WebSocket) and the custom time range (saved data).
 
 The view toggle sits outside both fragments, so their reruns never reset it. Only the chosen
-view's fragment is drawn: the live window polls GET /realtime/window every few seconds while it
-is shown, and the custom range loads only when 「查詢」 is pressed and never updates by itself.
+view's fragment is drawn: the live window is fed by a WebSocket to /api/v1/realtime/ws
+(core.live_feed) and redraws every second from what has been pushed, without polling; the custom
+range loads only when 「查詢」 is pressed and never updates by itself.
 Both fragments write the status chip into the header slot, which every full run writes first.
-A poll that fails keeps the last data on screen (重新連線中); a lost session goes to SCREEN-01
-through api.request. Layout order is also the narrow order: summary, latest readings, small
+A dropped connection keeps the last data on screen (重新連線中) while the feed reconnects; a lost
+session (close code 4401) goes to SCREEN-01 through session.lose_session. Layout order is also the narrow order: summary, latest readings, small
 charts, anomaly counts, list (Streamlit stacks columns in source order).
 """
 
 import calendar
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -19,7 +21,7 @@ import streamlit as st
 from dateutil.relativedelta import relativedelta
 from streamlit.errors import StreamlitAPIException
 
-from core import api, charts, records
+from core import api, charts, live_feed, records
 
 _LIVE, _RANGE = "即時窗口", "自訂時間範圍"
 _VIEW = "monitoring_view"
@@ -29,12 +31,12 @@ _END = "monitoring_range_end"
 _LIVE_KEY = "__submit__monitoring_live"
 _RANGE_KEY = "__submit__monitoring_range"
 
-_POLL_SECONDS = 5
-_POLL_TIMEOUT_SECONDS = 4
+_REDRAW_SECONDS = 1
+_FEED_KEY = "monitoring_live_feed"
+_NEW_HINT_SECONDS = 5
 _RANGE_TIMEOUT_SECONDS = 30
 _RETRY_AFTER_FAILURES = 3
 _MAX_MONTHS = 3
-_WINDOW_PATH = "/api/v1/realtime/window"
 _RANGE_PATH = "/api/v1/realtime/range"
 _EMPTY = "—"
 _ANOMALY_ROW_STYLE = "background-color: #FBE3E0"
@@ -95,6 +97,7 @@ class LiveState:
     error: str | None = None
     newest: str | None = None
     new_after: str | None = None
+    new_until: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -278,26 +281,51 @@ def _skeleton(chart_count: int = 4, *, with_side: bool = True) -> None:
 # --- Live window ---
 
 
-def _poll(state: LiveState) -> None:
-    try:
-        body = api.get(_WINDOW_PATH, timeout=_POLL_TIMEOUT_SECONDS)
-    except api.BackendUnavailable:
-        state.failures += 1
+def _feed() -> live_feed.LiveFeed | None:
+    """This session's WebSocket feed, started on first use and replaced when the login changes."""
+    token = st.session_state.get(api.TOKEN_STATE_KEY)
+    feed: live_feed.LiveFeed | None = st.session_state.get(_FEED_KEY)
+    if feed is not None and (feed.token != token or not feed.alive) and feed.view().stopped_code is None:
+        feed.stop()
+        feed = None
+    if feed is None and token:
+        feed = live_feed.LiveFeed(token)
+        st.session_state[_FEED_KEY] = feed
+    return feed
+
+
+def _pull(state: LiveState) -> None:
+    """Copies what the WebSocket has pushed so far into the page state."""
+    feed = _feed()
+    if feed is None:
         return
-    except api.ApiError as exc:  # A lost session has already left the page in api.request.
-        if exc.status >= 500:
-            state.failures += 1
-        else:
-            state.error = exc.message
+    if st.session_state.get("monitoring_live_retry"):
+        feed.retry_now()
+    view = feed.view()
+    if view.stopped_code is not None:
+        st.session_state.pop(_FEED_KEY, None)
+        if view.stopped_status == 401:
+            from core import session  # session imports api, which this page also uses.
+
+            session.lose_session(view.stopped_code)
+            return
+        state.error = "你的角色不能檢視即時監控。"
         return
-    state.failures = 0
+    state.failures = 0 if view.connected else view.failures
     state.error = None
-    items = body["recent_anomalies"]
+    if view.snapshot is None:
+        return
+    items = view.snapshot["recent_anomalies"]
     newest = items[0]["timestamp"] if items else state.newest
     # A row is 「新」 for the one update that brought it (the static form of SHARED-07's hint).
-    state.new_after = state.newest if state.snapshot is not None and newest != state.newest else None
+    # Redraws come every second, so the hint stays for _NEW_HINT_SECONDS rather than one redraw.
+    if newest != state.newest:
+        state.new_after = state.newest if state.snapshot is not None else None
+        state.new_until = time.monotonic() + _NEW_HINT_SECONDS
+    elif time.monotonic() >= state.new_until:
+        state.new_after = None
     state.newest = newest
-    state.snapshot = body
+    state.snapshot = view.snapshot
 
 
 def _live_chip(chip: Any, state: LiveState) -> None:
@@ -384,7 +412,7 @@ def _draw_live(state: LiveState) -> None:
                 )
                 st.altair_chart(chart, width="stretch", alt=f"{category['category']}最近 5 分鐘折線圖")
     with side:
-        _counts_card("最近 5 分鐘異常次數", categories, "anomaly_count_5m", "最近 5 分鐘沒有異常")
+        _counts_card("異常次數（近 5 分鐘）柱狀圖", categories, "anomaly_count_5m", "最近 5 分鐘沒有異常")
     _anomaly_list(
         snapshot["recent_anomalies"],
         heading="最近異常",
@@ -394,22 +422,14 @@ def _draw_live(state: LiveState) -> None:
     )
 
 
-@st.fragment(run_every=_POLL_SECONDS)
+@st.fragment(run_every=_REDRAW_SECONDS)
 def _live_view(chip: Any) -> None:
     state = _live_state()
-    if state.snapshot is None:
-        _live_chip(chip, state)
-        holder = st.empty()
-        with holder.container():
-            _skeleton()
-        _poll(state)
-        holder.empty()
-    else:
-        _poll(state)
+    _pull(state)
     _live_chip(chip, state)
     _live_message(state)
     if state.snapshot is None:
-        if state.failures or state.error:
+        if not state.error:
             _skeleton()
         return
     _draw_live(state)
@@ -577,7 +597,7 @@ def _draw_range_result(state: RangeState) -> None:
                 )
                 st.altair_chart(chart, width="stretch", alt=f"{category['category']}在 {span} 的折線圖")
     with side:
-        _counts_card("範圍內異常次數", categories, "anomaly_count", "這段時間沒有異常")
+        _counts_card("異常次數（所選範圍）柱狀圖", categories, "anomaly_count", "這段時間沒有異常")
     _anomaly_list(result["recent_anomalies"], heading="範圍內最近的異常", new_after=None, empty_title="這段時間沒有異常", empty_text="範圍內沒有被標為異常的記錄。")
 
 

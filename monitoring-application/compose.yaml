@@ -35,6 +35,10 @@ services:
       DB_PASSWORD: ${MARIADB_PASSWORD:?Missing required environment variable MARIADB_PASSWORD; see .env.example}
       INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:?Missing required environment variable INITIAL_ADMIN_USERNAME; see .env.example}
       INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:?Missing required environment variable INITIAL_ADMIN_PASSWORD; see .env.example}
+      INITIAL_USER_USERNAME: ${INITIAL_USER_USERNAME:?Missing required environment variable INITIAL_USER_USERNAME; see .env.example}
+      INITIAL_USER_PASSWORD: ${INITIAL_USER_PASSWORD:?Missing required environment variable INITIAL_USER_PASSWORD; see .env.example}
+      INITIAL_VIEWER_USERNAME: ${INITIAL_VIEWER_USERNAME:?Missing required environment variable INITIAL_VIEWER_USERNAME; see .env.example}
+      INITIAL_VIEWER_PASSWORD: ${INITIAL_VIEWER_PASSWORD:?Missing required environment variable INITIAL_VIEWER_PASSWORD; see .env.example}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Missing required environment variable JWT_SECRET_KEY; see .env.example}
       ACCESS_TOKEN_EXPIRE_HOURS: ${ACCESS_TOKEN_EXPIRE_HOURS:-12}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -42,7 +46,7 @@ services:
       DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-20}
       DB_POOL_RECYCLE_SECONDS: ${DB_POOL_RECYCLE_SECONDS:-1800}
       DB_STARTUP_TIMEOUT_SECONDS: ${DB_STARTUP_TIMEOUT_SECONDS:-60}
-      SIMULATOR_INTERVAL_SECONDS: ${SIMULATOR_INTERVAL_SECONDS:-30}
+      SIMULATOR_INTERVAL_SECONDS: ${SIMULATOR_INTERVAL_SECONDS:-1}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-365}
     ports:
       - "${HOST_BIND_ADDRESS:-127.0.0.1}:${BACKEND_HOST_PORT:-18000}:8000"

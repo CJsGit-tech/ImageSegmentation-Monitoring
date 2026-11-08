@@ -1,6 +1,6 @@
 # Browser tests
 
-These Playwright tests drive the real app in Chrome, the way a person would. They cover Batch 1 (register, log in and out, staying logged in, role-based pages), Batch 2 (add, list, edit, delete, anomaly warning and lock, range settings), Batch 3 (bulk CSV and JSON import), Batch 4 (simulated data, the live monitoring screen and its custom time range), Batch 5 (statistics, trend, anomaly list and Excel export) and Batch 6 (user roles, system log, database status and system data history). Each later batch adds its own tests here.
+These Playwright tests drive the real app in Chrome, the way a person would. They cover Batch 1 (register, log in and out, staying logged in, role-based pages), Batch 2 (add, list, edit, delete, anomaly warning and lock, range settings), Batch 3 (bulk CSV and JSON import), Batch 4 (simulated data, the live monitoring screen and its custom time range), Batch 5 (statistics, trend, anomaly list and Excel export) Batch 6 (user roles, system log, database status and system data history) and Batch 7 (the .env test accounts, the one-second simulator, the WebSocket-fed live window and the anomaly-count bar charts). Each later batch adds its own tests here.
 
 ## What they need
 
@@ -50,6 +50,7 @@ Only run these tests against a local or test stack. They write to whatever datab
 - A save or import that times out and is retried: that needs a 30-second stall. The backend side is checked by `test_retrying_a_save_with_the_same_key_adds_one_record` and by the backend suite.
 - Backend outages, phone widths, screen readers and keyboard focus.
 - The monitoring screen's paused, reconnecting and first-load states, and the chart drawings themselves.
-- The live-update test waits for the simulator's next reading, up to its interval (30 s by default) plus 15 s.
+- The live-update test waits for the simulator's next reading, up to its interval (1 s by default) plus 15 s.
+- The WebSocket test checks that the frontend container holds an open connection to the backend and that the screen changes about every second; it does not read the WebSocket frames themselves.
 - The Excel file is checked by its raw text (headers and units), not cell by cell; the backend suite reads it back with openpyxl.
 - Anything visual: the list's anomaly marks and range bars are drawn on a canvas that these tests can't read, so they check the action row and the API instead.

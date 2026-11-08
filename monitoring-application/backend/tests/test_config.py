@@ -36,6 +36,16 @@ def test_all_missing_variables_are_listed_without_values(monkeypatch):
     assert "short-secret-value" not in message
 
 
+def test_user_and_viewer_accounts_are_required(monkeypatch):
+    monkeypatch.delenv("INITIAL_USER_USERNAME")
+    monkeypatch.setenv("INITIAL_VIEWER_PASSWORD", "")
+    with pytest.raises(ConfigurationError) as caught:
+        load_settings()
+    message = str(caught.value)
+    assert "INITIAL_USER_USERNAME" in message
+    assert "INITIAL_VIEWER_PASSWORD" in message
+
+
 def test_password_with_special_characters_survives_url_building(monkeypatch):
     monkeypatch.setenv("DB_PASSWORD", "p@ss:w/rd?#")
     assert load_settings().database_url.password == "p@ss:w/rd?#"

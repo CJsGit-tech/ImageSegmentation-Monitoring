@@ -1,6 +1,6 @@
 """Batch 4: simulated data and the real-time monitoring screen (SCREEN-20, LB-330, LB-344).
 
-The simulator runs on its own schedule (30 s by default), so these tests read what it has produced
+The simulator runs on its own schedule (1 s by default), so these tests read what it has produced
 rather than creating data. Charts are drawn by Vega, so the tests check the text around them.
 """
 

@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.auth.bootstrap import ensure_initial_admin
+from app.auth.bootstrap import ensure_initial_accounts, ensure_initial_admin
 from app.auth.dependencies import CurrentUser, require_capability
 from app.auth.permissions import CAPABILITY_ROLES, Capability, capabilities_for
 from app.auth.schemas import UserOut
@@ -445,7 +445,55 @@ def test_initial_admin_never_elevates_an_existing_account(client, settings_env, 
     with caplog.at_level(logging.WARNING, logger="app.audit"):
         bootstrap()
     assert get_user("taken").role is Role.VIEWER
-    assert any(getattr(r, "event_type", "") == "initial_admin_not_admin" for r in caplog.records)
+    assert any(getattr(r, "event_type", "") == "initial_admin_wrong_role" for r in caplog.records)
+
+
+def bootstrap_all():
+    async def run():
+        engine = create_unpooled_engine(load_settings())
+        try:
+            await ensure_initial_accounts(engine, load_settings())
+        finally:
+            await engine.dispose()
+
+    asyncio.run(run())
+
+
+def test_initial_user_and_viewer_are_created_with_their_roles(client, settings_env):
+    settings_env.setenv("INITIAL_ADMIN_USERNAME", "root-admin")
+    settings_env.setenv("INITIAL_ADMIN_PASSWORD", GOOD_PASSWORD)
+    settings_env.setenv("INITIAL_USER_USERNAME", "demo-user")
+    settings_env.setenv("INITIAL_USER_PASSWORD", GOOD_PASSWORD)
+    settings_env.setenv("INITIAL_VIEWER_USERNAME", "demo-viewer")
+    settings_env.setenv("INITIAL_VIEWER_PASSWORD", GOOD_PASSWORD)
+    bootstrap_all()
+    assert login(client, "root-admin").json()["user"]["role"] == "Admin"
+    assert login(client, "demo-user").json()["user"]["role"] == "User"
+    assert login(client, "demo-viewer").json()["user"]["role"] == "Viewer"
+
+    before = get_user("demo-user")
+    settings_env.setenv("INITIAL_USER_PASSWORD", "Changed1!pass")
+    bootstrap_all()
+    assert count_users() == 3
+    assert get_user("demo-user").password_hash == before.password_hash
+
+
+def test_initial_user_never_changes_an_existing_account_role(client, settings_env, caplog):
+    register(client, "taken")
+    settings_env.setenv("INITIAL_USER_USERNAME", "taken")
+    settings_env.setenv("INITIAL_USER_PASSWORD", GOOD_PASSWORD)
+    with caplog.at_level(logging.WARNING, logger="app.audit"):
+        bootstrap_all()
+    assert get_user("taken").role is Role.VIEWER
+    assert any(getattr(r, "event_type", "") == "initial_user_wrong_role" for r in caplog.records)
+
+
+def test_initial_accounts_must_use_different_usernames(client, settings_env):
+    settings_env.setenv("INITIAL_ADMIN_USERNAME", "Same-Name")
+    settings_env.setenv("INITIAL_VIEWER_USERNAME", "same-name")
+    with pytest.raises(ConfigurationError, match="INITIAL_VIEWER_USERNAME"):
+        bootstrap_all()
+    assert count_users() == 0
 
 
 def test_initial_admin_username_too_long_stops_startup(client, settings_env):

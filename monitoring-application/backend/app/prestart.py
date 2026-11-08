@@ -13,7 +13,7 @@ import uvicorn
 from sqlalchemy.exc import InterfaceError, OperationalError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.auth.bootstrap import ensure_initial_admin
+from app.auth.bootstrap import ensure_initial_accounts
 from app.categories.seed import ensure_category_defaults
 from app.core.config import ConfigurationError, Settings, get_settings
 from app.core.logging import configure_logging
@@ -44,8 +44,8 @@ async def _prepare_database(settings: Settings) -> None:
     try:
         await _wait_for_database(engine, settings.db_startup_timeout_seconds)
         await upgrade_to_head(engine)
-        # Before the port opens, so that nobody can register this account name first.
-        await ensure_initial_admin(engine, settings)
+        # Before the port opens, so that nobody can register these account names first.
+        await ensure_initial_accounts(engine, settings)
         # Every start: a default applies only to a range or unit that was never configured.
         await ensure_category_defaults(engine, DEVICE_DEFAULTS)
     finally:

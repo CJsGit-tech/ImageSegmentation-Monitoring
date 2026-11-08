@@ -23,6 +23,7 @@ BOUND_LABEL = "異常界線（含）"
 _DIMMED_OPACITY = 0.4
 _ROW_HEIGHT = 34
 _CHART_HEIGHT = 170
+_COLUMN_HEIGHT = 220
 _POSITION_MIN, _POSITION_MAX, _TEXT_AT = -0.25, 1.95, 1.32
 
 
@@ -264,23 +265,45 @@ def position_bars(rows: list[dict[str, Any]]) -> alt.LayerChart:
     return _finish(layers, _ROW_HEIGHT * max(len(frame), 1) + 8, "各分類最新讀數在最小值到最大值之間的位置")
 
 
-def anomaly_count_bars(rows: list[dict[str, Any]]) -> alt.LayerChart:
-    """CH-03: rows are {name, count}. A count of 0 keeps the neutral empty track."""
+def anomaly_count_bars(rows: list[dict[str, Any]], *, height: int = _COLUMN_HEIGHT) -> alt.LayerChart:
+    """CH-03: a vertical bar (column) chart of rows {name, count}, one column per category.
+
+    A column with anomalies is warm red with its count above it; a count of 0 keeps a thin neutral
+    stub and shows 0, so an empty category still reads as "none" rather than "missing".
+    """
     frame = pd.DataFrame(rows, columns=["name", "count"])
+    frame["count"] = frame["count"].astype(int)
     top = max(int(frame["count"].max()) if not frame.empty else 0, 1)
-    end = top * 1.18
-    frame["zero"] = 0
-    frame["track"] = top
-    frame["text_at"] = end
+    frame["stub"] = top * 0.015
+    frame["shown"] = frame[["count", "stub"]].max(axis=1)
     order = frame["name"].tolist()
-    y = alt.Y("name:N", sort=order, axis=alt.Axis(title=None, labelFontSize=13, labelColor="#1E2A36", ticks=False, domain=False, labelPadding=10))
-    x_scale = alt.Scale(domain=[0, end], nice=False)
+    x = alt.X(
+        "name:N",
+        sort=order,
+        # Slanted and never hidden, so every category stays labelled in the narrow side column.
+        axis=alt.Axis(
+            title=None,
+            labelAngle=-45,
+            labelAlign="right",
+            labelOverlap=False,
+            labelFontSize=12,
+            labelColor="#1E2A36",
+            ticks=False,
+            labelPadding=6,
+        ),
+        scale=alt.Scale(paddingInner=0.35, paddingOuter=0.2),
+    )
+    y_scale = alt.Scale(domain=[0, top * 1.2], nice=False)
+    y_axis = alt.Axis(title="異常次數", tickMinStep=1, format="d", grid=True, gridColor="#EEF1F5", domain=False, ticks=False)
+    tooltip = [alt.Tooltip("name:N", title="分類"), alt.Tooltip("count:Q", title="異常次數")]
+    color = alt.condition("datum.count > 0", alt.value(ANOMALY), alt.value(SPREAD))
     base = alt.Chart(frame)
     layers = [
-        base.mark_bar(color=TRACK, height=16).encode(x=alt.X("zero:Q", scale=x_scale, axis=None), x2="track", y=y),
-        base.transform_filter("datum.count > 0")
-        .mark_bar(color=ANOMALY, height=16)
-        .encode(x=alt.X("zero:Q", scale=x_scale, axis=None), x2="count", y=y, tooltip=[alt.Tooltip("name:N", title="分類"), alt.Tooltip("count:Q", title="異常次數")]),
-        base.mark_text(align="right", fontSize=13, fontWeight="bold", color="#1E2A36").encode(x=alt.X("text_at:Q", scale=x_scale, axis=None), y=y, text="count:Q"),
+        base.mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
+            x=x, y=alt.Y("shown:Q", scale=y_scale, axis=y_axis), color=color, tooltip=tooltip
+        ),
+        base.mark_text(dy=-8, fontSize=13, fontWeight="bold", color="#1E2A36").encode(
+            x=x, y=alt.Y("shown:Q", scale=y_scale), text="count:Q"
+        ),
     ]
-    return _finish(layers, _ROW_HEIGHT * max(len(frame), 1) + 8, "各分類的異常次數橫條圖")
+    return _finish(layers, height, "各分類異常次數柱狀圖")
