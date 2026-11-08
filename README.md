@@ -82,32 +82,29 @@
     - 重複上傳只以檔名判斷, 不比對內容.
 
 
-## 測試帳號資訊
+## 工作方式
 
-監控系統有三種角色: **Admin**、**User** 與 **Viewer**. 三個測試帳號都在 `.env` 中設定, 後端每次啟動時會建立尚不存在的帳號. 若沿用 `.env.example` 的範例值, 可直接用以下帳號登入:
+監控系統的工作以 [LinearBoard](https://github.com/CJsGit-tech/LinearBoard) 管理. 這是我開發的本機專案管理工具, 用來協調我與 AI Agent 之間的工作. 需求、決策、任務與驗證證據都存放在 LinearBoard, 因此即使規劃、開發與驗收發生在不同對話中, 仍能追溯當初的決定.
 
-| 角色 | 帳號 | 密碼 | `.env` 變數 |
-|---|---|---|---|
-| **Admin** | `admin` | `Admin@12345` | `INITIAL_ADMIN_USERNAME`、`INITIAL_ADMIN_PASSWORD` |
-| **User** | `user` | `User@12345` | `INITIAL_USER_USERNAME`、`INITIAL_USER_PASSWORD` |
-| **Viewer** | `viewer` | `Viewer@12345` | `INITIAL_VIEWER_USERNAME`、`INITIAL_VIEWER_PASSWORD` |
+工作不是直接從程式碼開始, 而是由以下步驟逐層產生, 每一層都連回上一層:
 
-- **必填:** 這六個變數都必須設定, 缺少時 `docker compose` 會停止並顯示缺少的變數名稱; 三個帳號名稱不可相同.
-- **只用於測試:** 範例密碼是公開的, 部署到本機以外的環境前請在 `.env` 改成自己的值.
-- **其他帳號:** 在註冊頁註冊的新帳號為 Viewer, 可由 Admin 在「系統管理 → 使用者管理」修改角色.
+| 階段 | 做法 | 產出 |
+|---|---|---|
+| **1. 規劃** | 先釐清題目與要解決的問題, 再寫成願景文件 | 願景文件 |
+| **2. 里程碑** | 由願景推導使用者故事, 再依成果分組 | 里程碑 M1 到 M5 與分組的使用者故事 |
+| **3. 需求** | 為每個里程碑撰寫 PRD, 逐一釐清會影響使用者行為或測試方式的規則 | PRD 與[決策問答頁](monitoring-application/docs/MonitoringDashboard-decision-qa.html) |
+| **4. 設計** | 比較版面方向, 選定後製作完整畫面供審閱 | 設計規格與設計審閱圖庫 |
+| **5. 任務** | 將需求與設計拆成前端與後端任務, 再依相依性排成批次 | 連回 PRD 的任務 (如 `LB-325`) 與批次 |
+| **6. 交付** | AI Agent 依批次實作, 再由實作者以外的審閱者操作實際系統並記錄證據 | 程式碼、驗證紀錄與[瀏覽器測試](monitoring-application/e2e/README.md) |
 
-各角色可以做的事:
+我與 AI Agent 的分工:
 
-| 角色 | 權限 |
-|---|---|
-| **Admin** | 所有功能, 包含系統管理頁面; 可修改或刪除任何人的一般記錄 |
-| **User** | 瀏覽、新增、批量導入; 只能修改或刪除自己建立的記錄 |
-| **Viewer** | 只能瀏覽即時監控、資料列表與資料分析, 並下載 Excel |
+- **我負責決定:** 每個階段由我下指令才會開始. 產品規則的取捨與設計核准都由我決定.
+- **AI Agent 負責執行與提問:** AI Agent 依指令撰寫文件與實作, 遇到會影響產品行為的未決問題時先提問, 不自行假設.
+- **回報不等於完成:** 實作者的回報只是聲明, 需要經過獨立驗證. 每完成一個批次, 就新增瀏覽器測試並執行完整測試, 再進行下一批.
+- **決策回到需求文件:** 開發中確認的變更要更新到對應的 PRD, 影響多筆紀錄時, 先預覽修改內容, 經我核准後才更新. 驗收時發現的問題則記錄為有來源連結的修復任務.
 
-- **密碼規則:** 至少 8 個字元, 需包含大寫字母、小寫字母、數字與符號.
-- **帳號設定值:** 只在第一次建立帳號時套用, 之後修改 `.env` 不會改變已存在的帳號 (包含密碼與角色).
-- **單一登入:** 同一帳號在別處登入時, 先前的登入會失效.
-- **異常記錄:** 被標記為異常的記錄任何人都不能修改或刪除 (包含 Admin).
+圖像分割屬於實驗性質, 是透過多輪實驗比較方法, 過程記錄於[實驗歷程](image-segmentation/submission/reports/supporting/experiment_history.md).
 
 ## 系統架構圖
 
@@ -123,6 +120,6 @@
 | 測試資料 CSV 範例 (1000 筆, 含 50 筆異常) | [`monitoring-application/docs/sample-records-1000.csv`](monitoring-application/docs/sample-records-1000.csv) |
 | 測試資料 JSON 範例 | [`monitoring-application/docs/sample-records-1000.json`](monitoring-application/docs/sample-records-1000.json) |
 | 系統架構圖 | [`monitoring-application/docs/system-architecture-modules.svg`](monitoring-application/docs/system-architecture-modules.svg) |
-| 監控系統操作說明 (英文) | [`monitoring-application/README.md`](monitoring-application/README.md) |
+| 監控系統操作說明 | [`monitoring-application/README.md`](monitoring-application/README.md) |
 | 瀏覽器測試說明 | [`monitoring-application/e2e/README.md`](monitoring-application/e2e/README.md) |
 

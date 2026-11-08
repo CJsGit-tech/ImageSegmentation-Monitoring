@@ -1,154 +1,132 @@
-# Animal and Eye Segmentation with Distance Measurement
+# 動物與眼睛分割及距離量測
 
-This folder segments animals and their eyes in COCO images with at least 2 animals, measures each
-animal's eye distance and the right-eye distance between animals, and explains the models and
-measurements.
+此資料夾在至少有 2 隻動物的 COCO 圖片中分割動物及其眼睛, 量測每隻動物的雙眼距離與動物之間的右眼距離,
+並說明所用的模型與量測方式.
 
-- **Reports:** the detailed write-ups in [`reports/`](reports), including
-  [speed and accuracy on the other samples](reports/07_performance_on_other_samples.md)
+- **報告:** 詳細內容請見 [`reports/`](reports), 包含[其他樣本的速度與準確度](reports/07_performance_on_other_samples.md)
 
-## Final methods
+## 最終方法
 
-| Method | Animal outlines | Eye outlines |
+| 方法 | 動物輪廓 | 眼睛輪廓 |
 |---|---|---|
-| **YOLOE** | YOLOE, prompts `bird, cat, dog` | YOLOE, prompt `eye` |
-| **YOLOE + DINOv2** | YOLOE | DINOv2 heatmap peaks, outlined by GrabCut or the heatmap level |
+| **YOLOE** | YOLOE, 提示為 `bird, cat, dog` | YOLOE, 提示為 `eye` |
+| **YOLOE + DINOv2** | YOLOE | DINOv2 熱圖峰值, 以 GrabCut 或熱圖等高線描出輪廓 |
 
-YOLOE + DINOv2 has two outline variants:
+YOLOE + DINOv2 有兩種描輪廓的方式:
 
-- **GrabCut:** separates each eye from its surroundings using the colors in a small window. It
-  matches YOLOE's eye outlines most closely.
-- **Heatmap level:** traces the heatmap at half the height of each eye's peak. It matches YOLOE's eye
-  centers and distances most closely.
+- **GrabCut:** 依小視窗中的顏色, 將每個眼睛與周圍分離. 其輪廓最接近 YOLOE 的眼睛輪廓.
+- **熱圖等高線:** 在每個眼睛峰值一半高度處描出熱圖輪廓. 其眼睛中心點與距離最接近 YOLOE.
 
-No model was trained. [Report 5](reports/05_model_and_evaluation.md) explains why these models were
-chosen, and [the experiment history](reports/supporting/experiment_history.md) covers the methods
-that were tried and dropped.
+此專案沒有訓練模型. [報告 5](reports/05_model_and_evaluation.md) 說明選擇這些模型的原因,
+[實驗歷程](reports/supporting/experiment_history.md)則涵蓋嘗試過但未採用的方法.
 
-## Results at a glance
+## 結果摘要
 
-**Test samples:** 3 images, with 12 hand-marked cat and dog eyes.
+**測試樣本:** 3 張圖片, 含 12 個手動標記的貓狗眼睛.
 
-| Method | Eyes hit (of 12) | False eyes | Eye distance MAE, same 4 animals | Right-eye MAE |
+| 方法 | 命中眼睛 (共 12 個) | 誤判眼睛 | 雙眼距離 MAE, 相同 4 隻動物 | 右眼距離 MAE |
 |---|---|---|---|---|
-| YOLOE | 9 | 0 | 2.52 px | 1.82 px (2 pairs) |
-| YOLOE + DINOv2, GrabCut | 12 | 0 | 4.31 px | 2.92 px (3 pairs) |
-| YOLOE + DINOv2, heatmap level | 12 | 0 | 2.67 px | 2.09 px (3 pairs) |
+| YOLOE | 9 | 0 | 2.52 px | 1.82 px (2 對) |
+| YOLOE + DINOv2, GrabCut | 12 | 0 | 4.31 px | 2.92 px (3 對) |
+| YOLOE + DINOv2, 熱圖等高線 | 12 | 0 | 2.67 px | 2.09 px (3 對) |
 
-**Other samples:** 12 images, without eye marks.
+**其他樣本:** 12 張圖片, 沒有眼睛標記.
 
-| Method | Eyes output | Animals with two eyes (of 25) | Right-eye pairs |
+| 方法 | 輸出眼睛 | 有兩個眼睛的動物 (共 25 隻) | 右眼配對 |
 |---|---|---|---|
 | YOLOE | 18 | 7 | 2 |
-| YOLOE + DINOv2, either variant | 48 | 23 | 15 |
+| YOLOE + DINOv2, 任一方式 | 48 | 23 | 15 |
 
-**Speed and accuracy on the 9 new COCO images** in the other samples:
+**其他樣本中 9 張新 COCO 圖片的速度與準確度:**
 
-| Method | FPS | Eye precision | Eye recall | Eye F1 | Eye distance MAE |
+| 方法 | FPS | 眼睛精確率 | 眼睛召回率 | 眼睛 F1 | 雙眼距離 MAE |
 |---|---|---|---|---|---|
-| YOLOE | 5.56 | 77.8% | 22.6% | 0.35 | 1.95 px (2 animals) |
-| YOLOE + DINOv2, GrabCut | 1.98 | 71.9% | 74.2% | 0.73 | 1.71 px (8 animals) |
-| YOLOE + DINOv2, heatmap level | 3.95 | 71.9% | 74.2% | 0.73 | 2.17 px (9 animals) |
+| YOLOE | 5.56 | 77.8% | 22.6% | 0.35 | 1.95 px (2 隻動物) |
+| YOLOE + DINOv2, GrabCut | 1.98 | 71.9% | 74.2% | 0.73 | 1.71 px (8 隻動物) |
+| YOLOE + DINOv2, 熱圖等高線 | 3.95 | 71.9% | 74.2% | 0.73 | 2.17 px (9 隻動物) |
 
-YOLOE's cat and dog outlines match COCO's masks well: 19 of 21 found, all correctly labelled, with
-mask AP50 of 0.901 and AP50-95 of 0.597. Speeds are on an Apple M4 Pro using MPS.
-[Report 7](reports/07_performance_on_other_samples.md) has the details.
+YOLOE 的貓狗輪廓與 COCO 遮罩相當吻合: 21 隻中找到 19 隻, 類別全部正確, 遮罩 AP50 為 0.901, AP50-95 為 0.597.
+速度是在 Apple M4 Pro 上使用 MPS 測得. 詳情請見[報告 7](reports/07_performance_on_other_samples.md).
 
-- **Unreviewed marks:** Claude Code made all the eye marks, including drafts for the other samples,
-  and no person has reviewed them.
-- **Duplicates:** the other samples include copies of the 3 test samples.
+- **標記未經審閱:** 所有眼睛標記都由 Claude Code 製作, 包含其他樣本的草稿標記, 沒有經過人工審閱.
+- **重複圖片:** 其他樣本包含 3 張測試樣本的副本.
 
-## Limitations
+## 限制
 
 ### YOLOE
 
-- **Misses many eyes:** it found 9 of 13 marked test sample eyes, and only 7 of 31 marked eyes on the
-  9 new COCO images (recall 22.6%). Without both eyes, an animal can't be measured.
-- **No right-eye pairs on new images:** its 2 pairs on the other samples both come from copies of the
-  test samples.
-- **Low eye confidence:** eye confidence on the test samples is only 0.12-0.35, so the threshold must
-  stay at 0.1.
-- **Can merge animals:** in `000000333772.jpg`, it drew one outline around 2 cats.
-- **Settings tuned on the test samples:** the prompts, thresholds and input sizes were chosen on the 3
-  test samples, so those scores are likely optimistic.
-- **Licensing:** a maintainer comment in the YOLOE docs says production use requires AGPL-3.0
-  compliance or an Enterprise License, so confirm this before commercial use.
+- **漏掉許多眼睛:** 在測試樣本的 13 個標記眼睛中找到 9 個, 在 9 張新 COCO 圖片的 31 個標記眼睛中只找到 7 個 (召回率 22.6%). 動物沒有兩個眼睛就無法量測.
+- **新圖片沒有右眼配對:** 其他樣本上的 2 對都來自測試樣本的副本.
+- **眼睛信心分數低:** 測試樣本上的眼睛信心分數只有 0.12-0.35, 因此門檻必須維持在 0.1.
+- **可能合併動物:** 在 `000000333772.jpg` 中, 它用一個輪廓框住 2 隻貓.
+- **參數依測試樣本調整:** 提示、門檻與輸入尺寸都是依 3 張測試樣本選定, 因此這些分數可能偏樂觀.
+- **授權:** YOLOE 文件中維護者的留言表示, 正式環境使用需遵守 AGPL-3.0 或取得企業授權, 商業使用前請先確認.
 
 ### YOLOE + DINOv2
 
-These apply to both outline variants.
+以下限制適用於兩種描輪廓方式.
 
-- **Can't report "no eye":** at least one eye is always output for each animal, even when no eye is
-  visible, so false eyes can appear, such as ears or body patches. No minimum score has been tested.
-- **Depends on YOLOE:** YOLOE supplies the animal outlines and the reference eyes. An animal it misses
-  gets no eyes, and animals it merges are treated as one, which gave an invalid 137.6 px eye distance
-  across 2 cats in `000000333772.jpg`.
-- **Coarse features:** each 14 px patch covers several original pixels, so small or blurry eyes can
-  merge or lose detail. Some tiny results, such as 2.45 px, need checking.
-- **False eyes on new images:** against the draft marks on the 9 new COCO images, 9 of its 32 scored
-  eyes were false (precision 71.9%).
-- **Limited animals:** it runs only on cats and dogs, using reference eyes from cats and dogs.
-- **Slower, per animal:** DINOv2 takes about 97 ms per animal on an Apple M4 Pro, so images with many
-  animals take longer.
+- **無法回報「沒有眼睛」:** 每隻動物至少會輸出一個眼睛, 即使看不到眼睛也一樣, 因此可能出現誤判, 例如耳朵或身上的斑塊. 尚未測試最低分數門檻.
+- **依賴 YOLOE:** 動物輪廓與參考眼睛都來自 YOLOE. 它漏掉的動物不會有眼睛, 它合併的動物會被視為一隻, 這在 `000000333772.jpg` 造成橫跨 2 隻貓、無效的 137.6 px 雙眼距離.
+- **特徵較粗:** 每個 14 px 區塊涵蓋多個原始像素, 因此小或模糊的眼睛可能合併或失去細節. 部分極小的結果, 例如 2.45 px, 需要檢查.
+- **新圖片有誤判:** 以 9 張新 COCO 圖片的草稿標記比對, 計分的 32 個眼睛中有 9 個是誤判 (精確率 71.9%).
+- **動物種類有限:** 只處理貓與狗, 並使用貓狗的參考眼睛.
+- **速度較慢, 且依動物數量增加:** DINOv2 在 Apple M4 Pro 上每隻動物約需 97 ms, 因此動物多的圖片耗時較長.
 
-**GrabCut variant**
+**GrabCut 方式**
 
-- **Larger distance error on the test samples:** 4.31 px on the same 4 animals, against 2.67 px for
-  heatmap level and 2.52 px for YOLOE.
-- **Outline can shift the center:** on the 003 dog, it gave 55.47 px against a marked 49.33 px.
-- **Needs visible contrast:** dark, blurry or low-contrast eyes give it little color to separate.
-- **Slowest step:** GrabCut takes about 122 ms per animal on the CPU, giving 1.98 FPS overall.
+- **測試樣本上的距離誤差較大:** 相同 4 隻動物為 4.31 px, 熱圖等高線為 2.67 px, YOLOE 為 2.52 px.
+- **輪廓可能使中心點偏移:** 在 003 的狗上得到 55.47 px, 標記值為 49.33 px.
+- **需要明顯對比:** 深色、模糊或低對比的眼睛, 可供分離的顏色資訊很少.
+- **最慢的步驟:** GrabCut 在 CPU 上每隻動物約需 122 ms, 整體為 1.98 FPS.
 
-**Heatmap level variant**
+**熱圖等高線方式**
 
-- **Loose outlines:** they cover nearly twice YOLOE's eye area on the test samples, with polygon IoU of
-  0.51-0.54 against YOLOE, compared with 0.66-0.69 for GrabCut.
-- **No image edges:** it traces only the heatmap, so it can't follow the eye's real edge.
-- **Level is a fixed choice:** it uses a 50% level, and lower levels lost an eye in an earlier test.
+- **輪廓較鬆:** 在測試樣本上涵蓋的面積接近 YOLOE 眼睛的兩倍, 與 YOLOE 的多邊形 IoU 為 0.51-0.54, GrabCut 則為 0.66-0.69.
+- **不使用影像邊緣:** 它只描熱圖, 因此無法貼合眼睛的實際邊緣.
+- **等高線為固定選擇:** 使用 50% 高度, 較低的高度在先前的測試中曾漏掉一個眼睛.
 
-### Both methods
+### 兩種方法皆有
 
-- **Small validation:** only 3 test samples have eye marks, and settings were chosen on those images.
-- **The 002 dog is uncertain:** its mark gives 78.50 px, while both methods give 73-75 px.
-- **Pixels only:** distances aren't real-world sizes, and head angle and depth affect them.
-- **Right-eye rule:** it assumes a forward-facing, upright head.
+- **驗證規模小:** 只有 3 張測試樣本有眼睛標記, 參數也是依這些圖片選定.
+- **002 的狗不確定:** 標記值為 78.50 px, 兩種方法都得到 73-75 px.
+- **只有像素單位:** 距離不是實際尺寸, 也會受頭部角度與遠近影響.
+- **右眼規則:** 假設頭部朝前且直立.
 
-## Folder contents
+## 資料夾內容
 
 ```text
 submission/
 ├── README.md
-├── requirements.txt                Installed Python package versions
+├── requirements.txt                已安裝的 Python 套件版本
 ├── data/
-│   ├── 001-test_samples/           3 test samples with hand-marked eyes
-│   └── 002-other_samples/          9 other COCO images, copies of the test samples, and draft eye marks
+│   ├── 001-test_samples/           3 張測試樣本, 含手動標記的眼睛
+│   └── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與草稿眼睛標記
 ├── outputs/
-│   ├── 001-test_samples_yoloe/            YOLOE results
-│   ├── 001-test_samples_yoloe_dinov2/     Crops, heatmaps and both outline variants
-│   ├── 002-other_samples_yoloe/           YOLOE results
-│   ├── 002-other_samples_yoloe_dinov2/    Heatmaps, both outline variants and summary.csv
-│   └── 002-other_samples_performance/     Speed and accuracy results
-├── reports/                        Reports, figures, measurements and supporting notes
+│   ├── 001-test_samples_yoloe/            YOLOE 結果
+│   ├── 001-test_samples_yoloe_dinov2/     裁切圖、熱圖與兩種輪廓結果
+│   ├── 002-other_samples_yoloe/           YOLOE 結果
+│   ├── 002-other_samples_yoloe_dinov2/    熱圖、兩種輪廓結果與 summary.csv
+│   └── 002-other_samples_performance/     速度與準確度結果
+├── reports/                        報告、圖表、量測結果與補充筆記
 └── scripts/
-    ├── config.yaml                                  Data, output, YOLOE and measurement settings
-    ├── run_yoloe_test_samples.py                    YOLOE on the test samples
-    ├── run_yoloe_dinov2_test_samples.py             YOLOE + DINOv2 on the test samples
-    ├── run_yoloe_and_dinov2_other_samples.py        YOLOE and YOLOE + DINOv2 on the other samples
-    ├── evaluate_yoloe_and_dinov2_other_samples.py   Speed and accuracy on the other samples
-    ├── dinov2_eye_pipeline.py                       Shared YOLOE + DINOv2 steps
-    ├── measure_yoloe_eyes.py                        R2 and R3 for one YOLOE result
-    ├── measure_yoloe_dinov2_eyes.py                 R2 and R3 for one YOLOE + DINOv2 result
-    └── export_submission_files.py                   R2 and R3 for every result, plus figures, in reports/files/
+    ├── config.yaml                                  資料、輸出、YOLOE 與量測設定
+    ├── run_yoloe_test_samples.py                    在測試樣本上執行 YOLOE
+    ├── run_yoloe_dinov2_test_samples.py             在測試樣本上執行 YOLOE + DINOv2
+    ├── run_yoloe_and_dinov2_other_samples.py        在其他樣本上執行 YOLOE 與 YOLOE + DINOv2
+    ├── evaluate_yoloe_and_dinov2_other_samples.py   其他樣本的速度與準確度
+    ├── dinov2_eye_pipeline.py                       YOLOE + DINOv2 的共用步驟
+    ├── measure_yoloe_eyes.py                        單一 YOLOE 結果的 R2 與 R3
+    ├── measure_yoloe_dinov2_eyes.py                 單一 YOLOE + DINOv2 結果的 R2 與 R3
+    └── export_submission_files.py                   所有結果的 R2 與 R3, 以及圖表, 輸出到 reports/files/
 ```
 
-Model weights are in `../model/` and aren't committed. Earlier experiments are in
-[`../experiments/`](../experiments/README.md).
+模型權重位於 `../model/`, 不納入版本控制. 先前的實驗位於 [`../experiments/`](../experiments/README.md).
 
-## Measure the eye distances
+## 量測眼睛距離
 
-Two scripts print the calculation for one image, one for each method. The mode is set by `both_eyes`
-in `scripts/config.yaml`: `both-eyes` measures each animal's two eyes (R2), and `right-eye-pair`
-measures the right eyes of every pair of animals (R3).
+有兩支腳本會印出單張圖片的計算過程, 兩種方法各一支. 模式由 `scripts/config.yaml` 的 `both_eyes` 設定:
+`both-eyes` 量測每隻動物的雙眼 (R2), `right-eye-pair` 量測每一對動物的右眼 (R3).
 
 YOLOE:
 
@@ -156,18 +134,17 @@ YOLOE:
 .venv/bin/python image-segmentation/submission/scripts/measure_yoloe_eyes.py --json image-segmentation/submission/outputs/001-test_samples_yoloe/002-coco-sample.json
 ```
 
-YOLOE + DINOv2, using a JSON file from either the `grabcut/` or `heatmap_level/` folder:
+YOLOE + DINOv2, 使用 `grabcut/` 或 `heatmap_level/` 資料夾中的 JSON 檔:
 
 ```bash
 .venv/bin/python image-segmentation/submission/scripts/measure_yoloe_dinov2_eyes.py --json image-segmentation/submission/outputs/001-test_samples_yoloe_dinov2/grabcut/002-coco-sample.json
 ```
 
-Both work on either image set. To measure every result at once and save the CSV files used by
-reports 3 and 4, run `export_submission_files.py`, as shown below.
+兩者都適用於任一組圖片. 若要一次量測所有結果, 並儲存報告 3 與報告 4 使用的 CSV 檔, 請依下方說明執行 `export_submission_files.py`.
 
-## Reproduce the results
+## 重現結果
 
-Run these from the repository root, in order:
+請在專案根目錄依序執行:
 
 ```bash
 .venv/bin/python image-segmentation/submission/scripts/run_yoloe_test_samples.py
@@ -189,9 +166,9 @@ Run these from the repository root, in order:
 .venv/bin/python image-segmentation/submission/scripts/evaluate_yoloe_and_dinov2_other_samples.py
 ```
 
-The last command needs COCO's annotation file in `../experiments/data/coco_annotations/`.
+最後一個指令需要 `../experiments/data/coco_annotations/` 中的 COCO 標註檔.
 
-To install the packages in a new environment:
+在新環境中安裝套件:
 
 ```bash
 .venv/bin/python -m pip install -r image-segmentation/submission/requirements.txt
