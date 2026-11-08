@@ -213,7 +213,7 @@ def test_export_time_memory_and_size(api, label, start, end):
     detail = book["明細"]
     if expected < 200_000:
         rows = sum(1 for _ in detail.iter_rows(min_row=2, values_only=True))
-        marked = sum(1 for row in detail.iter_rows(min_row=2, values_only=True) if row[5] == "異常")
+        marked = sum(1 for row in detail.iter_rows(min_row=2, values_only=True) if row[6] == "異常")
         print(f"  read back: {rows} detail rows, {marked} marked anomalous")
         assert rows == expected
     else:

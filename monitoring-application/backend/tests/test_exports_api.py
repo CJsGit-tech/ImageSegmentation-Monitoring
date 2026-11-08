@@ -44,8 +44,8 @@ STATISTICS = "/api/v1/analytics/statistics"
 ROLES = ("admin1", "user1", "viewer1")
 TAIPEI = timezone(timedelta(hours=8))
 DAY = datetime(2026, 3, 10)  # Naive UTC.
-DETAIL_HEADERS = ["標題", "數值", "分類", "時間戳（UTC+08:00）", "創建者", "異常"]
-SUMMARY_HEADERS = ["分類", "總計", "平均", "最大值", "最小值"]
+DETAIL_HEADERS = ["標題", "數值", "單位", "分類", "時間戳（UTC+08:00）", "創建者", "異常"]
+SUMMARY_HEADERS = ["分類", "單位", "總計", "平均", "最大值", "最小值"]
 
 
 class Env:
@@ -72,6 +72,16 @@ def seed(rows):
             Record(title=t, category=c, value=v, timestamp=ts, is_anomaly=a, created_by_user_id=u)
             for t, c, v, ts, a, u in rows
         )
+        await session.commit()
+
+    run_in_db(work)
+
+
+def set_units(units):
+    """units: {category: unit}. Display setting only, no range."""
+
+    async def work(session):
+        session.add_all(CategorySetting(category=c, unit=u) for c, u in units.items())
         await session.commit()
 
     run_in_db(work)
@@ -180,7 +190,7 @@ def summary_rows(sheet):
     assert rows[0][0] == "查詢條件"
     conditions = {row[0]: row[1] for row in rows[1:5]}
     assert all(value is None for value in rows[5])  # Blank spacer row.
-    return conditions, rows[6][:5], [row[:5] for row in rows[7:]]
+    return conditions, rows[6][:6], [row[:6] for row in rows[7:]]
 
 
 def detail_rows(sheet):
@@ -238,7 +248,8 @@ def test_summary_matches_statistics_with_one_row_per_category_and_no_total(clien
     assert [row[0] for row in rows] == [item["category"] for item in statistics["categories"]]
     for row, item in zip(rows, statistics["categories"], strict=True):
         # Excel keeps 15 significant digits; XlsxWriter writes 16.
-        assert row[1:] == pytest.approx([item["sum"], item["avg"], item["max"], item["min"]], rel=1e-15)
+        assert row[1] is None  # No unit set.
+        assert row[2:] == pytest.approx([item["sum"], item["avg"], item["max"], item["min"]], rel=1e-15)
     assert len(rows) == 3  # 溫度, 壓力, Rpm: no total or count row.
     assert not any(str(cell).startswith(("合計", "總計")) for row in rows for cell in row[:1])
 
@@ -251,11 +262,11 @@ def test_selected_categories_are_shown_and_one_without_data_gets_empty_statistic
     conditions, _, rows = summary_rows(book["摘要"])
     assert conditions["分類"] == "壓力、溫度、濕度"
     assert [row[0] for row in rows] == ["壓力", "溫度", "濕度"]
-    assert rows[2][1:] == [None, None, None, None]
+    assert rows[2][1:] == [None, None, None, None, None]
     assert [row[0] for row in rows] == [item["category"] for item in statistics["categories"]]
     _, details = detail_rows(book["明細"])
     assert len(details) == sum(item["count"] for item in statistics["categories"]) == 5
-    assert {row[2] for row in details} == {"壓力", "溫度"}
+    assert {row[3] for row in details} == {"壓力", "溫度"}
 
 
 def test_detail_lists_every_counted_record_oldest_first_with_anomalies_marked(client):
@@ -268,21 +279,45 @@ def test_detail_lists_every_counted_record_oldest_first_with_anomalies_marked(cl
     assert len(rows) == sum(item["count"] for item in statistics["categories"]) == 6
     assert [row[0] for row in rows] == ["溫度 A", "壓力 A", "溫度 B", "溫度 C", "壓力 B", "轉速 A"]
     first = rows[0]
-    assert first[1] == 20.5 and first[2] == "溫度"
-    assert first[3] == datetime(2026, 3, 10, 9, 2, 3)  # 01:02:03 UTC shown at +08:00, a real date cell.
-    assert first[4] == "系統" and first[5] is None
-    assert rows[1][4] == "user1"
+    assert first[1] == 20.5 and first[2] is None and first[3] == "溫度"
+    assert first[4] == datetime(2026, 3, 10, 9, 2, 3)  # 01:02:03 UTC shown at +08:00, a real date cell.
+    assert first[5] == "系統" and first[6] is None
+    assert rows[1][5] == "user1"
     # Excel stores dates as day fractions: sub-second parts survive to about a millisecond.
-    assert abs(rows[3][3] - datetime(2026, 3, 10, 11, 0, 0, 250000)) <= timedelta(milliseconds=1)
-    marked = [row[0] for row in rows if row[5] == "異常"]
+    assert abs(rows[3][4] - datetime(2026, 3, 10, 11, 0, 0, 250000)) <= timedelta(milliseconds=1)
+    marked = [row[0] for row in rows if row[6] == "異常"]
     assert marked == ["溫度 B", "壓力 B"]
     # The anomaly rows are also filled; the others are not.
     fills = {sheet.cell(row=index + 2, column=1).fill.fgColor.rgb for index in range(len(rows))}
     assert sheet.cell(row=4, column=1).fill.fill_type == "solid"
     assert sheet.cell(row=2, column=1).fill.fill_type is None
     assert len(fills) == 2
-    assert sheet.cell(row=2, column=4).number_format == "yyyy-mm-dd hh:mm:ss"
+    assert sheet.cell(row=2, column=5).number_format == "yyyy-mm-dd hh:mm:ss"
     assert sheet.freeze_panes == "A2"
+
+
+def test_both_sheets_show_each_category_unit_and_leave_it_blank_when_unset(client):
+    standard_seed(client)
+    set_units({"溫度": "°C", "壓力": "=bar"})  # Rpm has no unit; =bar checks the formula guard.
+    statistics = get(client, STATISTICS, **RANGE).json()
+    book = workbook(download(client, **RANGE))
+    _, header, rows = summary_rows(book["摘要"])
+    assert header == SUMMARY_HEADERS
+    units = {row[0]: row[1] for row in rows}
+    assert units == {"溫度": "°C", "壓力": "=bar", "Rpm": None}
+    assert units == {item["category"]: item["unit"] for item in statistics["categories"]}
+    sheet = book["明細"]
+    _, details = detail_rows(sheet)
+    assert {(row[3], row[2]) for row in details} == {("溫度", "°C"), ("壓力", "=bar"), ("Rpm", None)}
+    # The anomalous 溫度 B row keeps its fill in the unit cell too.
+    anomaly_row = next(index for index, row in enumerate(details, start=2) if row[0] == "溫度 B")
+    assert sheet.cell(row=anomaly_row, column=3).fill.fill_type == "solid"
+    for index, row in enumerate(details, start=2):
+        if row[3] == "壓力":
+            cell = sheet.cell(row=index, column=3)
+            assert cell.data_type == "s" and cell.quotePrefix is True
+    summary_unit = next(cell for cell in book["摘要"]["B"] if cell.value == "=bar")
+    assert summary_unit.data_type == "s" and summary_unit.quotePrefix is True
 
 
 def test_file_has_no_chart_and_no_formula(client):
@@ -305,7 +340,7 @@ def test_user_text_that_looks_like_a_formula_stays_text(client):
     sheet = book["明細"]
     assert [row[0] for row in rows[: len(hostile)]] == hostile
     for index in range(len(hostile)):
-        for column in (1, 3):  # Title and category.
+        for column in (1, 4):  # Title and category.
             cell = sheet.cell(row=index + 2, column=column)
             assert cell.data_type == "s"
             assert cell.quotePrefix is True
@@ -400,5 +435,5 @@ def test_times_use_the_offset_of_start(client):
     conditions, _, _ = summary_rows(book["摘要"])
     assert conditions["開始時間"] == "2026-03-09 19:00:00 -05:00"
     header, rows = detail_rows(book["明細"])
-    assert header[3] == "時間戳（UTC-05:00）"
-    assert rows[0][3] == datetime(2026, 3, 9, 20, 0)
+    assert header[4] == "時間戳（UTC-05:00）"
+    assert rows[0][4] == datetime(2026, 3, 9, 20, 0)

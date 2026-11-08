@@ -51,4 +51,5 @@ Only run these tests against a local or test stack. They write to whatever datab
 - Backend outages, phone widths, screen readers and keyboard focus.
 - The monitoring screen's paused, reconnecting and first-load states, and the chart drawings themselves.
 - The live-update test waits for the simulator's next reading, up to its interval (30 s by default) plus 15 s.
+- The Excel file is checked by its raw text (headers and units), not cell by cell; the backend suite reads it back with openpyxl.
 - Anything visual: the list's anomaly marks and range bars are drawn on a canvas that these tests can't read, so they check the action row and the API instead.

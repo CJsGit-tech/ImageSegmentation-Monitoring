@@ -11,6 +11,13 @@ from conftest import button, choose, login, open_page
 TAIPEI = timezone(timedelta(hours=8))
 
 
+def sheet_text(content: bytes) -> str:
+    """All cell text of the workbook, read from the raw XML (no spreadsheet library needed)."""
+    with zipfile.ZipFile(io.BytesIO(content)) as archive:
+        names = [n for n in archive.namelist() if n.startswith("xl/worksheets/") or n == "xl/sharedStrings.xml"]
+        return "".join(archive.read(n).decode() for n in names)
+
+
 def window() -> dict:
     now = datetime.now(TAIPEI)
     return {"start": (now - timedelta(days=1)).isoformat(), "end": (now + timedelta(minutes=5)).isoformat()}
@@ -59,6 +66,7 @@ def test_export_matches_the_query_and_refuses_an_empty_range(run):
 
 def test_viewer_queries_a_category_and_downloads_the_excel(page: Page, run):
     category = run.category("screen")
+    run.api("setup_admin").set_range(category, None, None, unit="kPa")  # Unit only (PRD-17-R10).
     api = run.api("other")
     for value in (2, 4, 6):
         api.create(f"畫面 {value}", value, category)
@@ -87,6 +95,9 @@ def test_viewer_queries_a_category_and_downloads_the_excel(page: Page, run):
     download = download_info.value
     assert download.suggested_filename.endswith(".xlsx")
     expect(page.get_by_text("已下載", exact=False).first).to_be_visible()
+    # PRD-12-R7: both sheets carry a 單位 column with the category's unit.
+    text = sheet_text(open(download.path(), "rb").read())
+    assert text.count("單位") >= 2 and "kPa" in text
 
 
 def test_changed_conditions_disable_download(page: Page, run):
