@@ -1,60 +1,57 @@
-# 2. Animal and eye segmentation
+# 2. 動物與眼睛分割
 
-## Overview
+## 概述
 
-Two methods outline the eyes. Both use YOLOE to outline the animals.
+有兩種方法描出眼睛輪廓. 兩者都使用 YOLOE 描出動物輪廓.
 
-| Method | Animal outlines | Eye outlines |
+| 方法 | 動物輪廓 | 眼睛輪廓 |
 |---|---|---|
-| **YOLOE** | YOLOE, prompts `bird, cat, dog` | YOLOE, prompt `eye` |
-| **YOLOE + DINOv2** | YOLOE | DINOv2 heatmap peaks, outlined by either GrabCut or the heatmap level |
+| **YOLOE** | YOLOE, 提示為 `bird, cat, dog` | YOLOE, 提示為 `eye` |
+| **YOLOE + DINOv2** | YOLOE | DINOv2 熱圖峰值, 以 GrabCut 或熱圖等高線描出輪廓 |
 
-YOLOE + DINOv2 has two outline variants, and both are reported:
+YOLOE + DINOv2 有兩種描輪廓的方式, 兩者都會列出結果:
 
-- **GrabCut:** separates each eye from its surroundings using the colors in a small window.
-- **Heatmap level:** traces the heatmap at half the height of each eye's peak.
+- **GrabCut:** 依小視窗中的顏色, 將每個眼睛與周圍分離.
+- **熱圖等高線:** 在每個眼睛峰值一半高度處描出熱圖輪廓.
 
-In the figures, animals are green and eyes are red.
+圖中的動物為綠色, 眼睛為紅色.
 
-## How YOLOE + DINOv2 works
+## YOLOE + DINOv2 的運作方式
 
 ```text
-YOLOE animal outline → crop the animal → DINOv2 patch features
-→ similarity to reference eyes (heatmap) → keep peaks inside the animal outline
-→ pick up to 2 peaks → GrabCut or heatmap level → eye outline
+YOLOE 動物輪廓 → 裁切動物 → DINOv2 區塊特徵
+→ 與參考眼睛的相似度 (熱圖) → 保留動物輪廓內的峰值
+→ 選出最多 2 個峰值 → GrabCut 或熱圖等高線 → 眼睛輪廓
 ```
 
-No model was trained. Reference eyes are the DINOv2 features under YOLOE's eye outlines in the test
-samples. On the test samples, a crop's references come only from the other test samples. On the
-other samples, they come from all 3 test samples.
+此專案沒有訓練模型. 參考眼睛是測試樣本中 YOLOE 眼睛輪廓下的 DINOv2 特徵.
+在測試樣本上, 裁切圖的參考眼睛只來自其他測試樣本. 在其他樣本上, 則來自全部 3 張測試樣本.
 
-## Test samples
+## 測試樣本
 
-| Image | YOLOE | YOLOE + DINOv2, GrabCut | YOLOE + DINOv2, heatmap level |
+| 圖片 | YOLOE | YOLOE + DINOv2, GrabCut | YOLOE + DINOv2, 熱圖等高線 |
 |---|---|---|---|
-| 001 | ![YOLOE on image 001](files/figures/samples/yoloe/001-coco-sample.jpg) | ![GrabCut on image 001](files/figures/samples/dinov2_grabcut/001-coco-sample.jpg) | ![Heatmap level on image 001](files/figures/samples/dinov2_heatmap_level/001-coco-sample.jpg) |
-| 002 | ![YOLOE on image 002](files/figures/samples/yoloe/002-coco-sample.jpg) | ![GrabCut on image 002](files/figures/samples/dinov2_grabcut/002-coco-sample.jpg) | ![Heatmap level on image 002](files/figures/samples/dinov2_heatmap_level/002-coco-sample.jpg) |
-| 003 | ![YOLOE on image 003](files/figures/samples/yoloe/003-coco-sample.jpg) | ![GrabCut on image 003](files/figures/samples/dinov2_grabcut/003-coco-sample.jpg) | ![Heatmap level on image 003](files/figures/samples/dinov2_heatmap_level/003-coco-sample.jpg) |
+| 001 | ![圖片 001 的 YOLOE 結果](files/figures/samples/yoloe/001-coco-sample.jpg) | ![圖片 001 的 GrabCut 結果](files/figures/samples/dinov2_grabcut/001-coco-sample.jpg) | ![圖片 001 的熱圖等高線結果](files/figures/samples/dinov2_heatmap_level/001-coco-sample.jpg) |
+| 002 | ![圖片 002 的 YOLOE 結果](files/figures/samples/yoloe/002-coco-sample.jpg) | ![圖片 002 的 GrabCut 結果](files/figures/samples/dinov2_grabcut/002-coco-sample.jpg) | ![圖片 002 的熱圖等高線結果](files/figures/samples/dinov2_heatmap_level/002-coco-sample.jpg) |
+| 003 | ![圖片 003 的 YOLOE 結果](files/figures/samples/yoloe/003-coco-sample.jpg) | ![圖片 003 的 GrabCut 結果](files/figures/samples/dinov2_grabcut/003-coco-sample.jpg) | ![圖片 003 的熱圖等高線結果](files/figures/samples/dinov2_heatmap_level/003-coco-sample.jpg) |
 
-YOLOE found all 7 animals, including the bird. YOLOE + DINOv2 runs only on cats and dogs, so the
-bird has no eye result from it.
+YOLOE 找到全部 7 隻動物, 包含鳥. YOLOE + DINOv2 只處理貓與狗, 因此鳥沒有該方法的眼睛結果.
 
-## Other samples
+## 其他樣本
 
-| Method | Cats and dogs outlined | Eyes output | Animals with two eyes |
+| 方法 | 描出輪廓的貓狗 | 輸出眼睛 | 有兩個眼睛的動物 |
 |---|---|---|---|
 | YOLOE | 25 | 18 | 7 |
-| YOLOE + DINOv2, either variant | 25, from YOLOE | 48 | 23 |
+| YOLOE + DINOv2, 任一方式 | 25, 來自 YOLOE | 48 | 23 |
 
-Both variants start from the same eye locations, so they output the same number of eyes. YOLOE also
-found the bird in image 001. In `000000333772.jpg`, YOLOE drew one outline around 2 cats, so YOLOE +
-DINOv2 treated them as one animal.
+兩種方式都從相同的眼睛位置開始, 因此輸出的眼睛數量相同. YOLOE 也找到了圖片 001 中的鳥.
+在 `000000333772.jpg` 中, YOLOE 用一個輪廓框住 2 隻貓, 因此 YOLOE + DINOv2 將牠們視為一隻動物.
 
-Overviews of all 12 images:
+全部 12 張圖片的總覽:
 
 - [YOLOE](files/figures/other_samples/yoloe.jpg)
 - [YOLOE + DINOv2, GrabCut](files/figures/other_samples/dinov2_grabcut.jpg)
-- [YOLOE + DINOv2, heatmap level](files/figures/other_samples/dinov2_heatmap_level.jpg)
-- [DINOv2 heatmaps, each beside its crop](files/figures/other_samples/dinov2_heatmaps.jpg)
+- [YOLOE + DINOv2, 熱圖等高線](files/figures/other_samples/dinov2_heatmap_level.jpg)
+- [DINOv2 熱圖, 每張並列其裁切圖](files/figures/other_samples/dinov2_heatmaps.jpg)
 
-Full-size results and JSON outlines are in [`outputs/`](../outputs).
+完整尺寸的結果與 JSON 輪廓位於 [`outputs/`](../outputs).

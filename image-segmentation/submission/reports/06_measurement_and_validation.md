@@ -1,101 +1,93 @@
-# 6. Measurement method and validation
+# 6. 量測方法與驗證
 
-## Measurement method
+## 量測方法
 
-YOLOE and both YOLOE + DINOv2 variants are measured the same way, in image pixels:
+YOLOE 與兩種 YOLOE + DINOv2 方式都以相同方法量測, 單位為影像像素:
 
-1. **Group the eyes by animal.** YOLOE keeps its two most confident eyes per animal, and YOLOE +
-   DINOv2 outputs at most two.
-2. **Find each eye's center** from its outline.
-3. **Identify the right eye**, when needed, as the eye with the smaller $x$.
-4. **Calculate the distance** between the two centers.
+1. **依動物分組眼睛.** YOLOE 為每隻動物保留信心分數最高的兩個眼睛, YOLOE + DINOv2 最多輸出兩個.
+2. **找出每個眼睛的中心點**, 由其輪廓計算.
+3. **判斷右眼**, 需要時取 $x$ 較小的眼睛.
+4. **計算兩個中心點之間的距離.**
 
-## Formulas
+## 公式
 
-**Polygon area**, using the shoelace formula, for vertices $(x_i, y_i)$ with the last vertex joined
-back to the first:
+**多邊形面積**, 使用鞋帶公式, 頂點為 $(x_i, y_i)$, 最後一個頂點連回第一個:
 
 $$A = \frac{1}{2}\sum_i (x_i y_{i+1} - x_{i+1} y_i)$$
 
-**Eye center**, the polygon's centroid:
+**眼睛中心點**, 即多邊形的形心:
 
 $$C_x = \frac{1}{6A}\sum_i (x_i + x_{i+1})(x_i y_{i+1} - x_{i+1} y_i)$$
 
 $$C_y = \frac{1}{6A}\sum_i (y_i + y_{i+1})(x_i y_{i+1} - x_{i+1} y_i)$$
 
-**Distance**, the Euclidean distance between two centers:
+**距離**, 兩個中心點之間的歐氏距離:
 
 $$d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$
 
-## Validation
+## 驗證
 
-### 1. Known-answer test
+### 1. 已知答案測試
 
-Made-up eye centers with known distances gave the expected results, including a 30-40-50 triangle
-and the rule that an animal with one eye isn't measured. This confirms the calculation, not the model.
+使用距離已知的虛構眼睛中心點, 得到預期結果, 包含 30-40-50 三角形, 以及只有一個眼睛的動物不量測的規則.
+這確認的是計算本身, 而不是模型.
 
-### 2. Comparison with hand marks
+### 2. 與手動標記比較
 
-On the sample images, each distance was compared with the distance between the centers of the
-hand-marked eye boxes. All results are in
-[`validation_against_marks.csv`](files/measurements/validation_against_marks.csv).
+在範例圖片上, 將每個距離與手動標記眼睛外框中心點之間的距離比較.
+所有結果都在 [`validation_against_marks.csv`](files/measurements/validation_against_marks.csv).
 
-**Each animal's eye distance**
+**每隻動物的雙眼距離**
 
-| Image | Animal | Marked | YOLOE | Error | GrabCut | Error | Heatmap level | Error |
+| 圖片 | 動物 | 標記值 | YOLOE | 誤差 | GrabCut | 誤差 | 熱圖等高線 | 誤差 |
 |---|---|---|---|---|---|---|---|---|
-| 001 | Dog | 44.53 px | Not found | None | 43.82 px | 0.70 px | 43.14 px | 1.39 px |
-| 001 | Cat | 11.67 px | Not found | None | 10.52 px | 1.16 px | 11.87 px | 0.19 px |
-| 002 | Cat | 76.03 px | 73.12 px | 2.91 px | 70.38 px | 5.65 px | 73.15 px | 2.88 px |
-| 002 | Dog | 78.50 px | 73.29 px | 5.21 px | 74.92 px | 3.58 px | 73.25 px | 5.25 px |
-| 003 | Dog | 49.33 px | 48.54 px | 0.79 px | 55.47 px | 6.14 px | 48.77 px | 0.56 px |
-| 003 | Cat | 40.51 px | 39.35 px | 1.17 px | 38.65 px | 1.87 px | 38.53 px | 1.98 px |
+| 001 | 狗 | 44.53 px | 未找到 | 無 | 43.82 px | 0.70 px | 43.14 px | 1.39 px |
+| 001 | 貓 | 11.67 px | 未找到 | 無 | 10.52 px | 1.16 px | 11.87 px | 0.19 px |
+| 002 | 貓 | 76.03 px | 73.12 px | 2.91 px | 70.38 px | 5.65 px | 73.15 px | 2.88 px |
+| 002 | 狗 | 78.50 px | 73.29 px | 5.21 px | 74.92 px | 3.58 px | 73.25 px | 5.25 px |
+| 003 | 狗 | 49.33 px | 48.54 px | 0.79 px | 55.47 px | 6.14 px | 48.77 px | 0.56 px |
+| 003 | 貓 | 40.51 px | 39.35 px | 1.17 px | 38.65 px | 1.87 px | 38.53 px | 1.98 px |
 
-**Right eyes of each animal pair**
+**每對動物的右眼**
 
-| Image | Pair | Marked | YOLOE | Error | GrabCut | Error | Heatmap level | Error |
+| 圖片 | 配對 | 標記值 | YOLOE | 誤差 | GrabCut | 誤差 | 熱圖等高線 | 誤差 |
 |---|---|---|---|---|---|---|---|---|
-| 001 | Dog to cat | 177.10 px | Not found | None | 176.50 px | 0.61 px | 175.79 px | 1.31 px |
-| 002 | Cat to dog | 212.59 px | 215.25 px | 2.66 px | 215.33 px | 2.74 px | 214.02 px | 1.43 px |
-| 003 | Dog to cat | 269.86 px | 268.88 px | 0.98 px | 264.46 px | 5.40 px | 273.39 px | 3.53 px |
+| 001 | 狗到貓 | 177.10 px | 未找到 | 無 | 176.50 px | 0.61 px | 175.79 px | 1.31 px |
+| 002 | 貓到狗 | 212.59 px | 215.25 px | 2.66 px | 215.33 px | 2.74 px | 214.02 px | 1.43 px |
+| 003 | 狗到貓 | 269.86 px | 268.88 px | 0.98 px | 264.46 px | 5.40 px | 273.39 px | 3.53 px |
 
-**Summary**
+**摘要**
 
-| Method | Eye distance MAE | MAPE | Animals | Right-eye MAE | MAPE | Pairs |
+| 方法 | 雙眼距離 MAE | MAPE | 動物 | 右眼距離 MAE | MAPE | 配對 |
 |---|---|---|---|---|---|---|
 | YOLOE | 2.52 px | 3.7% | 4 | 1.82 px | 0.8% | 2 |
 | YOLOE + DINOv2, GrabCut | 3.18 px | 6.8% | 6 | 2.92 px | 1.2% | 3 |
-| YOLOE + DINOv2, heatmap level | 2.04 px | 3.6% | 6 | 2.09 px | 0.9% | 3 |
+| YOLOE + DINOv2, 熱圖等高線 | 2.04 px | 3.6% | 6 | 2.09 px | 0.9% | 3 |
 
-The DINOv2 averages include image 001, where YOLOE has no result, so the rows don't cover the same
-animals. On the same 4 animals, the eye distance MAE is 2.52 px for YOLOE, 4.31 px for GrabCut and
-2.67 px for heatmap level.
+DINOv2 的平均值包含圖片 001, 而 YOLOE 在該圖沒有結果, 因此各列涵蓋的動物不同.
+在相同 4 隻動物上, 雙眼距離 MAE 為 YOLOE 2.52 px、GrabCut 4.31 px、熱圖等高線 2.67 px.
 
-### 3. Comparison between methods
+### 3. 方法之間的比較
 
-On the other samples, YOLOE + DINOv2 was compared with YOLOE on the 18 eyes YOLOE found. The
-distances differ from YOLOE's by 2.50 px for GrabCut and 0.54 px for heatmap level, on 7 animals.
-This shows agreement rather than accuracy, and 4 of those 7 animals are copies of the test samples.
+在其他樣本上, 以 YOLOE 找到的 18 個眼睛比較 YOLOE + DINOv2 與 YOLOE. 在 7 隻動物上, 與 YOLOE 的距離差異為 GrabCut 2.50 px、熱圖等高線 0.54 px.
+這表示的是一致程度而非準確度, 而且這 7 隻動物中有 4 隻來自測試樣本的副本.
 
-### Checks still to run
+### 尚待執行的檢查
 
-| Check | How | What passing looks like |
+| 檢查 | 方式 | 通過的樣子 |
 |---|---|---|
-| Reviewed marks | Have a person mark eyes on the test images | Hits, false eyes and errors can be scored |
-| Between annotators | Have two people mark independently | Their disagreement shows how exact the reference can be |
-| Scale | Resize images by 2× and run again | Distances roughly double |
-| Real-world size | Photograph a target of known size | Pixel results convert to the known size |
+| 經審閱的標記 | 請人在測試圖片上標記眼睛 | 能計算命中、誤判與誤差 |
+| 標註者之間 | 請兩人各自獨立標記 | 兩人的差異顯示參考值能有多精確 |
+| 尺度 | 將圖片放大 2× 後重新執行 | 距離約增為兩倍 |
+| 實際尺寸 | 拍攝已知尺寸的目標物 | 像素結果可換算為已知尺寸 |
 
-## Limits
+## 限制
 
-- **Pixels only:** COCO images have no known scale, so results can't be converted to centimeters.
-- **Compare within one image:** distances from different photos aren't comparable.
-- **Head angle:** a turned head makes eyes look closer together, so this isn't the true anatomical distance.
-- **Depth:** two animals at different distances from the camera aren't measured in the same plane.
-- **Right-eye rule:** it assumes a forward-facing, upright head, and it can be wrong in a side view.
-- **Center depends on the outline:** a centroid is the middle of the outlined shape, not necessarily
-  the pupil, and a false eye gives a false distance.
-- **The 002 dog is uncertain:** its mark gives 78.50 px, while YOLOE and both variants give 73-75 px. The mark
-  may be off, so a person should check it.
-- **Marks aren't exact:** Claude Code made them from zoomed views with no second annotator, so very
-  small errors shouldn't be read as exact.
+- **只有像素單位:** COCO 圖片沒有已知比例, 因此結果無法換算為公分.
+- **只在同一張圖片內比較:** 不同照片的距離無法互相比較.
+- **頭部角度:** 頭部轉向會使眼睛看起來較靠近, 因此這不是真實的解剖距離.
+- **遠近:** 離鏡頭距離不同的兩隻動物, 並不是在同一平面上量測.
+- **右眼規則:** 假設頭部朝前且直立, 側臉時可能判斷錯誤.
+- **中心點取決於輪廓:** 形心是輪廓形狀的中間, 不一定是瞳孔, 而誤判的眼睛會產生錯誤的距離.
+- **002 的狗不確定:** 標記值為 78.50 px, YOLOE 與兩種方式都得到 73-75 px. 標記可能有偏差, 應由人工檢查.
+- **標記並不精確:** 由 Claude Code 依放大檢視製作, 沒有第二位標註者, 因此極小的誤差不應視為精確.
