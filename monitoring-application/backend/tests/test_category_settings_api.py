@@ -1,4 +1,4 @@
-"""Category ranges, the anomaly rule and read-only anomalies (PRD-17, PRD-09, PRD-18).
+"""Category ranges, the anomaly rule and changing anomalies (PRD-17, PRD-09, PRD-18).
 
 Against a real MariaDB. Run through tests/run_integration.sh.
 """
@@ -26,7 +26,6 @@ from app.models.record import Record
 from app.models.user import Role, User
 from app.prestart import _wait_for_database
 from app.records.anomaly import CategoryRange, evaluate_anomaly, get_range, is_out_of_range
-from app.records.errors import AnomalyRecordReadOnlyError
 from app.records.schemas import RecordCreate, RecordOut, RecordPage, RecordUpdate
 from app.records.service import create_record, update_record
 
@@ -425,8 +424,8 @@ def test_clearing_keeps_the_unit_and_the_old_anomaly(client):
     assert cleared["range"] is None and cleared["range_status"] == "unset" and cleared["unit"] == "rpm"
     assert added(client, value=50)["is_anomaly"] is False
     assert call(client, "GET", f"{RECORDS}/{anomaly['id']}", "viewer1").json()["is_anomaly"] is True
-    assert_error(call(client, "DELETE", f"{RECORDS}/{anomaly['id']}", "admin1"), 403, "ANOMALY_RECORD_READ_ONLY")
-    assert_error(call(client, "PATCH", f"{RECORDS}/{anomaly['id']}", "admin1", json={"value": 1}), 403, "ANOMALY_RECORD_READ_ONLY")
+    changed = call(client, "PATCH", f"{RECORDS}/{anomaly['id']}", "admin1", json={"value": 1})
+    assert changed.status_code == 200 and changed.json()["is_anomaly"] is False
 
 
 def test_unit_without_range_still_reads_as_unset(client):
@@ -492,7 +491,7 @@ def test_unconfirmed_anomaly_is_not_saved(client):
     for value in (10, 20, 5, 25):
         error = assert_error(add(client, value=value), 409, "ANOMALY_CONFIRMATION_REQUIRED")
         assert error["details"] == {"category": "c", "value": value, "range": {"min": 10, "max": 20}}
-        assert "任何人都不能修改或刪除" in error["message"]
+        assert "請確認" in error["message"] and "任何人" not in error["message"]
     assert record_count() == 0
     assert added(client, value=10, confirm_anomaly=True)["is_anomaly"] is True
 
@@ -532,7 +531,7 @@ def test_confirmation_must_be_a_real_boolean(client, flag):
     assert "body.confirm_anomaly" in problems(add(client, confirm_anomaly=flag))
 
 
-def test_edit_into_anomaly_needs_confirmation_then_locks(client):
+def test_edit_into_anomaly_needs_confirmation_and_stays_editable(client):
     set_range(client)
     record = added(client)
     url = f"{RECORDS}/{record['id']}"
@@ -542,8 +541,9 @@ def test_edit_into_anomaly_needs_confirmation_then_locks(client):
     changed = call(client, "PATCH", url, "user1", json={"value": 20, "confirm_anomaly": True})
     assert changed.status_code == 200 and changed.json()["is_anomaly"] is True
     for who in ("user1", "admin1"):
-        assert_error(call(client, "PATCH", url, who, json={"title": "again"}), 403, "ANOMALY_RECORD_READ_ONLY")
-        assert_error(call(client, "DELETE", url, who), 403, "ANOMALY_RECORD_READ_ONLY")
+        edited = call(client, "PATCH", url, who, json={"title": f"again {who}"})
+        assert edited.status_code == 200 and edited.json()["is_anomaly"] is True
+    assert call(client, "DELETE", url, "user1").status_code == 204
 
 
 def test_moving_to_another_category_is_judged_there(client):
@@ -620,11 +620,8 @@ def test_racing_edits_cannot_overwrite_a_new_anomaly(client):
     async def edit(db, body):
         async with AsyncSession(db, expire_on_commit=False) as session:
             admin = await _as(session, "admin1")
-            try:
-                await update_record(session, admin, record_id, RecordUpdate(**body))
-                return "ok"
-            except AnomalyRecordReadOnlyError:
-                return "read-only"
+            await update_record(session, admin, record_id, RecordUpdate(**body))
+            return "ok"
 
     async def race():
         db = engine()
@@ -636,8 +633,7 @@ def test_racing_edits_cannot_overwrite_a_new_anomaly(client):
             await db.dispose()
 
     results = asyncio.run(race())
-    assert results[0] == "ok"
-    assert set(results) <= {"ok", "read-only"}
+    assert set(results) == {"ok"}
     stored = call(client, "GET", f"{RECORDS}/{record_id}", "viewer1").json()
     assert stored["is_anomaly"] is True and stored["value"] == 50
 
@@ -736,36 +732,61 @@ def test_long_lived_session_sees_new_ranges_after_commit(client):
     assert asyncio.run(scenario()).max == 100
 
 
-# --- Read-only anomalies (PRD-18) ---
+# --- Changing anomalies: the same ownership rule as any other record (PRD-18) ---
 
 
 @pytest.mark.parametrize("who", ["admin1", "user1"])
-@pytest.mark.parametrize("method, kwargs", [("PATCH", {"json": {"title": "x"}}), ("DELETE", {})])
-def test_anomaly_is_read_only_with_a_reason(client, who, method, kwargs, caplog):
+def test_creator_and_admin_can_edit_an_anomaly(client, who, caplog):
     set_range(client)
     anomaly = added(client, value=50, confirm_anomaly=True)
     url = f"{RECORDS}/{anomaly['id']}"
     caplog.clear()
     with caplog.at_level(logging.INFO, logger="app.audit"):
-        error = assert_error(call(client, method, url, who, **kwargs), 403, "ANOMALY_RECORD_READ_ONLY")
-    assert "任何人都不能修改或刪除" in error["message"]
-    assert call(client, "GET", url, "viewer1").json() == anomaly
+        response = call(client, "PATCH", url, who, json={"title": "x"})
+    assert response.status_code == 200
+    # A title edit does not re-judge: the value is unchanged, so the record stays anomalous.
+    assert response.json()["title"] == "x" and response.json()["is_anomaly"] is True
     [event] = audit_events(caplog)
-    assert event.event_type == "permission_denied" and event.reason == "anomaly_read_only"
+    assert event.event_type == "record_updated"
 
 
-def test_other_user_gets_the_same_reason_and_viewer_the_role_reason(client):
+@pytest.mark.parametrize("who", ["admin1", "user1"])
+def test_creator_and_admin_can_delete_an_anomaly(client, who, caplog):
     set_range(client)
     url = f"{RECORDS}/{added(client, value=50, confirm_anomaly=True)['id']}"
-    assert_error(call(client, "DELETE", url, "user2"), 403, "ANOMALY_RECORD_READ_ONLY")
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger="app.audit"):
+        assert call(client, "DELETE", url, who).status_code == 204
+    assert_error(call(client, "GET", url, "viewer1"), 404, "RECORD_NOT_FOUND")
+    [event] = audit_events(caplog)
+    assert event.event_type == "record_deleted"
+
+
+def test_other_user_and_viewer_still_cannot_change_an_anomaly(client):
+    set_range(client)
+    anomaly = added(client, value=50, confirm_anomaly=True)
+    url = f"{RECORDS}/{anomaly['id']}"
+    assert_error(call(client, "DELETE", url, "user2"), 403, "NOT_RECORD_OWNER")
+    assert_error(call(client, "PATCH", url, "user2", json={"title": "x"}), 403, "NOT_RECORD_OWNER")
     assert_error(call(client, "DELETE", url, "viewer1"), 403, "FORBIDDEN")
+    assert call(client, "GET", url, "viewer1").json() == anomaly
 
 
-def test_confirmation_does_not_unlock_an_anomaly(client):
+def test_correcting_an_anomaly_into_range_clears_the_flag(client):
     set_range(client)
     url = f"{RECORDS}/{added(client, value=50, confirm_anomaly=True)['id']}"
-    response = call(client, "PATCH", url, "admin1", json={"value": 15, "confirm_anomaly": True})
-    assert_error(response, 403, "ANOMALY_RECORD_READ_ONLY")
+    response = call(client, "PATCH", url, "admin1", json={"value": 15})
+    assert response.status_code == 200 and response.json()["is_anomaly"] is False
+
+
+def test_changing_an_anomaly_to_another_bad_value_needs_confirmation(client):
+    set_range(client)
+    anomaly = added(client, value=50, confirm_anomaly=True)
+    url = f"{RECORDS}/{anomaly['id']}"
+    assert_error(call(client, "PATCH", url, "user1", json={"value": 60}), 409, "ANOMALY_CONFIRMATION_REQUIRED")
+    assert call(client, "GET", url, "viewer1").json() == anomaly
+    response = call(client, "PATCH", url, "user1", json={"value": 60, "confirm_anomaly": True})
+    assert response.status_code == 200 and response.json()["is_anomaly"] is True
 
 
 def test_normal_records_keep_the_ownership_rule(client):

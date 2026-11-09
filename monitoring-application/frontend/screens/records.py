@@ -19,7 +19,7 @@ from core.records import ListState, Query
 _NEW_RECORD_PAGE = "screens/record_new.py"
 _SORT_LABELS = {"timestamp": "時間戳", "title": "標題", "value": "數值", "category": "分類"}
 _ORDER_LABELS = {"desc": "遞減（新到舊）", "asc": "遞增（舊到新）"}
-_ANOMALY_LABEL = "◆ 異常 🔒"
+_ANOMALY_LABEL = "◆ 異常"
 _NO_RANGE_LABEL = "未設定範圍"
 _ANOMALY_ROW_STYLE = "background-color: #FBE3E0"
 _ANOMALY_STATUS_STYLE = "background-color: #FBE3E0; color: #A61B12; font-weight: 700"

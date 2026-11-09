@@ -258,7 +258,7 @@ def _confirm_clear(item: dict[str, Any]) -> None:
     ui.confirm_dialog(
         f"清除範圍：{name}",
         target=f"將清除「{name}」目前的範圍：{records.escape_markdown(f'{low} – {high}')}。{unit}",
-        consequence="清除後，這個分類之後的新資料不會再檢查是否異常。已標為異常的記錄維持異常且不能修改。之後可以再次設定範圍。",
+        consequence="清除後，這個分類之後的新資料不會再檢查是否異常。已標為異常的記錄維持異常。之後可以再次設定範圍。",
         confirm_label="清除範圍",
         on_confirm=lambda: _clear_range(item),
     )

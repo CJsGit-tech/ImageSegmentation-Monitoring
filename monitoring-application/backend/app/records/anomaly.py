@@ -1,16 +1,11 @@
-"""The only definition of what is anomalous (PRD-09-R7) and of what that makes a record (PRD-18)."""
-
-import logging
+"""The only definition of what is anomalous (PRD-09-R7)."""
 
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.events import audit
 from app.models.category_setting import CategorySetting
-from app.models.record import Record
-from app.models.user import User
-from app.records.errors import AnomalyConfirmationRequiredError, AnomalyRecordReadOnlyError
+from app.records.errors import AnomalyConfirmationRequiredError
 
 
 class CategoryRange(BaseModel):
@@ -48,9 +43,9 @@ async def evaluate_anomaly(session: AsyncSession, category: str, value: float) -
 
 
 async def judge_manual_save(session: AsyncSession, category: str, value: float, *, confirmed: bool) -> bool:
-    """The save-time judgement, which is final (PRD-09-R4). An anomaly becomes permanent, so a
-    person must have confirmed it (PRD-18-R6): whatever the check said earlier, this refuses
-    an unconfirmed one. A confirmation is ignored when the value turns out to be normal."""
+    """The save-time judgement (PRD-09-R4). A person must have confirmed an anomaly (PRD-18-R6):
+    whatever the check said earlier, this refuses an unconfirmed one. A confirmation is ignored
+    when the value turns out to be normal."""
     category_range = await get_range(session, category)
     if not is_out_of_range(value, category_range):
         return False
@@ -59,18 +54,3 @@ async def judge_manual_save(session: AsyncSession, category: str, value: float, 
             details={"category": category, "value": value, "range": category_range.model_dump()}
         )
     return True
-
-
-def ensure_modifiable(record: Record, user: User) -> None:
-    """Called with the row locked, before any update or delete, for every role (PRD-18-R1)."""
-    if record.is_anomaly:
-        audit(
-            "permission_denied",
-            "permission denied",
-            user=user,
-            level=logging.WARNING,
-            role=user.role.value,
-            reason="anomaly_read_only",
-            record_id=record.id,
-        )
-        raise AnomalyRecordReadOnlyError(details={"record_id": record.id})

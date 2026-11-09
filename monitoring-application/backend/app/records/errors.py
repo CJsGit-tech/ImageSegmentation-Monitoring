@@ -13,14 +13,9 @@ class NotRecordOwnerError(ForbiddenError):
     message = "只有建立者或 Admin 可修改或刪除這筆記錄"
 
 
-class AnomalyRecordReadOnlyError(ForbiddenError):
-    code = "ANOMALY_RECORD_READ_ONLY"
-    message = "異常記錄已封存，任何人都不能修改或刪除"
-
-
 class AnomalyConfirmationRequiredError(ConflictError):
     code = "ANOMALY_CONFIRMATION_REQUIRED"
-    message = "儲存後將標為異常，且之後任何人都不能修改或刪除；請確認後再送出"
+    message = "儲存後將標為異常；請確認後再送出"
 
 
 class ClientRequestReusedError(ConflictError):

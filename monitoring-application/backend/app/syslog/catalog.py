@@ -91,6 +91,7 @@ def _permission_denied(fields: dict[str, Any]) -> str:
     reason = fields.get("reason")
     if reason == "not_record_owner":
         return f"只能修改或刪除自己建立的資料，{_record(fields)}被拒絕"
+    # Anomalies are editable now, but rows logged while they were locked still carry this reason.
     if reason == "anomaly_read_only":
         return f"異常{_record(fields)}不可修改或刪除"
     if reason == "own_role_change":

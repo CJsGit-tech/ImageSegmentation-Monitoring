@@ -169,7 +169,7 @@ def _finish(outcome: _Outcome, record_id: int, *, success_notice: str | None = N
     elif refused.status == 404:
         records.record_gone()
     else:
-        # A record can become anomalous after the list loaded: the row now shows why it is locked.
+        # The user's role can change after the list loaded: the row now shows why they cannot act.
         records.request_reload(notice=refused.message, keep_selected_id=record_id)
     st.rerun()
 

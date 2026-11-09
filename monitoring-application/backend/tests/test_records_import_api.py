@@ -550,7 +550,7 @@ def test_viewer_and_anonymous_are_refused_and_nothing_is_written(client):
 def test_imported_records_follow_the_edit_and_delete_rules(client):
     ranged = f"{CATEGORY_PREFIX}振動"
     set_range(ranged, 0, 10)
-    text = csv_text([f"mine,5,{ranged},", f"other,6,{ranged},", f"admin,7,{ranged},", f"locked,10,{ranged},"])
+    text = csv_text([f"mine,5,{ranged},", f"other,6,{ranged},", f"admin,7,{ranged},", f"flagged,10,{ranged},"])
     assert upload(client, "perm.csv", text).status_code == 201
     ids = {i["title"]: i["id"] for i in list_all(client)["items"]}
 
@@ -563,8 +563,9 @@ def test_imported_records_follow_the_edit_and_delete_rules(client):
     assert_error(call(client, "DELETE", f"{RECORDS}/{ids['other']}", "viewer1"), 403, "FORBIDDEN")
     assert call(client, "PATCH", f"{RECORDS}/{ids['admin']}", "admin1", json={"value": 8}).status_code == 200
     assert call(client, "DELETE", f"{RECORDS}/{ids['admin']}", "admin1").status_code == 204
-    for who in ("user1", "admin1"):
-        assert_error(call(client, "DELETE", f"{RECORDS}/{ids['locked']}", who), 403, "ANOMALY_RECORD_READ_ONLY")
+    assert_error(call(client, "DELETE", f"{RECORDS}/{ids['flagged']}", "user2"), 403, "NOT_RECORD_OWNER")
+    assert call(client, "PATCH", f"{RECORDS}/{ids['flagged']}", "user1", json={"title": "flagged2"}).status_code == 200
+    assert call(client, "DELETE", f"{RECORDS}/{ids['flagged']}", "admin1").status_code == 204
 
 
 # --- Audit (PRD-14-R6) ---

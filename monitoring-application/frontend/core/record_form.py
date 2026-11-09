@@ -31,7 +31,7 @@ import streamlit as st
 
 from core import api, records
 
-ANOMALY_WARNING = "儲存後將標為異常，且之後任何人都不能修改或刪除"
+ANOMALY_WARNING = "儲存後將標為異常"
 VALUE_REQUIRED = "請輸入數值"
 VALUE_NOT_NUMBER = "數值必須是數字"
 CONFIRMATION_REQUIRED_CODE = "ANOMALY_CONFIRMATION_REQUIRED"
@@ -39,7 +39,7 @@ CONFIRMATION_REQUIRED_CODE = "ANOMALY_CONFIRMATION_REQUIRED"
 _CONFIRM_LABEL = "我了解，確認儲存為異常記錄"
 _RANGE_CHANGED = "此分類的範圍剛被變更，依目前範圍這筆資料會成為異常。"
 _CHECK_FAILED = "暫時無法確認此分類的範圍，送出時系統仍會檢查。"
-_SAVED_ANOMALY = "這筆記錄已標為異常，之後任何人都不能修改或刪除。"
+_SAVED_ANOMALY = "這筆記錄已標為異常。"
 _SAVED_NORMAL_AFTER_CONFIRM = "範圍已變更，依目前範圍這筆記錄未被標為異常。"
 _CHECK_TIMEOUT_SECONDS = 5
 # ASCII only: float() alone would also accept 1_000, full-width digits, nan and inf.

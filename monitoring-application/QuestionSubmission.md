@@ -14,13 +14,11 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-開啟 http://127.0.0.1:18501, 以 `.env.example` 的測試帳號登入:
+開啟 http://127.0.0.1:18501 登入. 若要測試三種角色的權限, `.env` 必須包含以下三個測試帳號. `.env.example` 已預填這些值, 後端首次啟動時會依 `.env` 建立帳號:
 
-| 角色 | 帳號 | 密碼 |
-| --- | --- | --- |
-| Admin | `admin` | `Admin@12345` |
-| User | `user` | `User@12345` |
-| Viewer | `viewer` | `Viewer@12345` |
+- **Admin:** `admin` / `Admin@12345`
+- **User:** `user` / `User@12345`
+- **Viewer:** `viewer` / `Viewer@12345`
 
 可用 `docs/sample-records-1000.csv` 或 `docs/sample-records-1000.json` 測試批量導入. 完整說明請見 [README.md](README.md).
 
@@ -40,9 +38,9 @@ docker compose up -d --build
 
 | 項目 | 指令 | 結果 |
 | --- | --- | --- |
-| 後端測試 (含一次性 MariaDB 11.7.2) | `backend/tests/run_integration.sh` | 701 通過, 5 略過 |
+| 後端測試 (含一次性 MariaDB 11.7.2) | `backend/tests/run_integration.sh` | 702 通過, 5 略過 |
 | 前端單元測試 | 在 `frontend/` 執行 `.venv/bin/python -m pytest tests` | 119 通過 |
-| 瀏覽器測試 (Playwright, 對執行中的服務) | 在 `e2e/` 執行 `.venv/bin/python -m pytest` | 42 通過 |
+| 瀏覽器測試 (Playwright, 對執行中的服務) | 在 `e2e/` 執行 `.venv/bin/python -m pytest` | 43 通過 |
 | Swagger 副本 | 重新匯出後與 `docs/api-documentation.html` 比對 | 內容完全相同 |
 | 圖表繪製 | 以 Viewer 登入並截圖檢查即時監控與資料分析頁面 | 折線圖, 柱狀圖與異常標記皆正常顯示 |
 
@@ -129,8 +127,8 @@ docker compose up -d --build
 | --- | --- | --- | --- |
 | 即時監控, 資料列表, 資料分析, 下載 Excel | ✅ | ✅ | ✅ |
 | 新增與批量導入 | ✅ | ✅ | - |
-| 修改或刪除自己建立的一般記錄 | ✅ | ✅ | - |
-| 修改或刪除他人的一般記錄 | ✅ | - | - |
+| 修改或刪除自己建立的記錄 | ✅ | ✅ | - |
+| 修改或刪除他人的記錄 | ✅ | - | - |
 | 系統管理頁面 | ✅ | - | - |
 
 ### 2. 資料管理模組
@@ -139,7 +137,7 @@ docker compose up -d --build
 | --- | --- | --- | --- |
 | 創建記錄 (標題, 數值, 分類, 時間戳) | ✅ | `POST /records`, `frontend/screens/record_new.py` | `test_add_without_range_saves_a_normal_record` |
 | 讀取 (分頁, 篩選, 排序) | ✅ | `GET /records`, `frontend/screens/records.py` | `test_edit_keeps_the_filter_and_delete_removes_the_record`, `backend/tests/test_records_api.py` |
-| 更新 (僅限創建者或 Admin) | ✅ | `PATCH /records/{record_id}`, `backend/app/records/service.py` | `test_admin_edits_others_records_but_not_anomalies`, `test_list_actions_follow_role_owner_and_anomaly` |
+| 更新 (僅限創建者或 Admin) | ✅ | `PATCH /records/{record_id}`, `backend/app/records/service.py` | `test_admin_edits_others_records_including_anomalies`, `test_list_actions_follow_role_owner_and_anomaly` |
 | 刪除 (僅限創建者或 Admin) | ✅ | `DELETE /records/{record_id}`, `backend/app/records/service.py` | `test_edit_keeps_the_filter_and_delete_removes_the_record`, `test_list_actions_follow_role_owner_and_anomaly` |
 | 批量導入 (CSV/JSON) | ✅ | `POST /records/imports`, `backend/app/records/importing.py`, `frontend/screens/records_import.py` | `test_csv_import_succeeds_with_the_importer_as_creator`, `test_json_import_marks_out_of_range_rows_without_asking` |
 
@@ -197,7 +195,6 @@ docker compose up -d --build
 
 **與題目字面不同的做法:**
 
-- **異常記錄不可修改或刪除, 包含 Admin.** 題目要求創建者或 Admin 可以更新與刪除. 本系統對一般記錄採用此規則, 但額外鎖定異常記錄, 以保留異常的原始紀錄.
 - **Swagger 無法從本機直接開啟.** 後端只在 Docker 網路內開放, 因此 `/docs` 僅限容器內存取. 請下載 `docs/api-documentation.html` 後以瀏覽器開啟. 檢視時需要網路連線, 且已關閉 "Try it out".
 - **WebSocket 由 Streamlit 服務端連線, 不是由瀏覽器連線.** 同樣因為後端不對外開放. 前端服務端接收推送的資料後, 畫面每秒重繪一次.
 - **模擬器每秒產生 4 筆, 而不是 1 筆.** 每個設備每秒一筆, 可用 `SIMULATOR_INTERVAL_SECONDS` 調整間隔.

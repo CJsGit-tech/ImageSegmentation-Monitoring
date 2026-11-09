@@ -22,7 +22,6 @@ from core import api, session
 
 PAGE_SIZE = 25
 LOAD_ERROR = "無法載入資料，已保留你的篩選條件。"
-ANOMALY_REASON = "異常記錄已封存，任何人都不能修改或刪除"
 NOT_OWNER_REASON = "只有建立者或 Admin 可修改"
 RECORD_GONE = "這筆記錄已不存在"
 
@@ -111,8 +110,6 @@ def can_act_on_records(user: session.CurrentUser) -> bool:
 
 def availability(user: session.CurrentUser, record: dict[str, Any]) -> Availability:
     """The screen's copy of the rule. The backend still enforces it."""
-    if record["is_anomaly"]:
-        return Availability(False, ANOMALY_REASON)
     if "records.modify_any" in user.capabilities:
         return Availability(True)
     # creator_id, never creator_name: a user may have registered the name 系統.

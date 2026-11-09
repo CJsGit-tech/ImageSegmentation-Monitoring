@@ -1,4 +1,4 @@
-"""Batch 2: add, list, edit, delete, anomaly ranges and protection (SCREEN-10 to 13, SCREEN-44).
+"""Batch 2: add, list, edit, delete, anomaly ranges and warnings (SCREEN-10 to 13, SCREEN-44).
 
 Every test sets up its own category through the API before the browser logs in, because an API
 login would end the browser's session on the same account.
@@ -10,8 +10,8 @@ from playwright.sync_api import Page, expect
 
 from conftest import button, choose, login, open_page, select_row
 
-WARNING = "儲存後將標為異常，且之後任何人都不能修改或刪除"
-LOCKED = "異常記錄已封存，任何人都不能修改或刪除"
+WARNING = "儲存後將標為異常"
+SAVED_ANOMALY = "這筆記錄已標為異常。"
 NOT_OWNER = "只有建立者或 Admin 可修改"
 
 
@@ -73,7 +73,7 @@ def test_value_at_a_bound_needs_confirmation_and_a_changed_value_drops_it(page: 
     assert (record["value"], record["is_anomaly"]) == (50, False)
 
 
-def test_confirmed_anomaly_is_saved_and_locked(page: Page, run):
+def test_confirmed_anomaly_is_saved_and_stays_editable(page: Page, run):
     category = run.category("lock")
     run.api("setup_admin").set_range(category, 20, 80)
     login(page, run.accounts["user"])
@@ -86,9 +86,8 @@ def test_confirmed_anomaly_is_saved_and_locked(page: Page, run):
     expect(page.get_by_text("◆ 異常", exact=False)).to_have_count(0)  # drawn on the canvas, not in the DOM
     select_row(page, 0)
     selected(page, "超溫").to_be_visible()
-    expect(page.get_by_text(LOCKED)).to_be_visible()
-    expect(button(page, "records_edit")).to_be_disabled()
-    expect(button(page, "records_delete")).to_be_disabled()
+    expect(button(page, "records_edit")).to_be_enabled()
+    expect(button(page, "records_delete")).to_be_enabled()
     assert run.api("setup_admin").records(category)[0]["is_anomaly"] is True
 
 
@@ -113,10 +112,11 @@ def test_list_actions_follow_role_owner_and_anomaly(page: Page, run):
     expect(button(page, "records_edit")).to_be_disabled()
     select_row(page, 2)
     selected(page, "自己的異常").to_be_visible()
-    expect(page.get_by_text(LOCKED)).to_be_visible()
+    expect(button(page, "records_edit")).to_be_enabled()
+    expect(button(page, "records_delete")).to_be_enabled()
 
 
-def test_admin_edits_others_records_but_not_anomalies(page: Page, run):
+def test_admin_edits_others_records_including_anomalies(page: Page, run):
     category = run.category("admin")
     run.api("setup_admin").set_range(category, 0, 100)
     other = run.api("other")
@@ -127,7 +127,8 @@ def test_admin_edits_others_records_but_not_anomalies(page: Page, run):
     filter_list(page, category)
     select_row(page, 0)
     selected(page, "他人的異常").to_be_visible()
-    expect(page.get_by_text(LOCKED)).to_be_visible()
+    expect(button(page, "records_edit")).to_be_enabled()
+    expect(button(page, "records_delete")).to_be_enabled()
     select_row(page, 1)
     selected(page, "他人的一般記錄").to_be_visible()
     expect(button(page, "records_edit")).to_be_enabled()
@@ -188,8 +189,29 @@ def test_edit_into_anomaly_needs_confirmation(page: Page, run):
     expect(button(page, "record_edit_save")).to_be_disabled()
     dialog.get_by_text("我了解，確認儲存為異常記錄").click()
     button(page, "record_edit_save").click()
-    expect(page.get_by_text(LOCKED)).to_be_visible()
+    expect(page.get_by_text(SAVED_ANOMALY)).to_be_visible()
     assert run.api("setup_admin").records(category)[0]["is_anomaly"] is True
+
+
+def test_anomaly_can_be_corrected_then_deleted(page: Page, run):
+    category = run.category("fix")
+    run.api("setup_admin").set_range(category, 0, 100)
+    run.api("other").create("填錯的值", 100, category, confirm_anomaly=True)
+    login(page, run.accounts["admin"])
+    filter_list(page, category)
+    select_row(page, 0)
+    selected(page, "填錯的值").to_be_visible()
+
+    button(page, "records_edit").click()
+    page.get_by_role("dialog").get_by_label("數值").fill("50")
+    button(page, "record_edit_save").click()
+    expect(page.get_by_text("已儲存修改。")).to_be_visible()
+    assert run.api("setup_admin").records(category)[0]["is_anomaly"] is False
+
+    button(page, "records_delete").click()
+    button(page, "record_delete_confirm").click()
+    expect(page.get_by_text("已刪除")).to_be_visible()
+    assert run.api("setup_admin").records(category) == []
 
 
 def test_admin_sets_and_clears_a_range(page: Page, run):

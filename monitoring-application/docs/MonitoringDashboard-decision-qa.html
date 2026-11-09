@@ -163,7 +163,7 @@ html{scroll-behavior:smooth}.card,.ms{scroll-margin-top:16px}
 <tr><th>功能</th><th>Viewer</th><th>User</th><th>Admin</th></tr>
 <tr><td>即時監控、讀取資料、資料分析、下載 Excel</td><td>可</td><td>可</td><td>可</td></tr>
 <tr><td>新增資料、批量導入</td><td>不可</td><td>可</td><td>可</td></tr>
-<tr><td>修改、刪除資料</td><td>不可</td><td>僅限自己建立的</td><td>任何人的資料（被標為異常的記錄例外，見 M4 Q4）</td></tr>
+<tr><td>修改、刪除資料</td><td>不可</td><td>僅限自己建立的</td><td>任何人的資料</td></tr>
 <tr><td>系統管理（使用者列表、權限管理、系統日誌、資料庫狀態、即時資料的歷史查詢）</td><td>不可</td><td>不可</td><td>可，獨占</td></tr>
 </table></div>
 </div>
@@ -211,14 +211,14 @@ html{scroll-behavior:smooth}.card,.ms{scroll-margin-top:16px}
 <article id="m2-q5" class="card" data-state="done">
 <header><span class="qid">M2·Q5</span><h3>刪除資料記錄後還能復原嗎？</h3><span class="badge ok">已決定</span></header>
 <div class="ans">
-<p>不能。刪除是永久刪除，刪除前須確認，確認後記錄無法復原，也不再出現在列表與分析中。</p><p>例外：被標為異常的記錄不能被刪除（見 M4 Q4）。</p>
+<p>不能。刪除是永久刪除，刪除前須確認，確認後記錄無法復原，也不再出現在列表與分析中。</p>
 </div>
 <footer><span class="chip">PRD-05 規則 R5、R7</span></footer></article>
 <article id="m2-q6" class="card" data-state="done">
 <header><span class="qid">M2·Q6</span><h3>誰可以修改與刪除資料？</h3><span class="badge ok">已決定</span></header>
 <div class="ans">
 <p>僅限該記錄的創建者或 Admin。User 只能處理自己建立的記錄，Admin 可處理任何人的記錄，Viewer 不能修改或刪除。</p>
-<p>後端會驗證，直接呼叫 API 時沒有權限的操作同樣被拒絕。</p><p>例外：被標為異常的記錄，任何人（含 Admin）都不能修改或刪除（見 M4 Q4）。</p>
+<p>後端會驗證，直接呼叫 API 時沒有權限的操作同樣被拒絕。</p>
 </div>
 <footer><span class="chip">PRD-05 規則 R1、R2、R3</span></footer></article>
 <article id="m2-q7" class="card" data-state="done">
@@ -303,7 +303,7 @@ html{scroll-behavior:smooth}.card,.ms{scroll-margin-top:16px}
 <footer><span class="chip">PRD-10 規則 R11（故事 US-22）</span><span class="chip">PRD-09 規則 R11</span></footer></article>
 <article id="m4-q4" class="card" data-state="done">
 <header><span class="qid">M4·Q4</span><h3>異常記錄能被修改或刪除嗎？</h3><span class="badge ok">已決定</span></header>
-<div class="ans"><p>不能。被標為異常的記錄完全唯讀，任何人（含 Admin）都不能修改或刪除，以確保事後可追查。此規則優先於一般的修改與刪除權限，由 PRD-18（故事 US-23）擁有，PRD-05 只保留指向它的說明。</p><p>一般記錄被修改成超出範圍後成為異常，之後即唯讀。副作用：異常記錄一旦產生就無法更正，即使當初填錯。</p></div>
+<div class="ans"><p>能。依題目要求，異常記錄與其他記錄規則相同，可由建立者或 Admin 修改或刪除（此決定取代先前「異常記錄完全唯讀」的做法）。</p><p>修改數值或分類時會重新判斷：改回範圍內時移除異常標記，仍超出範圍時須再次確認。只修改標題等其他欄位時，異常標記不變。</p></div>
 <footer><span class="chip">PRD-18 規則 R1 到 R5</span><span class="chip">PRD-09 規則 R12</span></footer></article>
 <article id="m4-q5" class="card" data-state="done">
 <header><span class="qid">M4·Q5</span><h3>下載的 Excel 要包含什麼？</h3><span class="badge ok">已決定</span></header>
