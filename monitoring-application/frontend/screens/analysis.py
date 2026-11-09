@@ -51,7 +51,7 @@ _EMPTY = "—"
 
 _LOAD_ERROR = "無法載入資料，已保留你的條件。"
 _TOO_LONG = "時間範圍超過 3 個月上限。要看更長的期間，請分批查詢（一次一段）。"
-_ANOMALY_LABEL = "◆ 異常 🔒"
+_ANOMALY_LABEL = "◆ 異常"
 _ANOMALY_ROW_STYLE = "background-color: #FBE3E0"
 _ANOMALY_STATUS_STYLE = "background-color: #FBE3E0; color: #A61B12; font-weight: 700"
 _ANOMALY_COLUMNS = {

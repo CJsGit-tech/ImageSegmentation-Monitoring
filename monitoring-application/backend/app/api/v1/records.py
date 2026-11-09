@@ -26,8 +26,7 @@ _CHANGE_FORBIDDEN_RESPONSE: dict[int | str, dict[str, Any]] = {
     403: {
         "model": ErrorResponse,
         "description": (
-            "角色不可修改資料（FORBIDDEN）、不是此記錄的建立者（NOT_RECORD_OWNER），"
-            "或記錄為異常、任何人都不能修改或刪除（ANOMALY_RECORD_READ_ONLY），error.message 說明原因"
+            "角色不可修改資料（FORBIDDEN）或不是此記錄的建立者（NOT_RECORD_OWNER），error.message 說明原因"
         ),
     },
 }

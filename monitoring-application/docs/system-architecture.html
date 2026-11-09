@@ -72,7 +72,7 @@ td:first-child{white-space:nowrap;font-weight:600}
 <tr><td>REST API</td><td>FastAPI、Pydantic</td><td>使用者與資料記錄的 CRUD、分頁、篩選、排序、CSV／JSON 批量導入、統計聚合、Excel 下載。Swagger 文件位於容器網路內的 /docs，對外另提供靜態副本 docs/api-documentation.html。</td></tr>
 <tr><td>WebSocket 端點</td><td>FastAPI</td><td>把即時資料推送到前端；登入失效時中斷連線。</td></tr>
 <tr><td>認證與權限</td><td>JWT</td><td>驗證登入 Token，並依 Admin、User、Viewer 角色限制操作。</td></tr>
-<tr><td>異常判定與封存</td><td>後端服務</td><td>數值小於或等於最小值、或大於或等於最大值時標為異常；異常記錄不可修改或刪除。</td></tr>
+<tr><td>異常判定</td><td>後端服務</td><td>數值小於或等於最小值、或大於或等於最大值時標為異常。</td></tr>
 <tr><td>模擬資料生成器</td><td>後端背景工作</td><td>系統啟動後自動為 4 個分類各每秒產生一筆隨機資料（可由 SIMULATOR_INTERVAL_SECONDS 調整），並推送與批次保存。</td></tr>
 <tr><td>資料存取層</td><td>SQLAlchemy ORM、asyncmy</td><td>所有資料庫操作都經由 SQLAlchemy，不使用原生 SQL；連接池由 SQLAlchemy Engine 管理。</td></tr>
 <tr><td>資料庫結構遷移</td><td>Alembic</td><td>管理資料庫結構版本；每次後端容器啟動時、開放連接埠前自動升級到最新。</td></tr>
@@ -101,7 +101,7 @@ flowchart TB
       auth["JWT 認證與角色權限"]
       svc["業務服務<br/>資料記錄 · 批量導入 · 統計聚合<br/>Excel 匯出 · 系統管理"]
       sim["模擬資料生成器<br/>啟動後自動執行"]
-      rule["異常判定與封存<br/>依分類範圍"]
+      rule["異常判定<br/>依分類範圍"]
       batch["批次寫入<br/>每秒一批或滿 200 筆"]
       logw["系統日誌寫入<br/>約每秒一批"]
       orm["SQLAlchemy ORM · asyncmy<br/>連接池"]

@@ -72,7 +72,7 @@ Timestamp = Annotated[
 ]
 
 
-_CONFIRM_DESCRIPTION = "確認儲存後將成為異常且永久唯讀。判斷為異常卻未確認時回 409，不寫入；判斷為正常時此欄位無作用"
+_CONFIRM_DESCRIPTION = "確認儲存後將成為異常。判斷為異常卻未確認時回 409，不寫入；判斷為正常時此欄位無作用"
 
 
 class RecordCreate(BaseModel):

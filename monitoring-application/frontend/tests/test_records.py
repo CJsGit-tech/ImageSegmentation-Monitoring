@@ -118,10 +118,12 @@ def test_only_users_with_modify_own_can_act_on_records():
     assert not records.can_act_on_records(user("records.read"))
 
 
-def test_anomaly_records_are_locked_even_for_admins():
-    result = records.availability(user("records.modify_any"), record(is_anomaly=True))
+def test_anomaly_records_follow_the_ownership_rule():
+    assert records.availability(user("records.modify_any"), record(creator_id=2, is_anomaly=True)).enabled
+    assert records.availability(user("records.modify_own"), record(creator_id=1, is_anomaly=True)).enabled
 
-    assert (result.enabled, result.reason) == (False, records.ANOMALY_REASON)
+    result = records.availability(user("records.modify_own"), record(creator_id=2, is_anomaly=True))
+    assert (result.enabled, result.reason) == (False, records.NOT_OWNER_REASON)
 
 
 def test_modify_any_can_act_on_someone_elses_record():

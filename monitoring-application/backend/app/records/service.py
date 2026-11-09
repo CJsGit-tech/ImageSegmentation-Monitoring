@@ -15,7 +15,7 @@ from app.auth.permissions import Capability, user_can
 from app.models.category_setting import CategorySetting
 from app.models.record import Record
 from app.models.user import User
-from app.records.anomaly import ensure_modifiable, get_range, is_out_of_range, judge_manual_save
+from app.records.anomaly import get_range, is_out_of_range, judge_manual_save
 from app.records.errors import ClientRequestReusedError, NotRecordOwnerError, RecordNotFoundError
 from app.records.pagination import decode_cursor, encode_cursor, order_by_clause, seek_condition
 from app.records.schemas import (
@@ -211,8 +211,6 @@ async def _locked_for_change(session: AsyncSession, user: User, record_id: int) 
     record = await session.scalar(select(Record).where(Record.id == record_id).with_for_update())
     if record is None:
         raise RecordNotFoundError(details={"record_id": record_id})
-    # First, so that every role gets this reason for an anomalous record (SCREEN-10).
-    ensure_modifiable(record, user)
     if not user_can(user, Capability.RECORDS_MODIFY_ANY) and record.created_by_user_id != user.id:
         audit(
             "permission_denied",
@@ -233,7 +231,7 @@ async def update_record(session: AsyncSession, user: User, record_id: int, paylo
     new_value = changes.get("value", record.value)
     new_category = changes.get("category", record.category)
     # PRD-09-R12: re-judge only when the value or category really changes. The edit form sends
-    # every field, so a title-only edit must not turn the record permanently read-only just
+    # every field, so a title-only edit must not change the record's anomaly flag just
     # because the range moved since it was saved. This is a working interpretation: to re-judge
     # on every edit instead, remove this condition.
     if new_value != record.value or new_category != record.category:
