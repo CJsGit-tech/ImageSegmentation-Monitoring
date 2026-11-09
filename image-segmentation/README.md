@@ -14,7 +14,7 @@
             - 但精確率由 `77.8% 降至 71.9%`
             - 速度也由 `5.56 FPS 降至 1.98-3.95 FPS`
 
-![參考眼睛向量的建立過程: DINOv2 區塊向量、YOLOE 眼睛輪廓、保留眼睛區塊, 再平均為參考向量](submission/reports/files/figures/dinov2_reference_vector.gif)
+![參考眼睛向量的建立過程: DINOv2 區塊向量、YOLOE 眼睛輪廓、保留眼睛區塊, 再平均為參考向量](submission/data/figures/dinov2_reference_vector.gif)
 
 ## 資料夾結構 & 內容
 
@@ -22,23 +22,24 @@
 image-segmentation/
 ├── experiments/        先前的實驗, 不屬於最終流程
 ├── model/              模型權重 (不納入版本控制)
-└── submission/         報告、資料集與最終流程
+└── submission/         解答、資料集與最終流程
 ```
 
 ```text
 submission/
+├── QuestionsSubmission.md          問題一的解答
 ├── requirements.txt                已安裝的 Python 套件版本
 ├── requirements-dev.txt            單元測試用的套件
 ├── data/
-│   ├── 001-test_samples/           3 張測試樣本, 含手動標記的眼睛
-│   └── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與草稿眼睛標記
+│   ├── 001-test_samples/           3 張測試樣本, 含已複核的眼睛標記
+│   ├── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與已複核的眼睛標記
+│   └── figures/                    解答與 README 使用的圖片與動畫
 ├── outputs/
 │   ├── 001-test_samples_yoloe/            YOLOE 結果
 │   ├── 001-test_samples_yoloe_dinov2/     裁切圖、熱圖與兩種輪廓結果
 │   ├── 002-other_samples_yoloe/           YOLOE 結果
 │   ├── 002-other_samples_yoloe_dinov2/    熱圖、兩種輪廓結果與 summary.csv
 │   └── 002-other_samples_performance/     速度與準確度結果
-├── reports/                        報告、圖表、量測結果與補充筆記
 ├── tests/                          單元測試
 └── scripts/
     ├── config.yaml                                  資料、輸出、YOLOE 與量測設定
@@ -49,7 +50,7 @@ submission/
     ├── dinov2_eye_pipeline.py                       YOLOE + DINOv2 的共用步驟
     ├── measure_yoloe_eyes.py                        單一 YOLOE 結果的 R2 與 R3
     ├── measure_yoloe_dinov2_eyes.py                 單一 YOLOE + DINOv2 結果的 R2 與 R3
-    └── export_submission_files.py                   所有結果的 R2 與 R3, 以及圖表, 輸出到 reports/files/
+    └── export_submission_files.py                   所有結果的 R2 與 R3, 以及圖表, 執行時輸出到 reports/files/
 ```
 
 ## 技術棧
@@ -145,7 +146,7 @@ YOLOE 動物輪廓 → 依外框裁切動物 → DINOv2 區塊特徵 → 參考�
 
 ### 結果摘要
 
-**測試樣本:** 3 張圖片, 含 12 個手動標記的貓狗眼睛.
+**測試樣本:** 3 張圖片, 含 12 個已複核標記的貓狗眼睛.
 
 | 方法 | 命中眼睛 (共 12 個) | 誤判眼睛 | 雙眼距離 MAE, 相同 4 隻動物 | 右眼距離 MAE |
 |---|---|---|---|---|
@@ -207,7 +208,7 @@ YOLOE + DINOv2, 使用 `grabcut/` 或 `heatmap_level/` 資料夾中的 JSON 檔:
 .venv/bin/python image-segmentation/submission/scripts/measure_yoloe_dinov2_eyes.py --json image-segmentation/submission/outputs/001-test_samples_yoloe_dinov2/grabcut/002-coco-sample.json
 ```
 
-兩者都適用於任一組圖片. 若要一次量測所有結果, 並儲存報告 3 與報告 4 使用的 CSV 檔, 請依下方說明執行 `export_submission_files.py`.
+兩者都適用於任一組圖片. 若要一次量測所有結果, 並儲存距離量測的 CSV 檔, 請依下方說明執行 `export_submission_files.py`.
 
 ## 單元測試
 
