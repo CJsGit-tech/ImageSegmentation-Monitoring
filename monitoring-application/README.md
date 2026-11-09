@@ -1,5 +1,25 @@
 # MonitoringDashboard
 
+## 技術棧
+
+| 項目 | 技術 |
+|---|---|
+| 程式語言 | Python 3.13 |
+| 後端 | FastAPI 0.162, Pydantic 2.14, Uvicorn 0.54 |
+| 認證 | JWT (PyJWT 2.15), Argon2id 密碼雜湊 |
+| 資料庫 | MariaDB 11.7.2 |
+| ORM 與遷移 | SQLAlchemy 2.1 (asyncmy 0.2 非同步驅動), Alembic 1.20 |
+| 前端 | Streamlit 1.67, Altair 6.3 |
+| Excel 匯出 | XlsxWriter 3.2 |
+| 部署 | Docker 多階段構建, Docker Compose v2 |
+
+## 系統架構
+
+- [`docs/system-architecture.html`](docs/system-architecture.html): 容器與服務之間的關係
+- [`docs/system-architecture-modules.svg`](docs/system-architecture-modules.svg): 依五個功能模組劃分的元件與資料流 (亦有 [HTML 版本](docs/system-architecture-modules.html))
+
+HTML 檔案請下載後以瀏覽器開啟.
+
 ## 執行
 
 需要 Git、Docker 與 Docker Compose v2. 從 GitHub 取得專案:

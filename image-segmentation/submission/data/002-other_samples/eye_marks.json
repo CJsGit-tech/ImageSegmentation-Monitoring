@@ -1,5 +1,5 @@
 {
-  "status": "Draft. Marked by Claude Code from zoomed views and not reviewed by a person.",
+  "status": "Reviewed. Estimated by Claude Code from zoomed views, then checked by a person.",
   "format": "Boxes are [x1, y1, x2, y2] in image pixels. A predicted eye whose center is inside an ignore box isn't scored, because the eyes there couldn't be judged.",
   "images": {
     "000000107226": [

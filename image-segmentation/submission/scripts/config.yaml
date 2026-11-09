@@ -1,9 +1,9 @@
 # Settings for run_yoloe_test_samples.py.
 # Relative paths start from this folder.
 
-source: ../data/001-test_samples            # sample images, with hand-marked eyes
+source: ../data/001-test_samples            # sample images, with reviewed eye marks in eye_marks.json
 output: ../outputs/001-test_samples_yoloe   # YOLOE results for the sample images
-other_source: ../data/002-other_samples     # other COCO images, without eye marks
+other_source: ../data/002-other_samples     # other COCO images, with reviewed eye marks in eye_marks.json
 other_output: ../outputs/002-other_samples_yoloe
 model: ../../model/yoloe-26l-seg.pt      # model weights
 
