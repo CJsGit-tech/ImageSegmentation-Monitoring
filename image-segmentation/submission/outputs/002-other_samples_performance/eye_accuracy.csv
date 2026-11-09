@@ -2,6 +2,9 @@ images_set,method,images,marked_eyes,hits,false_eyes,missed,ignored_eyes,precisi
 9 new COCO images,yoloe,9,31,7,2,24,0,0.778,0.226,0.35,2.25,0.51,2,1.95,3.29,0,
 9 new COCO images,dinov2_grabcut,9,31,23,9,8,4,0.719,0.742,0.73,1.99,0.46,8,1.71,8.19,2,1.25
 9 new COCO images,dinov2_heatmap_level,9,31,23,9,8,4,0.719,0.742,0.73,1.75,0.31,9,2.17,8.32,2,1.73
+3 test images,yoloe,3,12,9,0,3,0,1.0,0.75,0.857,1.98,0.65,4,2.52,3.73,2,1.82
+3 test images,dinov2_grabcut,3,12,12,0,0,0,1.0,1.0,1.0,2.58,0.64,6,3.23,6.84,3,2.84
+3 test images,dinov2_heatmap_level,3,12,12,0,0,0,1.0,1.0,1.0,2.13,0.66,6,2.22,3.63,3,2.61
 all 12 images,yoloe,12,43,16,2,27,0,0.889,0.372,0.525,2.1,0.59,6,2.33,3.58,2,1.82
 all 12 images,dinov2_grabcut,12,43,35,9,8,4,0.795,0.814,0.805,2.19,0.52,14,2.36,7.62,5,2.2
 all 12 images,dinov2_heatmap_level,12,43,35,9,8,4,0.795,0.814,0.805,1.88,0.43,15,2.19,6.44,5,2.25

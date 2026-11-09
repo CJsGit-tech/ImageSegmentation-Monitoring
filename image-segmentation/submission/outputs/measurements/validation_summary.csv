@@ -1,0 +1,7 @@
+measurement,method,count,mae_px,mape_percent
+both_eyes,yoloe,4,2.52,3.7
+both_eyes,dinov2_grabcut,6,3.18,6.8
+both_eyes,dinov2_heatmap_level,6,2.04,3.5
+right_eyes,yoloe,2,1.82,0.8
+right_eyes,dinov2_grabcut,3,2.92,1.2
+right_eyes,dinov2_heatmap_level,3,2.09,0.9

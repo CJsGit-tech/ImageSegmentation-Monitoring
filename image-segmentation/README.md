@@ -12,7 +12,7 @@
       - 在測試樣本的 12 個標記眼睛中命中全部 12 個且沒有誤判, 
          - 純 YOLOE 則命中 9 個. 在 9 張新 COCO 圖片上, 眼睛召回率僅 `22.6%`. 但搭配 DINOv2 後提升至 `74.2%`
             - 但精確率由 `77.8% 降至 71.9%`
-            - 速度也由 `5.56 FPS 降至 1.98-3.95 FPS`
+            - 速度也由 `5.67 FPS 降至 1.97-4.00 FPS` (每次執行略有差異)
 
 ![參考眼睛向量的建立過程: DINOv2 區塊向量、YOLOE 眼睛輪廓、保留眼睛區塊, 再平均為參考向量](submission/data/figures/dinov2_reference_vector.gif)
 
@@ -28,18 +28,19 @@ image-segmentation/
 ```text
 submission/
 ├── QuestionsSubmission.md          問題一的解答
-├── requirements.txt                已安裝的 Python 套件版本
-├── requirements-dev.txt            單元測試用的套件
+├── requirements.txt                已安裝的 Python 套件版本, 含單元測試用的套件
 ├── data/
-│   ├── 001-test_samples/           3 張測試樣本, 含已複核的眼睛標記
-│   ├── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與已複核的眼睛標記
+│   ├── 001-test_samples/           3 張測試樣本
+│   ├── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與 eye_marks.json (全部 12 張的眼睛標記)
 │   └── figures/                    解答與 README 使用的圖片與動畫
 ├── outputs/
 │   ├── 001-test_samples_yoloe/            YOLOE 結果
 │   ├── 001-test_samples_yoloe_dinov2/     裁切圖、熱圖與兩種輪廓結果
 │   ├── 002-other_samples_yoloe/           YOLOE 結果
 │   ├── 002-other_samples_yoloe_dinov2/    熱圖、兩種輪廓結果與 summary.csv
-│   └── 002-other_samples_performance/     速度與準確度結果
+│   ├── 002-other_samples_performance/     速度與準確度結果
+│   ├── 004-labeled_eye_centers/           全部 12 張的眼睛標記框、中心點與距離
+│   └── measurements/                      距離量測與驗證結果
 ├── tests/                          單元測試
 └── scripts/
     ├── config.yaml                                  資料、輸出、YOLOE 與量測設定
@@ -50,7 +51,8 @@ submission/
     ├── dinov2_eye_pipeline.py                       YOLOE + DINOv2 的共用步驟
     ├── measure_yoloe_eyes.py                        單一 YOLOE 結果的 R2 與 R3
     ├── measure_yoloe_dinov2_eyes.py                 單一 YOLOE + DINOv2 結果的 R2 與 R3
-    └── export_submission_files.py                   所有結果的 R2 與 R3, 以及圖表, 執行時輸出到 reports/files/
+    ├── annotate_labeled_eye_centers.py              畫出眼睛標記框、中心點與距離
+    └── export_submission_files.py                   所有結果的 R2 與 R3 及驗證摘要輸出到 outputs/measurements/, 圖表輸出到 data/figures/
 ```
 
 ## 技術棧
@@ -166,9 +168,9 @@ YOLOE 動物輪廓 → 依外框裁切動物 → DINOv2 區塊特徵 → 參考�
 **其他樣本中 9 張新 COCO 圖片的速度與準確度:**
 | 方法 | FPS | 眼睛精確率 | 眼睛召回率 | 眼睛 F1 | 雙眼距離 MAE |
 |---|---|---|---|---|---|
-| YOLOE | 5.56 | 77.8% | 22.6% | 0.35 | 1.95 px (2 隻動物) |
-| YOLOE + DINOv2, GrabCut | 1.98 | 71.9% | 74.2% | 0.73 | 1.71 px (8 隻動物) |
-| YOLOE + DINOv2, HeatMap | 3.95 | 71.9% | 74.2% | 0.73 | 2.17 px (9 隻動物) |
+| YOLOE | 5.67 | 77.8% | 22.6% | 0.35 | 1.95 px (2 隻動物) |
+| YOLOE + DINOv2, GrabCut | 1.97 | 71.9% | 74.2% | 0.73 | 1.71 px (8 隻動物) |
+| YOLOE + DINOv2, HeatMap | 4.00 | 71.9% | 74.2% | 0.73 | 2.17 px (9 隻動物) |
 
 ### 觀察結論
 1. 雖然`方法２`在眼睛的定位上更加準確, 但在輪廓繪製上不如 YOLOE 的模型精準
@@ -208,17 +210,36 @@ YOLOE + DINOv2, 使用 `grabcut/` 或 `heatmap_level/` 資料夾中的 JSON 檔:
 .venv/bin/python image-segmentation/submission/scripts/measure_yoloe_dinov2_eyes.py --json image-segmentation/submission/outputs/001-test_samples_yoloe_dinov2/grabcut/002-coco-sample.json
 ```
 
-兩者都適用於任一組圖片. 若要一次量測所有結果, 並儲存距離量測的 CSV 檔, 請依下方說明執行 `export_submission_files.py`.
+兩者都適用於任一組圖片. 若要一次量測所有結果, 並將距離量測與驗證摘要的 CSV 檔儲存到 `submission/outputs/measurements/`, 請依下方說明執行 `export_submission_files.py`.
+
+## 眼睛標記
+
+全部 12 張圖片的眼睛標記都存放在 `submission/data/002-other_samples/eye_marks.json`. 標記由 Claude Code 估計, 再經人工複核.
+
+| 欄位 | 內容 |
+|---|---|
+| `status` | 標記狀態的說明文字 |
+| `format` | 標記框格式的說明文字 |
+| `images` | 以圖片檔名 (不含副檔名) 為鍵, 列出該圖的動物 |
+| `images.<圖片>[].animal` | 動物的描述, 例如 `tabby cat` |
+| `images.<圖片>[].eyes` | 眼睛標記框 `[x1, y1, x2, y2]`, 單位為原圖像素, 可能有 0-2 個 |
+| `images.<圖片>[].note` | 選填備註, 例如 `Eyes closed` |
+| `ignore` | 以圖片檔名為鍵的忽略框 `[x1, y1, x2, y2]`, 預測眼睛的中心點落在框內時不計分 |
+| `ignore_reasons` | 各圖片使用忽略框的原因 |
+
+眼睛中心點為標記框的中心 $((x_1 + x_2) / 2, (y_1 + y_2) / 2)$, 兩個中心點的距離即為驗證距離量測時使用的標記值.
+
+畫出標記框、中心點與距離, 結果存放在 `submission/outputs/004-labeled_eye_centers/`:
+
+```bash
+.venv/bin/python image-segmentation/submission/scripts/annotate_labeled_eye_centers.py
+```
 
 ## 單元測試
 
 單元測試使用小型的人工輸入, 不需要模型權重、GPU 或資料集. 它們檢查程式邏輯, 模型的準確度則由其他樣本的評估腳本負責.
 
-請在專案根目錄安裝測試套件並執行:
-
-```bash
-.venv/bin/python -m pip install -r image-segmentation/submission/requirements-dev.txt
-```
+安裝 `requirements.txt` 後, 請在專案根目錄執行:
 
 ```bash
 .venv/bin/python -m pytest image-segmentation/submission/tests

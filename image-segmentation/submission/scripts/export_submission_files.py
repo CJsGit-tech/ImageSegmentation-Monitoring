@@ -1,11 +1,11 @@
-"""Export the measurements and figures used by the submission reports.
+"""Export the measurements and figures used by the submission answers.
 
 For YOLOE and both YOLOE + DINOv2 variants, on the sample images and the other images,
 this measures each animal's eye distance and the distance between the right eyes of every animal
 pair. Right means the eye with the smaller x, which is the animal's own right eye when it faces the
-camera. On the sample images, it also compares the distances with the hand marks.
+camera. On the sample images, it also compares the distances with the reviewed eye marks.
 
-Files go to reports/files/. Run run_yoloe_test_samples.py, run_yoloe_dinov2_test_samples.py and
+Measurements go to outputs/measurements/ and figures to data/figures/. Run run_yoloe_test_samples.py, run_yoloe_dinov2_test_samples.py and
 run_yoloe_and_dinov2_other_samples.py first. Usage, from anywhere:
     .venv/bin/python image-segmentation/submission/scripts/export_submission_files.py
 """
@@ -22,7 +22,8 @@ import numpy as np
 from measure_yoloe_eyes import centroid
 from run_yoloe_test_samples import ROOT, load_config
 
-OUTPUT = ROOT.parent / "reports" / "files"
+MEASUREMENTS = ROOT.parent / "outputs" / "measurements"
+FIGURES = ROOT.parent / "data" / "figures"
 CONFIG = load_config()
 SAMPLE_IMAGES = CONFIG["source"]
 SAMPLE_YOLOE = CONFIG["output"]
@@ -38,7 +39,7 @@ EYE_COLOR = (0, 0, 255)
 TILE_HEIGHT = 240
 TILES_PER_ROW = 5
 
-# Eye boxes (x1, y1, x2, y2), marked by Claude Code from zoomed views and not reviewed by a person.
+# Eye boxes (x1, y1, x2, y2), estimated by Claude Code from zoomed views, then reviewed by a person.
 HAND_MARKS = {
     ("001-coco-sample", "dog 1"): [(205, 208, 224, 226), (246, 210, 272, 227)],
     ("001-coco-sample", "cat 2"): [(205, 37, 212, 43), (217, 35, 223, 41)],
@@ -130,9 +131,9 @@ def box_center(box):
     return (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
 
 
-def validation_rows(samples):
-    """Compare each measured distance with the distance between the hand marks."""
-    rows = []
+def validation_measurements(samples):
+    """Pair each measured distance with the distance between the reviewed eye marks."""
+    pairs = []
     for method in METHODS:
         for stem, animals in samples[method].items():
             right_eyes, marked_right = {}, {}
@@ -146,16 +147,29 @@ def validation_rows(samples):
                     measured = sorted(e["center"] for e in animal["eyes"])
                     right_eyes[animal["label"]] = measured[0]
                     predicted, manual = math.dist(*measured), math.dist(*centers)
-                    rows.append({"method": method, "measurement": "both_eyes", "image": stem, "item": animal["label"],
-                                 "predicted_px": round(predicted, 2), "marked_px": round(manual, 2),
-                                 "error_px": round(abs(predicted - manual), 2),
-                                 "error_percent": round(100 * abs(predicted - manual) / manual, 1)})
+                    pairs.append((method, "both_eyes", stem, animal["label"], predicted, manual))
             for a, b in itertools.combinations(sorted(right_eyes), 2):
                 predicted, manual = math.dist(right_eyes[a], right_eyes[b]), math.dist(marked_right[a], marked_right[b])
-                rows.append({"method": method, "measurement": "right_eyes", "image": stem, "item": f"{a} to {b}",
-                             "predicted_px": round(predicted, 2), "marked_px": round(manual, 2),
-                             "error_px": round(abs(predicted - manual), 2),
-                             "error_percent": round(100 * abs(predicted - manual) / manual, 1)})
+                pairs.append((method, "right_eyes", stem, f"{a} to {b}", predicted, manual))
+    return pairs
+
+
+def validation_rows(pairs):
+    return [{"method": method, "measurement": measurement, "image": stem, "item": item,
+             "predicted_px": round(predicted, 2), "marked_px": round(manual, 2),
+             "error_px": round(abs(predicted - manual), 2),
+             "error_percent": round(100 * abs(predicted - manual) / manual, 1)}
+            for method, measurement, stem, item, predicted, manual in pairs]
+
+
+def validation_summary(pairs):
+    """Return the MAE and MAPE of each method on each measurement."""
+    rows = []
+    for measurement, method in itertools.product(("both_eyes", "right_eyes"), METHODS):
+        errors = [(abs(p[4] - p[5]), abs(p[4] - p[5]) / p[5]) for p in pairs if p[0] == method and p[1] == measurement]
+        rows.append({"measurement": measurement, "method": method, "count": len(errors),
+                     "mae_px": round(sum(e[0] for e in errors) / len(errors), 2),
+                     "mape_percent": round(100 * sum(e[1] for e in errors) / len(errors), 1)})
     return rows
 
 
@@ -196,23 +210,25 @@ def main():
             for stem, animals in results.items():
                 eyes.extend(eye_rows(dataset, method, stem, animals))
                 rights.extend(right_eye_rows(dataset, method, stem, animals))
-    write_csv(OUTPUT / "measurements" / "eye_distances.csv", eyes)
-    write_csv(OUTPUT / "measurements" / "right_eye_distances.csv", rights)
-    write_csv(OUTPUT / "measurements" / "validation_against_marks.csv", validation_rows(data["samples"]))
+    write_csv(MEASUREMENTS / "eye_distances.csv", eyes)
+    write_csv(MEASUREMENTS / "right_eye_distances.csv", rights)
+    pairs = validation_measurements(data["samples"])
+    write_csv(MEASUREMENTS / "validation_against_marks.csv", validation_rows(pairs))
+    write_csv(MEASUREMENTS / "validation_summary.csv", validation_summary(pairs))
 
     for method in METHODS:
-        folder = OUTPUT / "figures" / "samples" / method
+        folder = FIGURES / "samples" / method
         folder.mkdir(parents=True, exist_ok=True)
         for stem, path in images["samples"].items():
             cv2.imwrite(str(folder / f"{stem}.jpg"), draw(path, data["samples"][method][stem]))
-        overview_folder = OUTPUT / "figures" / "other_samples"
+        overview_folder = FIGURES / "other_samples"
         overview_folder.mkdir(parents=True, exist_ok=True)
         overview([draw(path, data["other_samples"][method][stem]) for stem, path in images["other_samples"].items()],
                  overview_folder / f"{method}.jpg")
 
-    shutil.copy(OTHER_DINOV2 / "summary.csv", OUTPUT / "measurements" / "other_samples_method_comparison.csv")
-    shutil.copy(OTHER_DINOV2 / "heatmaps" / "overview.jpg", OUTPUT / "figures" / "other_samples" / "dinov2_heatmaps.jpg")
-    print(f"Saved {len(eyes)} eye rows and {len(rights)} right-eye rows to: {OUTPUT}")
+    shutil.copy(OTHER_DINOV2 / "summary.csv", MEASUREMENTS / "other_samples_method_comparison.csv")
+    shutil.copy(OTHER_DINOV2 / "heatmaps" / "overview.jpg", FIGURES / "other_samples" / "dinov2_heatmaps.jpg")
+    print(f"Saved {len(eyes)} eye rows and {len(rights)} right-eye rows to: {MEASUREMENTS}")
 
 
 if __name__ == "__main__":

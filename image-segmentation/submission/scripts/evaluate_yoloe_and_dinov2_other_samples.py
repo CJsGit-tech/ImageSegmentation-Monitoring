@@ -379,7 +379,9 @@ def main():
     marks = json.loads(EYE_MARKS.read_text())
     stems = [p.stem for p in image_paths()]
     new = [s for s in stems if s.isdigit()]
+    test = [s for s in stems if not s.isdigit()]
     rows = [{"images_set": "9 new COCO images", **eye_accuracy(marks, m, new)} for m in METHODS]
+    rows += [{"images_set": "3 test images", **eye_accuracy(marks, m, test)} for m in METHODS]
     rows += [{"images_set": "all 12 images", **eye_accuracy(marks, m, stems)} for m in METHODS]
     review_sheet(marks, OUTPUT / "eye_marks_review.jpg")
     write_csv(OUTPUT / "eye_accuracy.csv", rows)
