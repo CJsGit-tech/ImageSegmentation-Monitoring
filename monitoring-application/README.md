@@ -100,11 +100,13 @@ docker compose down
 
 [`docs/api-documentation.html`](docs/api-documentation.html) 是 API 文件的 Swagger UI 副本. 請下載後以瀏覽器開啟. 檢視時需要網路連線以載入 Swagger UI, 但不需要執行後端. 此副本已關閉 "Try it out". 後端不對 Docker 外部開放, 因此無法從本機直接發送請求. 所有端點都位於 `/api/v1/` 之下. WebSocket (`/api/v1/realtime/ws`) 未列於文件中, 因為 OpenAPI 不涵蓋 WebSocket.
 
-修改 API 後, 請在此資料夾重新產生檔案:
+[`docs/openapi.json`](docs/openapi.json) 是相同內容的 OpenAPI JSON 檔案, 可匯入 Postman、Swagger Editor 等工具.
+
+修改 API 後, 請在此資料夾重新產生這兩個檔案:
 
 ```sh
 docker build --target test -t monitoring-dashboard-backend-test backend
-docker run --rm -v "$PWD/docs:/out" monitoring-dashboard-backend-test python -m scripts.export_api_docs /out/api-documentation.html
+docker run --rm -v "$PWD/docs:/out" monitoring-dashboard-backend-test python -m scripts.export_api_docs /out/api-documentation.html --openapi-json /out/openapi.json
 ```
 
 ## 前端
