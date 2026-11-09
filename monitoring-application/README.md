@@ -83,7 +83,7 @@ docker compose down
 
 ### 補充說明
 
-- `docker compose` 指令會讀取 `.env`. 缺少必填變數時, `up`、`ps`、`logs`、`exec` 等指令會停止, 並顯示該變數名稱. `docker compose down` 是例外: 即使缺少變數或沒有 `.env` 也會執行, 因此 `down -v` 同樣會刪除資料.
+- `docker compose` 指令會讀取 `.env`. 缺少必填變數時, `up`、`build` 與 `config` 會停止, 並顯示該變數名稱. `ps`、`logs`、`exec`、`restart`、`stop` 與 `down` 則不受影響, 即使沒有 `.env` 也會執行, 因此 `down -v` 同樣會刪除資料.
 - MariaDB 只在第一次建立 volume 時套用 `MARIADB_*` 帳密. 之後若要變更, 需同時在資料庫中修改, 或重新建立 volume, 但這會刪除資料.
 - 每次後端容器啟動時, 都會自動執行資料庫遷移.
 - 後端會產生 4 個設備的模擬讀數, 每個設備每隔 `SIMULATOR_INTERVAL_SECONDS` 產生一筆 (預設為 1, 即每個設備每秒一筆). 此值在後端啟動時讀取, 修改後請重新啟動: `docker compose up -d backend`. 模擬讀數會保留在資料庫中, 沒有時間限制; 以預設速率計算, 每天約 345,000 筆.

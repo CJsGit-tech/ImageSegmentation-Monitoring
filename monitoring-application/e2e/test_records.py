@@ -13,6 +13,12 @@ from conftest import button, choose, login, open_page, select_row
 WARNING = "儲存後將標為異常"
 SAVED_ANOMALY = "這筆記錄已標為異常。"
 NOT_OWNER = "只有建立者或 Admin 可修改"
+# The records screen shortens filter chip values to this many characters (_CHIP_TEXT_LENGTH).
+CHIP_TEXT_LENGTH = 24
+
+
+def category_chip(page: Page, category: str):
+    return page.get_by_text(f"分類：{category[:CHIP_TEXT_LENGTH]}", exact=False).first
 
 
 def fill_new_record(page: Page, title: str, value: str, category: str) -> None:
@@ -32,7 +38,7 @@ def filter_list(page: Page, category: str, *, sort_by_value: bool = True) -> Non
         choose(page, "排序欄位", "數值")
         choose(page, "排序方向", "遞增")
     button(page, "records_query").click()
-    expect(page.get_by_text(f"分類：{category}", exact=False).first).to_be_visible()
+    expect(category_chip(page, category)).to_be_visible()
 
 
 def selected(page: Page, title: str):
@@ -160,7 +166,7 @@ def test_edit_keeps_the_filter_and_delete_removes_the_record(page: Page, run):
     button(page, "record_edit_save").click()
     expect(page.get_by_text("已儲存修改。")).to_be_visible()
     selected(page, "修改後").to_be_visible()
-    expect(page.get_by_text(f"分類：{category}", exact=False).first).to_be_visible()
+    expect(category_chip(page, category)).to_be_visible()
 
     button(page, "records_delete").click()
     expect(page.get_by_role("dialog").get_by_text("永久刪除這筆記錄？")).to_be_visible()
