@@ -5,8 +5,8 @@
 - `17_dinov2_grabcut`: 與 YOLOE 的多邊形重疊度最高 (平均 IoU 0.66).
 - `19_dinov2_heatmap_level`: 中心點與距離最接近 YOLOE (2.35 px 與 0.28 px).
 
-眼睛數量以 3 張圖片上的 12 個貓狗眼睛為準, 比對對象是 Claude Code 製作、未經人工審閱的手動標記.
-「與 YOLOE 比較」的分數只使用 YOLOE 偵測到的 9 個眼睛, 不使用手動標記, 衡量的是與 YOLOE 的一致程度, 而非準確度.
+眼睛數量以 3 張圖片上的 12 個貓狗眼睛為準, 比對對象是 Claude Code 估計、經人工複核的標記.
+「與 YOLOE 比較」的分數只使用 YOLOE 偵測到的 9 個眼睛, 不使用已複核標記, 衡量的是與 YOLOE 的一致程度, 而非準確度.
 參數是依這幾張圖片選定的, 因此這些結果並非最終證明.
 
 YOLOE 基準: 命中 9 個眼睛, 0 個誤判.
@@ -35,7 +35,7 @@ YOLOE 基準: 命中 9 個眼睛, 0 個誤判.
 
 | 實驗 | 封存原因 |
 |---|---|
-| `02_local_peaks` | DINO v1 定位器, 沒有輪廓, 與手動標記的距離誤差為 7.83 px |
+| `02_local_peaks` | DINO v1 定位器, 沒有輪廓, 與已複核標記的距離誤差為 7.83 px |
 | `05_guided_filter` | DINO v1, 由 `16_dinov2_guided_filter` 取代 |
 | `07_watershed` | DINO v1, 由 `14_dinov2_peaks_watershed` 取代 |
 | `13_heatmap_level` | DINO v1, 由 `19_dinov2_heatmap_level` 取代 |
@@ -53,5 +53,5 @@ YOLOE 基準: 命中 9 個眼睛, 0 個誤判.
 | `22_dinov2_blob_detector` | 無 | 2.97 px | 1.68 px | 沒有輪廓 |
 | `23_dinov2_watershed_canny` | 0.56 | 3.34 px | 3.89 px | 重疊度低於 GrabCut, 中心點與距離也和 YOLOE 相差較遠 |
 
-與手動標記相比, `14_dinov2_peaks_watershed` 與 `23_dinov2_watershed_canny` 的距離誤差最低 (1.71 與 1.48 px).
-它們仍被封存, 因為這次選擇是與 YOLOE 比較, 而且這些標記尚未經過審閱.
+與已複核標記相比, `14_dinov2_peaks_watershed` 與 `23_dinov2_watershed_canny` 的距離誤差最低 (1.71 與 1.48 px).
+它們仍被封存, 因為這次選擇是與 YOLOE 比較, 而且這些標記當時尚未經過審閱.

@@ -30,8 +30,8 @@ submission/
 ├── requirements.txt                已安裝的 Python 套件版本
 ├── requirements-dev.txt            單元測試用的套件
 ├── data/
-│   ├── 001-test_samples/           3 張測試樣本, 含手動標記的眼睛
-│   └── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與草稿眼睛標記
+│   ├── 001-test_samples/           3 張測試樣本, 含已複核的眼睛標記
+│   └── 002-other_samples/          9 張其他 COCO 圖片、測試樣本副本與已複核的眼睛標記
 ├── outputs/
 │   ├── 001-test_samples_yoloe/            YOLOE 結果
 │   ├── 001-test_samples_yoloe_dinov2/     裁切圖、熱圖與兩種輪廓結果
@@ -145,7 +145,7 @@ YOLOE 動物輪廓 → 依外框裁切動物 → DINOv2 區塊特徵 → 參考�
 
 ### 結果摘要
 
-**測試樣本:** 3 張圖片, 含 12 個手動標記的貓狗眼睛.
+**測試樣本:** 3 張圖片, 含 12 個已複核標記的貓狗眼睛.
 
 | 方法 | 命中眼睛 (共 12 個) | 誤判眼睛 | 雙眼距離 MAE, 相同 4 隻動物 | 右眼距離 MAE |
 |---|---|---|---|---|

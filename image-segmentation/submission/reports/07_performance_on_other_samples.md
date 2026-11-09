@@ -10,7 +10,7 @@
 | YOLOE + DINOv2, GrabCut | 1.98 | 71.9% | 74.2% | 0.73 | 1.71 px (8 隻動物) |
 | YOLOE + DINOv2, 熱圖等高線 | 3.95 | 71.9% | 74.2% | 0.73 | 2.17 px (9 隻動物) |
 
-眼睛分數來自 9 張新 COCO 圖片. 它們使用未經人工審閱的草稿眼睛標記, 因此請視為估計值.
+眼睛分數來自 9 張新 COCO 圖片. 它們使用已複核的眼睛標記. 樣本仍少, 因此請視為估計值.
 
 - **YOLOE 最快,** 但找到的標記眼睛不到四分之一.
 - **YOLOE + DINOv2 找到的眼睛約為三倍,** 精確率略低.
@@ -94,7 +94,7 @@ AP 以 COCO 的 101 點方法依類別計算, 再對貓狗取平均. 只有 21 �
 
 ## 如何看待這些數字
 
-- **草稿標記:** 眼睛由 Claude Code 依放大檢視標記, 沒有經過人工審閱. 部分眼睛只有 3-5 px 寬, 或閉合、半閉合, 因此外框只是近似值.
+- **標記來源:** 眼睛由 Claude Code 依放大檢視估計, 再經人工複核. 部分眼睛只有 3-5 px 寬, 或閉合、半閉合, 因此外框只是近似值.
   [`eye_marks_review.jpg`](../outputs/002-other_samples_performance/eye_marks_review.jpg) 顯示所有標記以供檢查.
 - **忽略框:** 有 2 張圖片的臉部太暗而無法標記, 因此那些眼睛不計分. 這對 YOLOE + DINOv2 略為有利, 因為它在那裡輸出了眼睛, 而 YOLOE 沒有.
 - **資料量小:** 9 張新圖片、21 隻動物與 31 個標記眼睛.
@@ -109,7 +109,7 @@ AP 以 COCO 的 101 點方法依類別計算, 再對貓狗取平均. 只有 21 �
 | `speed_summary.csv`, `speed_per_image.csv` | 各方法與各步驟的速度 |
 | `animal_accuracy.csv`, `animal_matches.csv` | YOLOE 動物輪廓與 COCO 遮罩的比較 |
 | `eye_accuracy.csv` | 兩組圖片的眼睛分數 |
-| `eye_marks_review.jpg` | 供審閱的草稿眼睛標記 |
+| `eye_marks_review.jpg` | 所有眼睛標記的檢視圖 |
 | `environment.json` | 硬體、版本與設定 |
 
 若要重新執行, 請在專案根目錄執行:
