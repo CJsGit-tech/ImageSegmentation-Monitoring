@@ -1,0 +1,5259 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MonitoringDashboard API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "後端存活檢查（不連資料庫）",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "就緒檢查（資料庫可連線且結構為最新）",
+        "operationId": "ready_api_v1_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "註冊（預設角色 Viewer）",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "帳號已存在，details.field 為 username",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "登入並取得 JWT；先前的登入立即失效",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "帳號或密碼錯誤，error.code 為 INVALID_CREDENTIALS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "登出目前的登入",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "目前使用者、角色與可用功能",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/records/imports": {
+      "post": {
+        "tags": [
+          "records"
+        ],
+        "summary": "批量導入 CSV／JSON（整批全部寫入或完全不寫入）",
+        "description": "以 `multipart/form-data` 的 `file` 欄位上傳一個 `.csv` 或 `.json` 檔（依副檔名判斷，不分大小寫）。\n\n- **欄位：** `title`（必填）、`value`（必填，數字；JSON 必須是數字型別）、`category`（必填）、\n  `timestamp`（選填，含時區位移的 ISO-8601，例如 `2026-09-01T00:14:42+08:00`；省略、空白或 null 時為導入當下）。\n  驗證規則與單筆新增相同。單位與創建者不從檔案讀取，創建者一律為目前使用者。\n- **CSV：** UTF-8（可帶 BOM），第一列為標題列；欄位順序不限，`timestamp` 欄可省略；其他欄位整個檔案拒絕。整列空白的列略過。\n- **JSON：** 最外層為物件陣列，每個物件只能有上述四個鍵。\n- **整批：** 任何一列有問題就整批拒絕、一筆都不寫入，回報列號與原因（最多 200 筆，\n  `error_count` 為總數）。超出範圍的列直接存為異常，不需要也不接受確認。\n- **檔名：** 同一檔名（只看檔名本身，去除前後空白、不分大小寫）已成功導入過就拒絕；被拒絕的上傳不佔用檔名。\n- **上限：** 檔案 5 MB、10000 筆資料列。",
+        "operationId": "import_records_api_v1_records_imports_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": ".csv 或 .json"
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "IMPORT_ROWS_INVALID（details.errors：row、field、message、type；error_count；truncated）、IMPORT_FILE_UNPARSEABLE（details.reason：not_utf8、invalid_json、not_array、csv_malformed、missing_columns、unknown_columns、duplicate_columns）、IMPORT_FILE_EMPTY、IMPORT_TOO_MANY_ROWS、IMPORT_FILENAME_INVALID、IMPORT_FILE_MISSING。以上都不會寫入任何資料",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IMPORT_FILENAME_TAKEN：相同檔名已成功導入過；details.previous_import 含 imported_at、row_count、same_content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "IMPORT_FILE_TOO_LARGE：超過檔案大小上限；details.max_bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "IMPORT_UNSUPPORTED_FORMAT：副檔名不是 .csv 或 .json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/records": {
+      "post": {
+        "tags": [
+          "records"
+        ],
+        "summary": "新增資料記錄",
+        "operationId": "create_record_api_v1_records_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "依目前範圍將成為異常但未帶 confirm_anomaly=true（ANOMALY_CONFIRMATION_REQUIRED），未寫入；error.details 含 category、value 與 range。新增時另可能回 CLIENT_REQUEST_REUSED：相同 client_request_id 但內容不同，未寫入",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "records"
+        ],
+        "summary": "分頁瀏覽、篩選與排序資料記錄",
+        "operationId": "list_records_api_v1_records_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "title",
+                "value",
+                "category",
+                "timestamp"
+              ],
+              "type": "string",
+              "default": "timestamp",
+              "title": "Sort By"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "desc",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "上一次回應的 next_cursor；須搭配相同的 sort_by 與 order",
+              "title": "Cursor"
+            },
+            "description": "上一次回應的 next_cursor；須搭配相同的 sort_by 與 order"
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "標題包含此文字，不分大小寫；空白視為未篩選",
+              "title": "Title"
+            },
+            "description": "標題包含此文字，不分大小寫；空白視為未篩選"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "分類完全相符；空白視為未篩選",
+              "title": "Category"
+            },
+            "description": "分類完全相符；空白視為未篩選"
+          },
+          {
+            "name": "value_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "數值下限（含）",
+              "title": "Value Min"
+            },
+            "description": "數值下限（含）"
+          },
+          {
+            "name": "value_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "數值上限（含）",
+              "title": "Value Max"
+            },
+            "description": "數值上限（含）"
+          },
+          {
+            "name": "time_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "含時區位移的 ISO-8601，例如 2026-09-01T00:14:42+08:00"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "時間下限（含），須含時區位移",
+              "title": "Time From"
+            },
+            "description": "時間下限（含），須含時區位移"
+          },
+          {
+            "name": "time_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "含時區位移的 ISO-8601，例如 2026-09-01T00:14:42+08:00"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "時間上限（含），須含時區位移",
+              "title": "Time To"
+            },
+            "description": "時間上限（含），須含時區位移"
+          },
+          {
+            "name": "anomaly_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "true 時僅顯示異常記錄",
+              "default": false,
+              "title": "Anomaly Only"
+            },
+            "description": "true 時僅顯示異常記錄"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/categories": {
+      "get": {
+        "tags": [
+          "records"
+        ],
+        "summary": "資料中實際出現的分類",
+        "operationId": "list_categories_api_v1_records_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/records/anomaly-check": {
+      "get": {
+        "tags": [
+          "records"
+        ],
+        "summary": "儲存前預判：此分類與數值依目前範圍是否會成為異常（修改時請傳修改後的分類與數值）",
+        "operationId": "check_anomaly_api_v1_records_anomaly_check_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Category"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Value"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/records/{record_id}": {
+      "get": {
+        "tags": [
+          "records"
+        ],
+        "summary": "取得一筆資料記錄",
+        "operationId": "get_record_api_v1_records__record_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Record Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "記錄已不存在，error.code 為 RECORD_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "records"
+        ],
+        "summary": "修改資料記錄（僅建立者或 Admin）；未提供的欄位不變",
+        "operationId": "update_record_api_v1_records__record_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Record Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色不可修改資料（FORBIDDEN）、不是此記錄的建立者（NOT_RECORD_OWNER），或記錄為異常、任何人都不能修改或刪除（ANOMALY_RECORD_READ_ONLY），error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "記錄已不存在，error.code 為 RECORD_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "依目前範圍將成為異常但未帶 confirm_anomaly=true（ANOMALY_CONFIRMATION_REQUIRED），未寫入；error.details 含 category、value 與 range。新增時另可能回 CLIENT_REQUEST_REUSED：相同 client_request_id 但內容不同，未寫入",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "records"
+        ],
+        "summary": "永久刪除資料記錄（僅建立者或 Admin）",
+        "operationId": "delete_record_api_v1_records__record_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Record Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色不可修改資料（FORBIDDEN）、不是此記錄的建立者（NOT_RECORD_OWNER），或記錄為異常、任何人都不能修改或刪除（ANOMALY_RECORD_READ_ONLY），error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "記錄已不存在，error.code 為 RECORD_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/category-settings": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "異常範圍設定：列出分類的範圍與單位（僅 Admin）",
+        "operationId": "list_settings_api_v1_category_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySettingList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "設定、修改或清除分類的範圍與單位（僅 Admin）；只影響之後的資料",
+        "operationId": "update_setting_api_v1_category_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategorySettingUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySettingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/category-display": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "供畫面顯示的分類範圍與單位（唯讀，所有已登入角色）",
+        "operationId": "list_display_api_v1_category_display_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDisplayList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/realtime/window": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "即時窗口：最近 5 分鐘的讀數、摘要與最近異常（含 WebSocket 契約說明）",
+        "description": "即時窗口快照（PRD-08）。所有已登入角色可用。畫面可每數秒輪詢此端點，或改用 WebSocket；兩者內容相同。\n\n- `summary.stalled` 為 true（server_time 與 last_reading_at 相差超過 stale_after_seconds = 2 × interval + 10）：\n  連線正常但資料停止到達，顯示「已暫停更新」。請求失敗（連線錯誤、逾時、5xx）：顯示「重新連線中」並重試。\n  401（SESSION_SUPERSEDED 等）：導向登入。\n- 即時窗口只含系統產生的模擬資料；讀數先推送、約 5 秒內批次寫入資料庫。\n\n**WebSocket `/api/v1/realtime/ws`**\n\n- 認證：`Authorization: Bearer <token>` 標頭，或連線後 5 秒內送出 `{\"type\":\"auth\",\"token\":\"<token>\"}`。不接受網址中的 token。\n- 伺服器訊息（JSON，`type` 區分）：\n  - `snapshot`：認證後一次，內容同本端點回應。每次（重新）連線都會收到新的快照。\n  - `readings`：每次產生資料一則（每個設備一筆），含 `readings[]`、`summary`、`category_anomaly_counts_5m`、`simulated: true`。\n    客戶端自行移除超過 300 秒的點。\n  - `heartbeat`：每 10 秒，含 `server_time`、`last_reading_at`、`generator`。超過 25 秒沒有任何訊息即視為斷線。\n  - `error`：關閉前送出，`error` 同統一錯誤格式（code、message）。\n- 客戶端只能送 `auth`；其他訊息以 1008 關閉。\n- 關閉代碼：4401 登入無效／過期／在別處登入／已登出（reason 為 error.code，不要重連，導向登入）；\n  4403 角色不可檢視；4408 未在 5 秒內認證；1008 協定錯誤；\n  1001／1012 伺服器關閉或重啟、1011 伺服器錯誤、1013 客戶端讀取太慢：以 1、2、4、8 秒再每 15 秒退避重連。",
+        "operationId": "live_window_api_v1_realtime_window_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveSnapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/realtime/range": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "自訂時間範圍：已保存資料的彙總圖表資料與摘要（最長 3 個月，不自動更新）",
+        "description": "start、end 為含時區位移的 ISO-8601。end 不可晚於 start 的 3 個日曆月後（以 start 的時區計算，日期超過月底時取月底；剛好 3 個月可以查詢）。超過時回 422，error.code 為 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。每個分類不超過 400 點時逐筆回傳，否則依序選用 1、5、15、30 分鐘、1、3、6、12 小時、1 天的區間彙總（aggregation 說明所用區間）；含異常的區間 anomaly_count 大於 0。",
+        "operationId": "custom_range_api_v1_realtime_range_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-11-05T08:00:00+08:00",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-11-05T08:00:00+08:00"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-11-05T08:00:00+08:00",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-11-05T08:00:00+08:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RangeView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR 或 RANGE_TOO_LONG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/statistics": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "各分類各自的總計、平均、最大值、最小值（沒有跨分類合計，最長 3 個月）",
+        "description": "所有已登入角色可用。start、end 為含時區位移的 ISO-8601，兩端都包含；start 可等於 end，晚於 end 時回 422 VALIDATION_ERROR（query.end、range_reversed）。end 不可晚於 start 的 3 個日曆月後（以 start 的時區計算，日期超過月底時取月底；剛好 3 個月可以查詢），超過時回 422 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。category 可重複，省略表示全部分類。涵蓋系統產生、手動新增與導入的記錄。 has_data 為 false 時顯示空狀態說明。count 僅供人工核對（各分類 count 加總 = GET /records 同範圍的 total），畫面不顯示。",
+        "operationId": "statistics_api_v1_analytics_statistics_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "maxItems": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類",
+              "title": "Category"
+            },
+            "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatisticsResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR 或 RANGE_TOO_LONG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/trend": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "各分類的趨勢資料點：依所選粒度取平均，含異常的區間保留異常標記（最長 3 個月）",
+        "description": "所有已登入角色可用。start、end 為含時區位移的 ISO-8601，兩端都包含；start 可等於 end，晚於 end 時回 422 VALIDATION_ERROR（query.end、range_reversed）。end 不可晚於 start 的 3 個日曆月後（以 start 的時區計算，日期超過月底時取月底；剛好 3 個月可以查詢），超過時回 422 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。category 可重複，省略表示全部分類。涵蓋系統產生、手動新增與導入的記錄。 granularity 為 minute、hour（預設）或 day，區間對齊 start 的時區位移（day 為當地午夜）。範圍在所選粒度下每個分類超過 2500 個區間時，查詢前即回 422 TOO_MANY_POINTS，details 含 granularity、points_per_category、max_points 與 coarser（可改選的較粗粒度）。沒有資料的區間不列出。anomaly_count 大於 0 的區間以 anomaly_min／anomaly_max（實際異常數值）標示異常。",
+        "operationId": "trend_api_v1_analytics_trend_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "maxItems": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類",
+              "title": "Category"
+            },
+            "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類"
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "minute",
+                "hour",
+                "day"
+              ],
+              "type": "string",
+              "description": "彙總粒度，僅影響趨勢",
+              "default": "hour",
+              "title": "Granularity"
+            },
+            "description": "彙總粒度，僅影響趨勢"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR、RANGE_TOO_LONG 或 TOO_MANY_POINTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/anomalies": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "異常記錄清單：只列被判為異常的記錄，分頁（最長 3 個月）",
+        "description": "所有已登入角色可用。start、end 為含時區位移的 ISO-8601，兩端都包含；start 可等於 end，晚於 end 時回 422 VALIDATION_ERROR（query.end、range_reversed）。end 不可晚於 start 的 3 個日曆月後（以 start 的時區計算，日期超過月底時取月底；剛好 3 個月可以查詢），超過時回 422 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。category 可重複，省略表示全部分類。涵蓋系統產生、手動新增與導入的記錄。 回應格式同 GET /records。預設依時間由新到舊；分頁以 next_cursor 接續，須搭配相同的條件、sort_by 與 order。",
+        "operationId": "anomalies_api_v1_analytics_anomalies_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "maxItems": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類",
+              "title": "Category"
+            },
+            "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "title",
+                "value",
+                "category",
+                "timestamp"
+              ],
+              "type": "string",
+              "default": "timestamp",
+              "title": "Sort By"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "desc",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "上一次回應的 next_cursor；須搭配相同的條件、sort_by 與 order",
+              "title": "Cursor"
+            },
+            "description": "上一次回應的 next_cursor；須搭配相同的條件、sort_by 與 order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR 或 RANGE_TOO_LONG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/export": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "下載 Excel：摘要（查詢條件與各分類四項統計，沒有合計列）＋明細（範圍內的記錄，異常列有標示）",
+        "description": "所有已登入角色可用。start、end 為含時區位移的 ISO-8601，兩端都包含；start 可等於 end，晚於 end 時回 422 VALIDATION_ERROR（query.end、range_reversed）。end 不可晚於 start 的 3 個日曆月後（以 start 的時區計算，日期超過月底時取月底；剛好 3 個月可以查詢），超過時回 422 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。category 可重複，省略表示全部分類。涵蓋系統產生、手動新增與導入的記錄。 條件與 GET /analytics/statistics 相同，檔案內容與其結果一致。工作表「摘要」列出開始時間、結束時間、分類、產生時間，以及每個分類一列的總計、平均、最大值、最小值（不含筆數與單位）；工作表「明細」由舊到新列出標題、數值、分類、時間戳、創建者（系統產生為「系統」）與「異常」欄，異常列另有底色。所有時間使用 start 的時區位移。不含圖表。檔案在回應前完整產生，大量資料時需數十秒，呼叫端請設定較長的逾時。",
+        "operationId": "export_excel_api_v1_analytics_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "maxItems": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類",
+              "title": "Category"
+            },
+            "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Excel 檔（.xlsx）。Content-Disposition 為 attachment，檔名含產生的日期時間（start 的時區），例如 資料分析_20261107-153000.xlsx（filename* 以 UTF-8 編碼，filename 為 ASCII 的 analysis_…）。",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR、RANGE_TOO_LONG，或 EXPORT_TOO_LARGE（明細超過 1,048,575 筆，details 含 rows 與 max_rows）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EXPORT_NO_DATA：條件內沒有資料，不產生檔案（PRD-12-R4）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "使用者列表：依帳號搜尋、分頁（限 Admin）",
+        "operationId": "list_users_api_v1_users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "帳號包含此文字；不分大小寫、重音與全形半形，% 與 _ 視為一般字元；空白視為未篩選",
+              "title": "Q"
+            },
+            "description": "帳號包含此文字；不分大小寫、重音與全形半形，% 與 _ 視為一般字元；空白視為未篩選"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "上一次回應的 next_cursor；須搭配相同的 q",
+              "title": "Cursor"
+            },
+            "description": "上一次回應的 next_cursor；須搭配相同的 q"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/role": {
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "變更使用者角色（限 Admin，不能變更自己）；於該使用者下一次請求生效",
+        "operationId": "change_role_api_v1_users__user_id__role_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "不是 Admin（FORBIDDEN），或嘗試變更自己的角色（OWN_ROLE_CHANGE_FORBIDDEN），error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "使用者不存在，error.code 為 USER_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs": {
+      "get": {
+        "tags": [
+          "system-logs"
+        ],
+        "summary": "查詢系統日誌：時間範圍（最長 3 個月）、事件類型、嚴重程度、使用者；由新到舊分頁（限 Admin）",
+        "description": "時間範圍超過 3 個月回 422，error.code 為 RANGE_TOO_LONG（剛好 3 個月可以）；開始不早於結束回 422 range_reversed。日誌保留期限由 LOG_RETENTION_DAYS 設定，超過的自動清理。",
+        "operationId": "list_logs_api_v1_logs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "login_success",
+                      "login_failure",
+                      "logout",
+                      "login_superseded",
+                      "permission_denied",
+                      "role_changed",
+                      "record_created",
+                      "record_updated",
+                      "record_deleted",
+                      "import_result",
+                      "range_unit_changed",
+                      "system_error"
+                    ],
+                    "type": "string"
+                  },
+                  "maxItems": 20
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "事件類型，可重複，例如 ?event_type=login_failure&event_type=permission_denied；省略表示全部。選項見 GET /logs/options",
+              "title": "Event Type"
+            },
+            "description": "事件類型，可重複，例如 ?event_type=login_failure&event_type=permission_denied；省略表示全部。選項見 GET /logs/options"
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Severity"
+                  },
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "嚴重程度 info、warning、error，可重複；省略表示全部",
+              "title": "Severity"
+            },
+            "description": "嚴重程度 info、warning、error，可重複；省略表示全部"
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "執行該操作的使用者帳號，完全相符（不分大小寫與重音）；不是關鍵字搜尋。空白視為未篩選",
+              "title": "Username"
+            },
+            "description": "執行該操作的使用者帳號，完全相符（不分大小寫與重音）；不是關鍵字搜尋。空白視為未篩選"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "上一次回應的 next_cursor；須搭配完全相同的條件",
+              "title": "Cursor"
+            },
+            "description": "上一次回應的 next_cursor；須搭配完全相同的條件"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/options": {
+      "get": {
+        "tags": [
+          "system-logs"
+        ],
+        "summary": "系統日誌的篩選選項：事件類型、嚴重程度與保留天數（限 Admin）",
+        "operationId": "log_options_api_v1_logs_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogOptions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/db-status": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "資料庫狀態：連線、回應時間、連線池、資料筆數、最後一次批次寫入時間（限 Admin）",
+        "description": "供畫面每 10 秒呼叫。驗證通過後，對資料庫的檢查最多等 2 秒；檢查失敗仍回 200，status 為 unavailable，error.category 說明原因（不含資料庫原始錯誤文字），指標為 null。資料筆數為精確值，每個後端程序最多每 60 秒重算一次。",
+        "operationId": "db_status_api_v1_db_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DbStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "請求資料驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "登入驗證需要讀取資料庫；資料庫在驗證時就無法使用，回 503，error.code 為 DATABASE_UNAVAILABLE。畫面應把它與 200 的 status=unavailable 一樣顯示為不可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/history/records": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "即時資料歷史：系統產生的原始記錄，依時間範圍（必填，最長 3 個月）、分類、僅異常過濾，分頁（限 Admin）",
+        "description": "只含系統產生的記錄（creator_id 為 null、creator_name 為「系統」）；手動新增與導入的記錄不在此列，請用 GET /records。Admin 修改過的系統記錄仍列出，內容為目前的版本。start、end 必填，為含時區位移的 ISO-8601，兩端都包含；start 可等於 end，晚於 end 時回 422 VALIDATION_ERROR（query.end、range_reversed）。end 不可晚於 start 的 3 個日曆月後（剛好 3 個月可以查詢），超過時回 422 RANGE_TOO_LONG，details 含 max_months 與 latest_allowed_end。category 可重複，省略表示全部分類；anomaly_only 為 true 時只列異常。條件可同時使用。依時間戳排序（order：desc 新到舊為預設，或 asc），時間相同時依 id；以 next_cursor 接續下一頁，須搭配相同的條件與 order。items 為空、total 為 0 時顯示空狀態說明。單位與範圍請用 GET /category-display（目前的設定）。此頁沒有匯出。",
+        "operationId": "history_records_api_v1_history_records_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "Start"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間",
+              "title": "End"
+            },
+            "description": "含時區位移的 ISO-8601，例如 2026-08-01T00:00:00+08:00；包含此時間"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "maxItems": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類",
+              "title": "Category"
+            },
+            "description": "可重複，例如 ?category=溫度&category=壓力；完全相符、大小寫視為不同分類。省略表示全部分類"
+          },
+          {
+            "name": "anomaly_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "true 時僅顯示異常記錄",
+              "default": false,
+              "title": "Anomaly Only"
+            },
+            "description": "true 時僅顯示異常記錄"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "description": "依時間戳排序；desc 為新到舊（預設）",
+              "default": "desc",
+              "title": "Order"
+            },
+            "description": "依時間戳排序；desc 為新到舊（預設）"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "上一次回應的 next_cursor；須搭配相同的條件與 order",
+              "title": "Cursor"
+            },
+            "description": "上一次回應的 next_cursor；須搭配相同的條件與 order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "VALIDATION_ERROR 或 RANGE_TOO_LONG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器內部錯誤",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "資料庫無法使用或結構不是最新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或登入失效，error.code 為 UNAUTHORIZED、TOKEN_EXPIRED、SESSION_SUPERSEDED 或 SESSION_LOGGED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "角色沒有此操作的權限，error.message 說明原因",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Aggregation": {
+        "properties": {
+          "bucket_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bucket Seconds",
+            "description": "彙總區間秒數；null 表示未彙總（逐筆）"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "例如「每 1 分鐘」；未彙總為「逐筆」"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket_seconds",
+          "label"
+        ],
+        "title": "Aggregation"
+      },
+      "AnomalyCheck": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "would_be_anomaly": {
+            "type": "boolean",
+            "title": "Would Be Anomaly",
+            "description": "依目前範圍的判斷。最終結果以儲存時為準"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null 表示尚未設定範圍"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "value",
+          "would_be_anomaly",
+          "range",
+          "unit"
+        ],
+        "title": "AnomalyCheck"
+      },
+      "AnomalyItem": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "判定時的範圍；啟動前已保存的異常則為目前的範圍"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "value",
+          "unit",
+          "range",
+          "timestamp"
+        ],
+        "title": "AnomalyItem"
+      },
+      "Bucket": {
+        "properties": {
+          "bucket_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bucket Start",
+            "description": "區間開始；逐筆時為該筆時間"
+          },
+          "avg": {
+            "type": "number",
+            "title": "Avg"
+          },
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count",
+            "description": "區間內的異常筆數；大於 0 時在 min 或 max 中越界的一端標示異常"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket_start",
+          "avg",
+          "min",
+          "max",
+          "count",
+          "anomaly_count"
+        ],
+        "title": "Bucket"
+      },
+      "Capability": {
+        "type": "string",
+        "enum": [
+          "monitoring.view",
+          "records.read",
+          "analysis.view",
+          "records.export",
+          "records.create",
+          "records.import",
+          "records.modify_own",
+          "records.modify_any",
+          "system.admin"
+        ],
+        "title": "Capability"
+      },
+      "CategoryDisplayList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryDisplayOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CategoryDisplayList"
+      },
+      "CategoryDisplayOut": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "range",
+          "unit"
+        ],
+        "title": "CategoryDisplayOut"
+      },
+      "CategoryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CategoryList"
+      },
+      "CategoryRange": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "CategoryRange"
+      },
+      "CategorySettingList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategorySettingOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "未設定範圍的分類排在最前"
+          },
+          "unset_count": {
+            "type": "integer",
+            "title": "Unset Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "unset_count"
+        ],
+        "title": "CategorySettingList"
+      },
+      "CategorySettingOut": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "range_status": {
+            "type": "string",
+            "title": "Range Status",
+            "description": "set：已設定範圍；unset：尚未設定，資料不判斷異常"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "has_data": {
+            "type": "boolean",
+            "title": "Has Data",
+            "description": "資料中是否有此分類；模擬設備在第一筆讀數前為 false"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "range",
+          "range_status",
+          "unit",
+          "has_data"
+        ],
+        "title": "CategorySettingOut"
+      },
+      "CategorySettingUpdate": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Category",
+            "description": "自由文字，大小寫不同視為不同分類"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RangeInput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null 表示清除範圍；省略表示不變"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit",
+            "description": "自由文字，null 或空白表示清除單位；省略表示不變"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "category"
+        ],
+        "title": "CategorySettingUpdate",
+        "description": "Omitted range or unit stays as it is."
+      },
+      "CategoryStatistics": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit",
+            "description": "分類設定目前的單位；未設定為 null（只顯示數字）"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "範圍內的記錄數。僅供人工核對（各分類 count 加總 = 記錄列表同條件的 total），畫面不顯示（PRD-10-R10）"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count",
+            "description": "範圍內被標記為異常的記錄數；畫面以柱狀圖顯示各分類的異常次數"
+          },
+          "sum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sum",
+            "description": "總計；此分類在範圍內沒有資料時為 null"
+          },
+          "avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg",
+            "description": "平均"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max",
+            "description": "最大值"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min",
+            "description": "最小值"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "unit",
+          "count",
+          "anomaly_count",
+          "sum",
+          "avg",
+          "max",
+          "min"
+        ],
+        "title": "CategoryStatistics"
+      },
+      "DbError": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "timeout",
+              "unreachable",
+              "auth_failed",
+              "pool_exhausted",
+              "error"
+            ],
+            "title": "Category",
+            "description": "timeout：資料庫在時限內沒有回應；unreachable：無法連線；auth_failed：資料庫拒絕登入；pool_exhausted：連線池已滿；error：其他資料庫錯誤"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "依 category 固定的中文說明；不含資料庫原始錯誤文字"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "message"
+        ],
+        "title": "DbError"
+      },
+      "DbStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status",
+            "description": "available：資料庫可用；unavailable：本次檢查失敗"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At",
+            "description": "本次檢查時間（UTC），畫面的「最後更新時間」"
+          },
+          "last_available_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Available At",
+            "description": "此後端程序最後一次檢查成功的時間（UTC）；重新啟動後尚未成功過則為 null"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DbError"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "status 為 unavailable 時的原因；可用時為 null"
+          },
+          "response_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Time Ms",
+            "description": "一次最簡單查詢的來回時間（毫秒），不含建立連線；不可用時為 null"
+          },
+          "pool": {
+            "$ref": "#/components/schemas/PoolUsage",
+            "description": "後端連線池使用狀況；資料庫不可用時仍為後端本身的數字"
+          },
+          "record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count",
+            "description": "所有來源（手動、導入、系統產生）的資料總筆數，精確值，最多快取 60 秒；不可用或尚未算出時為 null"
+          },
+          "record_count_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count As Of",
+            "description": "record_count 算出的時間（UTC）"
+          },
+          "last_batch_write_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Batch Write At",
+            "description": "最後一次批次寫入時間（UTC）：模擬器最近一次寫入的系統產生資料的時間戳；模擬器在產生後 5 秒內批次寫入。不可用或尚無系統資料時為 null"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/DbWarning"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "超過門檻的指標；可為空。主狀態仍只有可用／不可用"
+          },
+          "refresh_interval_seconds": {
+            "type": "integer",
+            "title": "Refresh Interval Seconds",
+            "description": "畫面自動更新間隔（PRD-15-R5）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checked_at",
+          "last_available_at",
+          "error",
+          "response_time_ms",
+          "pool",
+          "record_count",
+          "record_count_as_of",
+          "last_batch_write_at",
+          "warnings",
+          "refresh_interval_seconds"
+        ],
+        "title": "DbStatus"
+      },
+      "DbWarning": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "SLOW_RESPONSE",
+              "POOL_HIGH",
+              "BATCH_STALE"
+            ],
+            "title": "Code",
+            "description": "SLOW_RESPONSE：回應時間 ≥ 250 ms；POOL_HIGH：連線池使用 ≥ 80%；BATCH_STALE：最後一次批次寫入早於 3 個模擬器間隔。門檻為工程選擇"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "DbWarning"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "GeneratorState": {
+        "properties": {
+          "running": {
+            "type": "boolean",
+            "title": "Running",
+            "description": "此後端目前正在產生模擬資料"
+          },
+          "last_tick_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Tick At",
+            "description": "最近一次產生資料的時間；尚未產生為 null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "running",
+          "last_tick_at"
+        ],
+        "title": "GeneratorState"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "ImportResult": {
+        "properties": {
+          "import_id": {
+            "type": "integer",
+            "title": "Import Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "json"
+            ],
+            "title": "Format"
+          },
+          "imported_count": {
+            "type": "integer",
+            "title": "Imported Count"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count",
+            "description": "依導入當下的範圍被判為異常的筆數（僅供參考，畫面不必顯示）"
+          },
+          "imported_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Imported At",
+            "description": "UTC；未填時間戳的列以此為時間戳"
+          },
+          "creator_id": {
+            "type": "integer",
+            "title": "Creator Id"
+          },
+          "creator_name": {
+            "type": "string",
+            "title": "Creator Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "import_id",
+          "filename",
+          "format",
+          "imported_count",
+          "anomaly_count",
+          "imported_at",
+          "creator_id",
+          "creator_name"
+        ],
+        "title": "ImportResult"
+      },
+      "LiveCategory": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "目前的範圍；清除後為 null（不判斷異常）"
+          },
+          "range_status": {
+            "type": "string",
+            "enum": [
+              "set",
+              "unset"
+            ],
+            "title": "Range Status"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Point"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anomaly_count_5m": {
+            "type": "integer",
+            "title": "Anomaly Count 5M"
+          },
+          "readings": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "type": "array",
+            "title": "Readings",
+            "description": "最近 5 分鐘的讀數，由舊到新"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "unit",
+          "range",
+          "range_status",
+          "latest",
+          "anomaly_count_5m",
+          "readings"
+        ],
+        "title": "LiveCategory"
+      },
+      "LiveSnapshot": {
+        "properties": {
+          "server_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Server Time"
+          },
+          "interval_seconds": {
+            "type": "number",
+            "title": "Interval Seconds",
+            "description": "每個設備產生一筆資料的間隔（PRD-07-R1）"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "title": "Window Seconds",
+            "description": "即時窗口長度（5 分鐘）"
+          },
+          "stale_after_seconds": {
+            "type": "number",
+            "title": "Stale After Seconds",
+            "description": "超過此秒數沒有新資料即視為已暫停更新：2 × interval + 10"
+          },
+          "generator": {
+            "$ref": "#/components/schemas/GeneratorState"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/LiveSummary"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/LiveCategory"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "4 個模擬設備的分類，順序固定"
+          },
+          "recent_anomalies": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyItem"
+            },
+            "type": "array",
+            "title": "Recent Anomalies",
+            "description": "最近的異常，最新在前，最多 20 筆"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_time",
+          "interval_seconds",
+          "window_seconds",
+          "stale_after_seconds",
+          "generator",
+          "summary",
+          "categories",
+          "recent_anomalies"
+        ],
+        "title": "LiveSnapshot"
+      },
+      "LiveSummary": {
+        "properties": {
+          "anomalous_category_count": {
+            "type": "integer",
+            "title": "Anomalous Category Count",
+            "description": "最新一筆讀數為異常的分類數"
+          },
+          "category_count": {
+            "type": "integer",
+            "title": "Category Count"
+          },
+          "anomaly_count_5m": {
+            "type": "integer",
+            "title": "Anomaly Count 5M",
+            "description": "最近 5 分鐘的異常筆數"
+          },
+          "last_reading_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reading At",
+            "description": "最後收到資料的時間；尚無資料為 null"
+          },
+          "stalled": {
+            "type": "boolean",
+            "title": "Stalled",
+            "description": "server_time 與 last_reading_at 相差超過 stale_after_seconds：資料停止到達（已暫停更新）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "anomalous_category_count",
+          "category_count",
+          "anomaly_count_5m",
+          "last_reading_at",
+          "stalled"
+        ],
+        "title": "LiveSummary"
+      },
+      "LogItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At",
+            "description": "事件發生時間，一律為 UTC"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "login_success",
+              "login_failure",
+              "logout",
+              "login_superseded",
+              "permission_denied",
+              "role_changed",
+              "record_created",
+              "record_updated",
+              "record_deleted",
+              "import_result",
+              "range_unit_changed",
+              "system_error"
+            ],
+            "title": "Event Type",
+            "description": "事件類型（篩選用的分組）"
+          },
+          "event_label": {
+            "type": "string",
+            "title": "Event Label"
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name",
+            "description": "細項事件，例如 records_import_rejected、category_unit_cleared"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "severity_label": {
+            "type": "string",
+            "title": "Severity Label"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "執行操作的使用者；null 表示無（例如不存在的帳號登入失敗、系統錯誤）"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "事件發生當時的帳號"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "簡短說明"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details",
+            "description": "補充欄位（編號、筆數、欄位名稱、設定值）；不含密碼、權杖或資料內容"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "occurred_at",
+          "event_type",
+          "event_label",
+          "event_name",
+          "severity",
+          "severity_label",
+          "user_id",
+          "username",
+          "summary",
+          "details"
+        ],
+        "title": "LogItem"
+      },
+      "LogOptions": {
+        "properties": {
+          "event_types": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Event Types",
+            "description": "可篩選的事件類型，依畫面顯示順序"
+          },
+          "severities": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Severities"
+          },
+          "retention_days": {
+            "type": "number",
+            "title": "Retention Days",
+            "description": "日誌保留天數；超過的日誌會被自動清理"
+          },
+          "max_range_months": {
+            "type": "integer",
+            "title": "Max Range Months",
+            "description": "單次查詢時間範圍上限（月）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_types",
+          "severities",
+          "retention_days",
+          "max_range_months"
+        ],
+        "title": "LogOptions"
+      },
+      "LogPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LogItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "由新到舊；可能為空，這時仍為 200"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "符合條件的總筆數，不受 cursor 影響"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor",
+            "description": "下一頁的 cursor；null 表示沒有下一頁"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "next_cursor"
+        ],
+        "title": "LogPage"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LoginResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_at",
+          "user"
+        ],
+        "title": "LoginResponse"
+      },
+      "ManagedUserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "註冊時間，一律為 UTC"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At",
+            "description": "最後登入時間，一律為 UTC；null 表示尚無登入紀錄"
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self",
+            "description": "是否為目前登入的 Admin 本人；本人不能變更自己的角色"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "role",
+          "created_at",
+          "last_login_at",
+          "is_self"
+        ],
+        "title": "ManagedUserOut"
+      },
+      "Option": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "Option"
+      },
+      "Point": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "is_anomaly": {
+            "type": "boolean",
+            "title": "Is Anomaly"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "timestamp",
+          "is_anomaly"
+        ],
+        "title": "Point"
+      },
+      "PoolUsage": {
+        "properties": {
+          "in_use": {
+            "type": "integer",
+            "title": "In Use",
+            "description": "已借出的連線數（含模擬器常駐的一條鎖定連線）"
+          },
+          "idle": {
+            "type": "integer",
+            "title": "Idle",
+            "description": "已開啟但閒置的連線數"
+          },
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "description": "已開啟的連線總數（in_use + idle）"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity",
+            "description": "連線池上限（DB_POOL_SIZE + DB_MAX_OVERFLOW）"
+          },
+          "usage_ratio": {
+            "type": "number",
+            "title": "Usage Ratio",
+            "description": "in_use / capacity，0 到 1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "in_use",
+          "idle",
+          "open",
+          "capacity",
+          "usage_ratio"
+        ],
+        "title": "PoolUsage"
+      },
+      "RangeCategory": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "range_status": {
+            "type": "string",
+            "enum": [
+              "set",
+              "unset"
+            ],
+            "title": "Range Status"
+          },
+          "latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Point"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "範圍內最後一筆"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "unit",
+          "range",
+          "range_status",
+          "latest",
+          "anomaly_count",
+          "points"
+        ],
+        "title": "RangeCategory"
+      },
+      "RangeInput": {
+        "properties": {
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min",
+            "description": "最小值（下界），必填"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max",
+            "description": "最大值（上界），必填"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RangeInput"
+      },
+      "RangeSummary": {
+        "properties": {
+          "anomalous_category_count": {
+            "type": "integer",
+            "title": "Anomalous Category Count",
+            "description": "範圍內曾有異常的分類數"
+          },
+          "category_count": {
+            "type": "integer",
+            "title": "Category Count"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count"
+          },
+          "last_reading_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reading At",
+            "description": "範圍內最後一筆資料的時間"
+          }
+        },
+        "type": "object",
+        "required": [
+          "anomalous_category_count",
+          "category_count",
+          "anomaly_count",
+          "last_reading_at"
+        ],
+        "title": "RangeSummary"
+      },
+      "RangeView": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "aggregation": {
+            "$ref": "#/components/schemas/Aggregation"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/RangeSummary"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/RangeCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "recent_anomalies": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyItem"
+            },
+            "type": "array",
+            "title": "Recent Anomalies",
+            "description": "範圍內最近的異常，最新在前，最多 20 筆"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "aggregation",
+          "summary",
+          "categories",
+          "recent_anomalies"
+        ],
+        "title": "RangeView"
+      },
+      "ReadyResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ready",
+            "title": "Status",
+            "default": "ready"
+          },
+          "database": {
+            "type": "string",
+            "const": "ok",
+            "title": "Database",
+            "default": "ok"
+          },
+          "schema_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Revision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schema_revision"
+        ],
+        "title": "ReadyResponse"
+      },
+      "RecordCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Category",
+            "description": "自由文字；大小寫不同視為不同分類"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "description": "含時區位移的 ISO-8601，例如 2026-09-01T00:14:42+08:00"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp",
+            "description": "含時區位移的 ISO-8601；省略或 null 時為建立當下"
+          },
+          "confirm_anomaly": {
+            "type": "boolean",
+            "title": "Confirm Anomaly",
+            "description": "確認儲存後將成為異常且永久唯讀。判斷為異常卻未確認時回 409，不寫入；判斷為正常時此欄位無作用",
+            "default": false
+          },
+          "client_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Request Id",
+            "description": "同一次新增的重試請帶相同的 UUID：若已寫入，回傳既有記錄而不新增第二筆。同一使用者以相同 UUID 送出不同內容時回 409（CLIENT_REQUEST_REUSED）"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "value",
+          "category"
+        ],
+        "title": "RecordCreate"
+      },
+      "RecordOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "一律為 UTC"
+          },
+          "creator_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator Id",
+            "description": "系統產生的記錄為 null"
+          },
+          "creator_name": {
+            "type": "string",
+            "title": "Creator Name",
+            "description": "使用者名稱；系統產生的記錄為「系統」"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "description": "請以此判斷系統產生的記錄，不要比對 creator_name"
+          },
+          "is_anomaly": {
+            "type": "boolean",
+            "title": "Is Anomaly"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "value",
+          "category",
+          "timestamp",
+          "creator_id",
+          "creator_name",
+          "is_system",
+          "is_anomaly"
+        ],
+        "title": "RecordOut"
+      },
+      "RecordPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecordOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "可能為空：沒有符合條件的資料，或此 cursor 之後的記錄已被刪除；這時仍為 200"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "符合篩選條件的總筆數，不受 cursor 影響"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor",
+            "description": "下一頁的 cursor；null 表示沒有下一頁"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "next_cursor"
+        ],
+        "title": "RecordPage"
+      },
+      "RecordUpdate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Category"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "含時區位移的 ISO-8601，例如 2026-09-01T00:14:42+08:00"
+          },
+          "confirm_anomaly": {
+            "type": "boolean",
+            "title": "Confirm Anomaly",
+            "description": "確認儲存後將成為異常且永久唯讀。判斷為異常卻未確認時回 409，不寫入；判斷為正常時此欄位無作用",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RecordUpdate",
+        "description": "Omitted fields stay as they are. None of the fields can be cleared with null."
+      },
+      "RegisterRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "2 到 64 個字元；可用任何語言的文字、數字與 _ . - @，大小寫視為相同"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "8 到 128 個字元，需同時包含英文大寫、英文小寫、數字與符號"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "Admin",
+          "User",
+          "Viewer"
+        ],
+        "title": "Role"
+      },
+      "RoleChange": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role",
+            "description": "新角色：Admin、User 或 Viewer；於該使用者下一次請求生效，不需重新登入"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "RoleChange"
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "error"
+        ],
+        "title": "Severity"
+      },
+      "StatisticsResult": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "查詢的分類；null 表示全部分類"
+          },
+          "has_data": {
+            "type": "boolean",
+            "title": "Has Data",
+            "description": "false 時顯示空狀態說明，而不是 0（PRD-10-R6）"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryStatistics"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "每個分類一列，沒有跨分類合計列（PRD-10-R12）。未指定分類時只列範圍內有資料的分類（依分類排序）；指定分類時每個指定的分類一列（依指定順序），沒有資料的分類 count 為 0、統計值為 null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "category",
+          "has_data",
+          "categories"
+        ],
+        "title": "StatisticsResult"
+      },
+      "TrendPoint": {
+        "properties": {
+          "bucket_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bucket Start",
+            "description": "區間開始，使用請求 start 的時區位移"
+          },
+          "avg": {
+            "type": "number",
+            "title": "Avg",
+            "description": "區間內數值的平均（PRD-11-R7）"
+          },
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "anomaly_count": {
+            "type": "integer",
+            "title": "Anomaly Count",
+            "description": "區間內的異常筆數；大於 0 時圖上標示異常（PRD-11-R9）"
+          },
+          "anomaly_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anomaly Min",
+            "description": "區間內異常記錄的最小數值；沒有異常為 null"
+          },
+          "anomaly_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anomaly Max",
+            "description": "區間內異常記錄的最大數值；沒有異常為 null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket_start",
+          "avg",
+          "min",
+          "max",
+          "count",
+          "anomaly_count",
+          "anomaly_min",
+          "anomaly_max"
+        ],
+        "title": "TrendPoint"
+      },
+      "TrendResult": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "minute",
+              "hour",
+              "day"
+            ],
+            "title": "Granularity"
+          },
+          "bucket_seconds": {
+            "type": "integer",
+            "title": "Bucket Seconds"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "utc_offset": {
+            "type": "string",
+            "title": "Utc Offset",
+            "description": "區間對齊的時區位移（取自 start），例如 +08:00"
+          },
+          "max_points_per_category": {
+            "type": "integer",
+            "title": "Max Points Per Category"
+          },
+          "has_data": {
+            "type": "boolean",
+            "title": "Has Data"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/TrendSeries"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "每個分類一格小圖；列出規則同統計"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "category",
+          "granularity",
+          "bucket_seconds",
+          "label",
+          "utc_offset",
+          "max_points_per_category",
+          "has_data",
+          "categories"
+        ],
+        "title": "TrendResult"
+      },
+      "TrendSeries": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "目前的範圍，畫最小與最大值線用；未設定為 null"
+          },
+          "range_status": {
+            "type": "string",
+            "enum": [
+              "set",
+              "unset"
+            ],
+            "title": "Range Status"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Points",
+            "description": "由舊到新；沒有資料的區間不列出"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "unit",
+          "range",
+          "range_status",
+          "points"
+        ],
+        "title": "TrendSeries"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "role",
+          "capabilities",
+          "created_at"
+        ],
+        "title": "UserOut"
+      },
+      "UserPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedUserOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "依註冊順序（舊到新）；可能為空，這時仍為 200"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "符合搜尋條件的總人數，不受 cursor 影響"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor",
+            "description": "下一頁的 cursor；null 表示沒有下一頁"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "next_cursor"
+        ],
+        "title": "UserPage"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "description": "POST /api/v1/auth/login 取得的 access_token",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

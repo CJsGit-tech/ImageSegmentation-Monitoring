@@ -35,12 +35,12 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 <text x="555.0" y="58.0" text-anchor="middle" font-size="13">Admin · User · Viewer</text>
 <rect class="ex" x="1150" y="20" width="310" height="52" rx="6"/>
 <text x="1305.0" y="42.0" text-anchor="middle" font-size="12">環境變數</text>
-<text x="1305.0" y="59.0" text-anchor="middle" font-size="12">初始 Admin · Token 期限 · 資料庫連線</text>
+<text x="1305.0" y="59.0" text-anchor="middle" font-size="12">三個角色帳號 · JWT 金鑰 · Token 期限 · 資料庫連線</text>
 <rect class="net" x="30" y="90" width="1440" height="850" rx="10"/>
 <text class="gt" x="46" y="112" style="font-size:13px;fill:var(--muted)">Docker Compose 容器網路</text>
 <path class="ard" d="M1305 72V90"/>
 <rect class="lb" x="1319.0" y="71" width="66" height="20"/><text x="1352" y="85.5" text-anchor="middle" font-size="12">啟動設定</text>
-<rect class="grp" x="40" y="122" width="1420" height="178" rx="8"/><text class="gt" x="56" y="142">前端容器 · Streamlit</text>
+<rect class="grp" x="40" y="122" width="1420" height="178" rx="8"/><text class="gt" x="56" y="138">前端容器 · Streamlit</text>
 <rect class="fe" x="60" y="160" width="190" height="48" rx="6"/>
 <text x="155.0" y="180.0" text-anchor="middle" font-size="12.5" font-weight="700">① 使用者管理</text>
 <text x="155.0" y="197.0" text-anchor="middle" font-size="12.5">登入 · 註冊</text>
@@ -55,15 +55,15 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 <text x="755.0" y="197.0" text-anchor="middle" font-size="12.5">趨勢圖 · 下載 Excel</text>
 <rect class="fe" x="860" y="160" width="190" height="48" rx="6"/>
 <text x="955.0" y="180.0" text-anchor="middle" font-size="12.5" font-weight="700">⑤ 系統管理</text>
-<text x="955.0" y="197.0" text-anchor="middle" font-size="12.5">使用者 · 日誌 · 資料庫</text>
-<path class="ar" d="M555 70V140"/>
-<rect class="lb" x="559.0" y="90" width="42" height="20"/><text x="580" y="104.5" text-anchor="middle" font-size="12">HTTP</text>
-<path class="ln" d="M155 140H955"/>
-<path class="ar" d="M155 140V159"/>
-<path class="ar" d="M355 140V159"/>
-<path class="ar" d="M555 140V159"/>
-<path class="ar" d="M755 140V159"/>
-<path class="ar" d="M955 140V159"/>
+<text x="955.0" y="197.0" text-anchor="middle" font-size="12.5">使用者 · 日誌 · 資料庫 · 歷史</text>
+<path class="ar" d="M555 70V148"/>
+<rect class="lb" x="561.0" y="91" width="232" height="20"/><text x="677" y="105.5" text-anchor="middle" font-size="12">HTTP · 127.0.0.1:18501（唯一對外連接埠）</text>
+<path class="ln" d="M155 148H955"/>
+<path class="ar" d="M155 148V159"/>
+<path class="ar" d="M355 148V159"/>
+<path class="ar" d="M555 148V159"/>
+<path class="ar" d="M755 148V159"/>
+<path class="ar" d="M955 148V159"/>
 <path class="ln" d="M155 226H955"/>
 <path class="ln" d="M155 208V226"/>
 <path class="ln" d="M355 208V226"/>
@@ -72,16 +72,16 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 <path class="ln" d="M955 208V226"/>
 <rect class="fe" x="60" y="246" width="400" height="42" rx="6"/>
 <text x="260.0" y="263.0" text-anchor="middle" font-size="12.5">Session 狀態</text>
-<text x="260.0" y="280.0" text-anchor="middle" font-size="12.5">登入 Token · 即時資料緩衝</text>
+<text x="260.0" y="280.0" text-anchor="middle" font-size="12.5">登入 Token（HttpOnly cookie）· 即時資料緩衝</text>
 <rect class="fe" x="600" y="246" width="400" height="42" rx="6"/>
 <text x="800.0" y="263.0" text-anchor="middle" font-size="12.5">後端客戶端</text>
 <text x="800.0" y="280.0" text-anchor="middle" font-size="12.5">REST 呼叫 · WebSocket 接收</text>
 <path class="ar" d="M260 226V245" marker-start="url(#as)"/>
 <path class="ar" d="M800 226V245"/>
-<rect class="grp" x="40" y="320" width="1420" height="488" rx="8"/><text class="gt" x="56" y="340">後端容器 · FastAPI（非同步）</text>
+<rect class="grp" x="40" y="320" width="1420" height="488" rx="8"/><text class="gt" x="56" y="340">後端容器 · FastAPI（非同步）</text><text class="sm" x="1444" y="340" text-anchor="end">backend:8000 · 僅限容器網路，不對外開放</text>
 <rect class="be" x="60" y="352" width="640" height="42" rx="6"/>
 <text x="380.0" y="369.0" text-anchor="middle" font-size="12.5">REST API</text>
-<text x="380.0" y="386.0" text-anchor="middle" font-size="12.5">Pydantic 驗證 · Swagger 文件</text>
+<text x="380.0" y="386.0" text-anchor="middle" font-size="12.5">Pydantic 驗證 · Swagger 文件（/docs）</text>
 <rect class="be" x="760" y="352" width="672" height="42" rx="6"/>
 <text x="1096.0" y="369.0" text-anchor="middle" font-size="12.5">WebSocket 端點</text>
 <text x="1096.0" y="386.0" text-anchor="middle" font-size="12.5">推送即時資料 · 登入失效時中斷連線</text>
@@ -122,9 +122,9 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 <path class="ar" d="M746.0 586V594"/>
 <rect class="be" x="624" y="594" width="244" height="28" rx="6"/>
 <text x="746.0" y="612.5" text-anchor="middle" font-size="12.5">WebSocket 推送即時資料</text>
-<path class="ar" d="M746.0 622V630"/>
+<path class="ar" d="M868 572H877V644H869"/>
 <rect class="be" x="624" y="630" width="244" height="28" rx="6"/>
-<text x="746.0" y="648.5" text-anchor="middle" font-size="12.5">批次寫入資料庫</text>
+<text x="746.0" y="648.5" text-anchor="middle" font-size="12.5">批次寫入資料庫（每秒或滿 200 筆）</text>
 <path class="ar" d="M746.0 454V485"/>
 <rect class="mod" x="888" y="486" width="268" height="224" rx="8"/><text class="gt" x="1022.0" y="508" text-anchor="middle">④ 資料分析模組</text>
 <rect class="be" x="900" y="522" width="244" height="28" rx="6"/>
@@ -161,14 +161,14 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 <text x="580.0" y="783.0" text-anchor="middle" font-size="12.5">連接池（所有資料庫操作經 ORM）</text>
 <rect class="be" x="1160" y="750" width="272" height="40" rx="6"/>
 <text x="1296.0" y="774.5" text-anchor="middle" font-size="13">Alembic 遷移</text>
-<rect class="grp" x="40" y="840" width="1420" height="86" rx="8"/><text class="gt" x="56" y="860">資料庫容器</text>
+<rect class="grp" x="40" y="840" width="1420" height="86" rx="8"/><text class="gt" x="56" y="860">資料庫容器</text><text class="sm" x="56" y="880">db:3306 · 僅限容器網路，不對外開放</text>
 <rect class="dt" x="380" y="868" width="400" height="46" rx="6"/>
 <text x="580.0" y="887.0" text-anchor="middle" font-size="12" font-weight="700">MariaDB 11.7</text>
 <text x="580.0" y="904.0" text-anchor="middle" font-size="12">users · records · record_imports · category_settings · system_logs</text>
 <path class="ar" d="M580 790V867"/>
 <rect class="lb" x="540.5" y="820" width="79" height="20"/><text x="580" y="834.5" text-anchor="middle" font-size="12">非同步連線</text>
 <path class="ar" d="M1296 790V891H781"/>
-<rect class="lb" x="1007.0" y="881" width="66" height="20"/><text x="1040" y="895.5" text-anchor="middle" font-size="12">結構遷移</text>
+<rect class="lb" x="970.0" y="881" width="140" height="20"/><text x="1040" y="895.5" text-anchor="middle" font-size="12">結構遷移（容器啟動時）</text>
 <path class="ln" d="M580 914V965"/>
 <ellipse class="dt" cx="580" cy="972" rx="110" ry="9"/><path class="dt" d="M470 972V1004a110 9 0 0 0 220 0V972"/><ellipse class="dt" cx="580" cy="972" rx="110" ry="9"/>
 <text x="580" y="1000" text-anchor="middle" font-size="12.5">Docker Volume · 資料持久化</text>
@@ -176,5 +176,5 @@ rect.fe,rect.be,rect.dt,rect.ex{stroke-width:1.2}
 </svg>
 </section>
 <h2>元件與責任</h2>
-<div class="panel table"><table><thead><tr><th>元件</th><th>技術</th><th>模組</th><th>責任</th></tr></thead><tbody><tr><td>前端容器</td><td>Streamlit</td><td>①②③④⑤</td><td>每個模組一組頁面；保存登入 Token 與即時資料緩衝；以客戶端呼叫後端 REST，並接收 WebSocket 即時資料。</td></tr><tr><td>REST API／WebSocket 端點</td><td>FastAPI、Pydantic</td><td>①②③④⑤</td><td>REST 提供各模組功能並附 Swagger 文件；WebSocket 推送即時資料。</td></tr><tr><td>JWT 認證與角色權限</td><td>JWT</td><td>①（供全部使用）</td><td>驗證登入 Token，依 Admin、User、Viewer 角色限制操作。</td></tr><tr><td>① 使用者管理</td><td>後端模組</td><td>①</td><td>註冊、登入、角色與權限控制。</td></tr><tr><td>② 資料管理</td><td>後端模組</td><td>②</td><td>資料記錄 CRUD、分頁篩選排序、擁有者檢查、CSV／JSON 批量導入。</td></tr><tr><td>③ 即時監控</td><td>後端模組、背景任務</td><td>③</td><td>模擬器產生資料，判定異常，經 WebSocket 推送並批次寫入。</td></tr><tr><td>④ 資料分析</td><td>後端模組</td><td>④</td><td>統計、時間範圍查詢、分類聚合、趨勢與 Excel 匯出。</td></tr><tr><td>⑤ 系統管理</td><td>後端模組</td><td>⑤</td><td>使用者列表與權限、系統日誌、資料庫狀態、即時資料歷史查詢。</td></tr><tr><td>資料存取層</td><td>SQLAlchemy、asyncmy、Alembic</td><td>全部</td><td>所有資料庫操作經 ORM 與連接池；Alembic 管理結構遷移。</td></tr><tr><td>資料庫容器</td><td>MariaDB 11.7</td><td>全部</td><td>保存使用者、資料記錄、導入紀錄、異常範圍與系統日誌；以 Docker Volume 持久化。</td></tr></tbody></table></div>
+<div class="panel table"><table><thead><tr><th>元件</th><th>技術</th><th>模組</th><th>責任</th></tr></thead><tbody><tr><td>前端容器</td><td>Streamlit</td><td>①②③④⑤</td><td>每個模組一組頁面；保存登入 Token 與即時資料緩衝；以客戶端呼叫後端 REST，並接收 WebSocket 即時資料。</td></tr><tr><td>REST API／WebSocket 端點</td><td>FastAPI、Pydantic</td><td>①②③④⑤</td><td>REST 提供各模組功能；WebSocket 推送即時資料。Swagger 文件位於容器網路內的 /docs，對外另提供靜態副本 docs/api-documentation.html。</td></tr><tr><td>JWT 認證與角色權限</td><td>JWT</td><td>①（供全部使用）</td><td>驗證登入 Token，依 Admin、User、Viewer 角色限制操作。</td></tr><tr><td>① 使用者管理</td><td>後端模組</td><td>①</td><td>註冊、登入、角色與權限控制。</td></tr><tr><td>② 資料管理</td><td>後端模組</td><td>②</td><td>資料記錄 CRUD、分頁篩選排序、擁有者檢查、CSV／JSON 批量導入。異常記錄不可修改或刪除（含 Admin）。</td></tr><tr><td>③ 即時監控</td><td>後端模組、背景任務</td><td>③</td><td>模擬器預設每秒為 4 個分類各產生一筆，判定異常後同時經 WebSocket 推送並放入批次寫入緩衝（預設每秒一批，滿 200 筆提前）。</td></tr><tr><td>④ 資料分析</td><td>後端模組</td><td>④</td><td>統計、時間範圍查詢、分類聚合、趨勢與 Excel 匯出。</td></tr><tr><td>⑤ 系統管理</td><td>後端模組</td><td>⑤</td><td>使用者列表與權限、系統日誌、資料庫狀態、即時資料歷史查詢，以及各分類的異常範圍設定。</td></tr><tr><td>資料存取層</td><td>SQLAlchemy、asyncmy、Alembic</td><td>全部</td><td>所有資料庫操作經 SQLAlchemy 與連接池，不使用原生 SQL；Alembic 在每次後端容器啟動時、開放連接埠前升級結構。</td></tr><tr><td>資料庫容器</td><td>MariaDB 11.7</td><td>全部</td><td>保存使用者、資料記錄、導入紀錄、異常範圍與系統日誌；以 Docker Volume 持久化。</td></tr></tbody></table></div>
 </main></body></html>
