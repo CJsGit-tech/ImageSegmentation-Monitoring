@@ -1,7 +1,7 @@
 # 眼睛實驗
 
 此資料夾存放先前的工作, 不屬於提交內容. 內容包含 DINO v1 與 DINOv2 實驗、熱圖比較、二值化熱圖與背景筆記.
-[實驗歷程](../submission/reports/supporting/experiment_history.md)說明嘗試過哪些方法及其原因.
+[封存實驗](outputs/experiments/archive/README.md)說明嘗試過哪些方法及其結果.
 
 | 位置 | 內容 |
 |---|---|

@@ -1,4 +1,0 @@
-method,animals_with_two_eyes,eyes_output,no_outline,matched_yoloe_eyes,eyes_without_yoloe_match,mean_polygon_iou,median_polygon_iou,mean_center_offset_px,mean_distance_difference_px,distance_animals
-yoloe,7,18,0,18,0,1.0,1.0,0.0,0.0,7
-dinov2_grabcut,23,48,0,18,30,0.685,0.701,2.41,2.5,7
-dinov2_heatmap_level,23,48,0,18,30,0.537,0.529,1.7,0.54,7

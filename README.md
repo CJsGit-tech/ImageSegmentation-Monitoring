@@ -14,7 +14,7 @@
 ```text
 .
 ├── image-segmentation/          圖像分割與眼距量測
-│   ├── submission/              報告、資料、腳本與結果
+│   ├── submission/              解答、資料、腳本與結果
 │   ├── experiments/             先前的實驗
 │   └── model/                   模型權重 (不納入版本控制)
 └── monitoring-application/      即時資料分析與監控系統
@@ -114,4 +114,4 @@
 - AI Agent 負責執行與提問
     - AI Agent 依指令撰寫文件與實作, 遇到會影響產品行為的問題時會停下指出不自行假設
 
-註記： 圖像分割屬於實驗性質, 是透過多輪實驗比較方法, 過程記錄於[實驗歷程](image-segmentation/submission/reports/supporting/experiment_history.md).
+註記： 圖像分割屬於實驗性質, 是透過多輪實驗比較方法, 過程記錄於[封存實驗](image-segmentation/experiments/outputs/experiments/archive/README.md).

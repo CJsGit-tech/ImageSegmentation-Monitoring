@@ -173,7 +173,7 @@ $$C_x = \frac{1}{6A}\sum_i (x_i + x_{i+1})(x_i y_{i+1} - x_{i+1} y_i) \qquad C_y
     - 步驟二: 以面積作為權重, 計算這些三角形中心的加權總和.
     - 步驟三: 除以總面積 $A$, 得到形心 $(C_x, C_y)$.
 
-![形心計算動畫: 每條邊與原點連成三角形, 累計面積加權後除以總面積, 得到形心 (4, 3)](reports/files/figures/centroid_walkthrough.gif)
+![形心計算動畫: 每條邊與原點連成三角形, 累計面積加權後除以總面積, 得到形心 (4, 3)](data/figures/centroid_walkthrough.gif)
 
 
 - **計算範例 (示意數字):** 
@@ -183,7 +183,7 @@ $$C_x = \frac{1}{6A}\sum_i (x_i + x_{i+1})(x_i y_{i+1} - x_{i+1} y_i) \qquad C_y
   - 同理 $C_y = (0 + 6) \times 36 / (6 \times 18) = 2$.
   - 形心為 (2, 2): 大部分面積靠近 (0,0), 因此平衡點不在 (3,3), 而是偏向 (0,0).
 
-![三角形範例動畫: 三條邊的數值為 0, 36, 0, A = 18, 形心為 (2, 2)](reports/files/figures/centroid_triangle_example.gif)
+![三角形範例動畫: 三條邊的數值為 0, 36, 0, A = 18, 形心為 (2, 2)](data/figures/centroid_triangle_example.gif)
 
 ### 兩點距離
 
